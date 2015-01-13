@@ -1,0 +1,81 @@
+/* CSS file for hide or show panel on the side of the website */
+
+.column-layout
+{
+	position: relative;
+	height: 100%;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.column-layout.hide
+{
+	width: 8px;
+}
+
+.column-content
+{
+	width: -webkit-calc(100% - 28px);
+	width: calc(100% - 28px);
+	height: 100%;
+	overflow: hidden;
+	padding: 15px 10px;
+}
+
+#middle .column-content
+{
+	padding: 0;
+	width: 100%;
+}
+
+.hide .column-content
+{
+	display: none;
+}
+
+/* NEW */
+
+/* collapsed-right, collapsed-left */
+.cr, .cl
+{
+	
+}
+
+.collapser
+{
+	cursor:pointer; 
+	font-size:0.1px; 
+	position:absolute; 
+	top:0; 
+	right: 0;
+	height:100%; 
+	width:8px; 
+    background: url(../images/dragl.png)  no-repeat left center #4c4c4c;
+	z-index:1000;
+}
+
+.cl > .collapser
+{
+	background-image: url(../images/dragr.png);
+	left: 0;
+}
+
+.cr.hide > .collapser
+{
+	background-image: url(../images/dragr.png);
+}
+
+.cl.hide > .collapser
+{
+	background-image: url(../images/dragl.png);
+}
+
+.cl > .column-content
+{
+	margin-left: 8px;
+}
+
+aside
+{
+	z-index: 900;
+}

@@ -1,0 +1,46 @@
+#onoc-logs{
+    padding: 1em;
+}
+
+.logs_switch{
+    background: white;
+    width: 25%;
+    padding: 0.5em;
+}
+
+.logs_switch > .head select{
+    width: 100%;
+}
+
+.logs_switch > .search input{
+    width: 100%;
+    padding: 0.25em 0;
+}
+
+.logs_list{
+    overflow-y: auto;
+}
+
+.logs_list li{
+    margin-bottom: 0.25em;
+    -webkit-transition: background 0.25s;
+    -moz-transition:    background 0.25s;
+    -ms-transition:     background 0.25s;
+    -o-transition:      background 0.25s;
+    transition:         background 0.25s;
+}
+
+.logs_list li:hover{
+    background: rgb(255,244,121);
+}
+
+.logs_list span{
+    display: table-cell;
+    vertical-align: top;
+}
+
+.logs_list .date{
+    color: grey;
+    font-size: 0.8em;
+    width: 10em;
+}

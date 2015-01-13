@@ -1,0 +1,64 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+{#
+    The Graph template.
+    Displays the main graph area in the HTML page
+
+    Note that this template was NOT designed to be used several times in a single page. 
+    Doing so will most probably break everything.
+#}
+
+<link rel="Stylesheet" type="text/css" href="{{url_for('static',filename='css/menu.css')}}" />
+<link rel="Stylesheet" type="text/css" href="{{url_for('static',filename='css/graph.css')}}" />
+
+<h1 id="graph-big-msg">Loading...</h1>
+
+<div id="onoc-graph">
+</div>
+
+<nav>
+    <a href="#">&#9776;</a>
+    <ul data-popup-button="click">
+        <li class="submenu">
+            Rearrange
+            <ul data-layout-list="yes">
+            </ul>
+        </li>
+        <li class="submenu">
+            Save as
+            <ul id="savemenu">
+                <li class="inactive">
+                    <a href="#"><input placeholder="New save name" id="newSaveName" /></a>
+                    <p id="newSaveName-validation" style="display: none;"></p>
+                </li>
+            </ul>
+        </li>
+        <li class="submenu">
+            Load
+            <ul id="loadmenu">
+                <li class="no-load-entry inactive">No save available</li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+<script type="text/javascript">
+    onoc_main_modules.push('graph');
+</script>
+

@@ -1,0 +1,91 @@
+{#
+# This file is part of Omega Noc
+# Copyright Omega Noc (C) 2014 Omega Cube and contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% extends "layout.html" %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/login.css') }}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block content %}
+
+<form id="loginScreen" action="{{url_for('login')}}" method="post">
+
+  {% for message in get_flashed_messages() %}
+  <div class="errors"> {{ message }} </div>
+  <br />
+  {% endfor %}
+
+  <div> {{ form.username.label(class="formLabel") }} {{ form.username(class="formField", autofocus=True, required=True) }} </div>
+  {% if form.username.errors %}
+  {% for error in form.username.errors %}
+  <ul class="errors" style="width: 160px;">
+    <li> {{ error }} </li>
+  </ul>
+  {% endfor %}
+  {% endif %}
+
+
+  <div> {{ form.password.label(class="formLabel") }} {{ form.password(class="formField", required=True) }} </div>
+  {% if form.password.errors %}
+  {% for error in form.password.errors %}
+  <ul class="errors" style="width: 160px;">
+    <li> {{ error }} </li>
+  </ul>
+  {% endfor %}
+  {% endif %}
+
+  <div class="formButtons">
+    <input type="submit" value="Login" class="submitButton"/>
+    <!-- <a class="button add" href="{{ url_for('edit_user')}}">Create</a> -->
+  </div>
+
+</form>
+
+{% endblock %}
+
+<script src="{{ url_for('static', filename='scripts/jquery-1.7.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/jquery.validate.js') }}"></script>
+
+<script>
+    $().ready(function () {
+        $("#loginScreen").validate({
+            rules: {
+                username: {
+                    required: true,
+                    minlength: 4,
+                    maxlength: 20
+                },
+                password: {
+                    required: true
+                }
+            },
+            messages: {
+                username: {
+                    required: "Please entrer a username",
+                    minlength: "Username should contain between 4 and 20 characters",
+                    maxlength: "Username should contain between 4 and 20 characters"
+                },
+                password: {
+                    required: "Please entrer a password"
+                }
+            }
+        });
+        $(this).css({ 'color': '#FF0000' })
+    });
+
+</script>

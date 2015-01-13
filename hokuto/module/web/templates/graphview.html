@@ -1,0 +1,67 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+    <link rel="Stylesheet" type="text/css" href="{{url_for('static',filename='css/column.css')}}" />
+    
+    <style>
+    aside:nth-of-type(1)
+    {
+        width: 300px;
+    }
+
+    #middle
+    {
+        width: -webkit-calc(100% - 600px);
+        width: calc(100% - 600px);
+    }
+
+    aside:nth-of-type(2)
+    {
+        width: 300px;
+    }
+    </style>
+
+    <script type="text/javascript">
+        onoc_main_modules.push('column');
+    </script>
+
+{% endblock %}
+
+{% block content %}
+    <aside class="column-layout cr">
+        <div class="column-content treeview">
+            <h2>Network components</h2>
+            <!--Include a partial view containing the treeview-->
+            <div id="treeview-container"></div>
+        </div>
+        <div class="collapser"></div>
+    </aside><div id="middle" class="column-layout">        
+  
+        <div id="middle-column-content" class="column-content">
+            {% include 'partials/graph.html' %}
+        </div>
+        </div><aside class="column-layout cl">
+        <div class="collapser"></div>
+        <div class="column-content props">
+            <h3>Element properties</h3>
+            <div data-info-type="none">Select an element</div>
+        </div>
+    </aside>
+{% endblock %}

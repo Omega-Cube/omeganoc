@@ -1,0 +1,211 @@
+/*
+ * This file is part of Omega Noc
+ * Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ * Xavier Roger-Machart, xrm@omegacube.fr
+ * Nicolas Lantoing, nicolas@omegacube.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+.widget-header.basicchart{
+    background-color: #557975;
+}
+
+.widget-header.basicchart .dropmenu > ul > li.passive:hover{
+    background-color: #557975;
+}
+
+.widget-header.basicchart .dropmenu >ul > li{
+    background-color: #557975;
+}
+
+div.basicchart{
+    position: relative;
+}
+
+svg.basicchart {
+  font: 10px sans-serif;
+  fill: #ccc;
+}
+
+svg.basicchart .axis path,
+svg.basicchart .axis line {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1;
+}
+
+svg.basicchart .axis2 path,
+svg.opposatechart .axis2 line {
+  fill: none;
+  stroke: #ccc;
+  shape-rendering: crispEdges;
+}
+
+svg.basicchart .brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
+svg.basicchart .parts-focus {
+    pointer-events: all;
+}
+
+svg.basicchart .parts-cursor{
+    fill: #eee;
+    stroke: #000;
+    pointer-events: none;
+}
+
+.basicchart .chartButton{
+    pointer-events: all;
+    cursor: pointer;
+}
+
+.hidden{
+    display: none;
+}
+
+.widget-commands{
+    text-align: right;
+    padding: 0 10px;
+}
+
+.widget-commands button{
+    background-color: #777;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 2px 5px;
+    font-weight: bold;
+    margin: 0;
+    cursor: pointer;
+    text-shadow: 1px 1px #333;
+    width: 4em;
+    text-transform: uppercase;
+}
+
+.widget-commands .disabled{
+    color: #c88;
+    background-color: #555;
+    border: 1px solid #333;
+    text-shadow: none;
+}
+
+.widget-commands .enabled{
+    color: #8D8;
+}
+
+/* panels */
+ .panel h3{
+    text-transform: uppercase;
+    text-align: left;
+    border-bottom: 1px solid #555;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+    padding-bottom: 0.25em;
+}
+ 
+/* add panel */
+.panel .addprobe{
+    overflow: auto;
+    padding: 0.5em 1em;
+}
+
+.panel .addprobe form > .column{
+    width: 33%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.panel .addprobe label{
+     text-transform: uppercase;
+     font-weight: bold;
+     font-size: 1.25em;
+     display: block;
+     margin: 0.5em 0;
+}
+
+.panel .addprobe .formButton{
+     text-transform: uppercase;
+     font-weight: bold;
+     font-size: 1.15em;
+     margin: 0.25em;
+     background-image: none;
+     background-color: #777;
+     color: #FFF;
+     border: 1px solid #555;
+     padding: 0.1em 0.5em;
+     box-shadow: none;
+     text-shadow: 1px 1px #333;
+}
+
+.panel .addprobe .formButton:hover{
+    background-color: #888;
+    text-shadow: none;
+}
+
+.panel .addprobe .formButton.select{
+    text-transform: none;
+    font-size: 1em;
+    width: 70%;
+    height: 2em;
+}
+
+.panel .addprobe .formButton.select:hover{
+    background-color: #777;
+}
+
+.panel .addprobe .color{
+    margin-left: 0.5em;
+}
+
+.panel .addprobe button{
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 1em;
+    margin: 0.25em 0;
+    background-image: none;
+    background-color: #555;
+    color: #FFF;
+    border: 1px solid #555;
+    padding: 0.1em 0.5em;
+    box-shadow: none;
+    text-shadow: 1px 1px #333;
+    cursor: pointer;
+}
+
+.panel .addprobe .selected{
+    color: #8D8;
+    background-color: #777;
+}
+
+.panel .addprobe .color{
+    max-width: 18em;
+}
+
+#add_chart_submit{
+    position: absolute;
+    bottom: 1em;
+    right: 1em;
+    background-color: #D44F4D;
+    color: #FFF;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 1.75em;
+    display: inline-block;
+    padding: 0.15em 0.5em;
+    border: none;
+    cursor: pointer;
+}

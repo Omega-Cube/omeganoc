@@ -1,0 +1,90 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/scroll_bar.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ url_for('static', filename='css/gridster.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ url_for('static', filename='css/dashboards.css') }}" rel="stylesheet" type="text/css" />
+
+<script>
+    onoc_main_modules.push('dashboards');
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<section id="dashboard-header">
+  <h1 id="dashboard-title">Nothing to show</h1>
+  <a id="create-dashboard-button" class="button add" href="#">Create new dashboard</a>
+  <div id="dashboard-controls" class="hidden">
+    <a href="#" class="button add" title="Add a new widget to your dashboard" id="add-widget-button">Add a widget</a>
+    <a href="#" class="button edit" title="Rename this dashboard" id="rename-dashboard-button">Rename</a>
+  </div>
+</section>
+
+<section id="dashboard-container" data-scrollbar="150">
+    <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
+    <div class="viewport">
+        <div class="overview">
+            <div id="dashboard">
+                <div id="dashboard-big-msg">Loading...</div>
+                <ul>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="create-dashboard-popup" class="popup hidden">
+    <h2>Create a dashboard</h2>
+    <form id="createForm">
+        <input type="text" name="name" id="createNameField" placeholder="Enter a dashboard name" />
+        <input type="submit" value="Ok" class="popup-btn popup-btn-2l" />
+        <input type="reset" value="Cancel" class="popup-btn popup-btn-2r" />
+    </form>
+</div>
+
+<div id="add-widget-popup" class="popup hidden">
+    <h2>Add a widget</h2>
+    <div data-scrollbar="50">
+        <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
+        <div class="viewport">
+            <div class="overview">
+                <ul id="add-widget-list">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <input type="reset" value="Close" class="popup-btn popup-btn-1" />
+</div>
+
+<div id="rename-dashboard-popup" class="popup hidden">
+    <h2>Rename a dashboard</h2>
+    <form id="rename-dashboard-form">
+        <input type="text" name="name" id="rename-dashboard-field" placeholder="Enter a new name" />
+
+        <input type="submit" value="Ok" class="popup-btn popup-btn-2l" />
+        <input type="reset" value="Cancel" class="popup-btn popup-btn-2r" />
+    </form>
+</div>
+
+{% endblock %}
+
+

@@ -1,0 +1,40 @@
+{
+    "name": "hokuto",
+    "types": ["module"],
+    "version": "0.1",
+    "homepage": "http://omegacube.fr/",
+    "author": "Omegacube",
+    "description": "WEB monitoring  user-interface",
+    "contributors": [
+        {
+            "name": "Xavier Roger-Machart",
+            "email": "xrm@omegacube.fr"
+        },
+        {
+            "name": "Nicolas Lantoing",
+            "email": "nicolas@omegacube.fr"
+        }
+    ],
+    "repository": "git2.omegacube.fr:oc/omeganoc.git",
+    "keywords": [
+        "module",
+        "monitoring",
+        "web",
+        "UI",
+        "predict",
+        "charts"
+    ],
+    "dependencies": {
+        "shinken": ">=1.4",
+        "livestatus": ">=1.0",
+        "graphite": ">=2.0",
+        "logstore-sqlite": ">=1.4",
+        "sqlite3":">=3.7",
+        "python-igraph":">=0.7",
+        "graphviz":">=2.26",
+        "pygraphviz":">=1.3",
+        "flask":">=0.10",
+        "whisper":">=0.9"
+    },
+    "license": "AGPL v3"
+}

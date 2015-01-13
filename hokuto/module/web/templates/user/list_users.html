@@ -1,0 +1,69 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/users.css') }}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<div id="mainContent">
+  <h3 class="title"> {{gettext('Registered users')}} </h3>
+
+  <section class="userlist">
+    <div class="userlist-title"><span class="users-total">Users ({{list.total}})</span><a class="button add-user" href="{{url_for('edit_user')}}">New User</a></div>
+    <ul class="userlist-content">
+      {% if current_user.is_super_admin %}
+      {% for user in list.items|sort(attribute='username'): %}
+      <li data-id="{{user.id}}">
+        <span class="username">{{user.username}}</span>
+        {% if user.is_super_admin %}<span class="admin">(Admin)</span>{% endif %}
+        {% if user.is_disabled %}<span class="disabled"> - Blocked</span>{% endif %}
+        <p class="actions">
+          <span class="contact"><strong>{{user.shinken_contact}}</strong> - {{ contacts[user.shinken_contact] }}</span>
+          <a class="button edit-user" href="{{url_for('edit_user',userid=user.id)}}">edit</a>
+          {% if user.id != current_user.id and current_user.is_super_admin %}
+          <button class="button block">block</button>
+          <button class="button delete">destroy</button>
+          {% endif %}
+        </p>
+      </li>
+      {% endfor %}
+      {% else %}
+      <li data-id="{{current_user.id}}">
+        <span class="username">{{current_user.username}}</span>
+        {% if current_user.is_disabled %}<span class="disabled"> - Blocked</span>{% endif %}
+        <p class="actions">
+          <span class="contact"><strong>{{current_user.shinken_contact}}</strong> - {{ contacts[current_user.shinken_contact] }}</span>
+          <a class="button edit-user" href="{{url_for('edit_user',userid=current_user.id)}}">edit</a>
+        </p>
+      </li>
+      {% endif %}
+    </ul>
+  </section>
+</div>
+
+<!--
+{% for message in get_flashed_messages() %}
+<div class="flash"> {{ message }} </div>
+{% endfor %}
+-->
+
+<script src="/static/scripts/users.js"></script>
+
+{% endblock %}

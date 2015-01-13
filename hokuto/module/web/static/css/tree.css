@@ -1,0 +1,27 @@
+﻿/* Support stylesheet for everything in the treeview that is not included into the jstree stylesheet */
+
+/* Toolbar area */
+.tree-toolbar {
+    padding-bottom: 15px;
+    border-bottom: 2px solid #4c4c4c;
+}
+
+.tree-toolbar > button {
+    cursor: pointer;
+    border: 1px solid #E9E8D2;
+    border-radius: 2px;
+}
+
+.tree-toolbar > .collapse {
+    background: url(../images/jstree/arrow_merge.png) no-repeat center center #000;
+    width: 21px;
+    height: 21px;
+    overflow: hidden;
+    text-indent: -1000px;
+    border-style: none;
+}
+
+/* Customizing default tree style */
+.jstree-default .jstree-hovered {
+    background-color: #3a4348;
+}

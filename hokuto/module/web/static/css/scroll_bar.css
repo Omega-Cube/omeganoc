@@ -1,0 +1,57 @@
+[data-scrollbar]
+{ 
+    width: 100%; 
+    clear: both; 
+    margin: 20px 0 10px; 
+}
+[data-scrollbar] > .viewport 
+{ 
+    overflow: hidden; 
+    position: relative; 
+}
+[data-scrollbar] > .viewport > .overview 
+{ 
+    list-style: none; 
+    position: absolute; 
+    left: 0; 
+    top: 0; 
+}
+
+[data-scrollbar] .thumb .end,
+[data-scrollbar] .thumb 
+{ 
+    background-color: #003D5D; 
+    border-radius: 4px;
+}
+[data-scrollbar] > .scrollbar 
+{ 
+    position: relative; 
+    float: right; 
+    width: 15px; 
+}
+[data-scrollbar] .track 
+{ 
+    background-color: #D8EEFD; 
+    height: 100%; width:5px;
+    position: relative; 
+    padding: 0 1px;
+    border-radius: 4px;
+}
+[data-scrollbar] .thumb 
+{
+    height: 20px; 
+    width: 5px; 
+    cursor: pointer;
+    overflow: hidden; 
+    position: absolute; 
+    top: 0;}
+[data-scrollbar] .thumb .end 
+{ 
+    overflow: hidden; 
+    height: 5px;
+    width: 5px; 
+}
+[data-scrollbar] .disable
+{ 
+    display: none; 
+}

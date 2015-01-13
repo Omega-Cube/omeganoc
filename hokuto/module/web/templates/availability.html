@@ -1,0 +1,81 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/availability.css') }}" rel="stylesheet" type="text/css" />
+<script>
+    onoc_main_modules.push('availability');
+</script>
+
+{% endblock %}
+
+{% block content %}
+<article id="onoc-availability">
+  <section class="select">
+    <form name="requestConfig">
+      <label>Hosts : </label>
+      <select name="hostgroup" id="form-hostgroup">
+        <option value="null" selected="selected"></option>
+        {% for group in permissions.hostgroups %}
+        <option value="{{group}}">{{ group }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Services : </label>
+      <select name="services" id="form-services">
+        <option value="null" selected="selected"></option>
+        {% for group in permissions.services if group != '__HOST__' %}
+        <option value="{{group}}">{{ group }}</option>
+        {% endfor %}
+      </select>
+
+      <label>From : </label>
+      <select name="range" id="form-range">
+        <option value="1" selected="selected">Last day</option>
+        <option value="7">Last week</option>
+        <option value="30">Last month</option>
+        <option value="60">Last 2 month</option>
+        <option value="90">Last 3 month</option>
+        <option value="120">Last 4 month</option>
+        <option value="180">Last 6 month</option>
+        <option value="365">Last year</option>
+      </select>
+
+      <label>First assumed host state : </label>
+      <select name="firststate_host" id="firststate_host">
+        <option value="0" selected="selected">Up</option>
+        <option value="1">Down</option>
+        <option value="2">Unreachable</option>
+      </select>
+
+      <label>First assumed service state : </label>
+      <select name="firststate_service" id="firststate_service">
+        <option value="0" selected="selected">Ok</option>
+        <option value="1">Warning</option>
+        <option value="2">Alert</option>
+        <option value="3">Unknown</option>
+      </select>
+
+
+    </form>
+  </section>
+  <section class="results"></section>
+</article>
+
+{% endblock %}

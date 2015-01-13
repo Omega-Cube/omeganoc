@@ -1,0 +1,572 @@
+/* global */
+#content {
+    background-color: #333;
+}
+
+#content > section {
+    position: relative;
+}
+
+#dashboard-header {
+    -webkit-box-shadow: 1px 0px 3px #111;
+    -moz-box-shadow:    1px 0px 3px #111;
+    -ms-box-shadow:     1px 0px 3px #111;
+    -o-box-shadow:      1px 0px 3px #111;
+    box-shadow:         1px 0px 3px #111;
+    padding-top: 2px;
+    overflow: auto;
+    background-color: #3a4348;
+}
+
+#dashboard-header a{
+    float: right;
+    margin: 1px 9px;
+    line-height: 32px;
+    height: 32px;
+    text-decoration: none;
+    border: none;
+    color: #FFF;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+#dashboard-header a:hover , #dashboard-header a:active{
+    text-decoration: underline;
+}
+
+#dashboard-title{
+    color: #fff;
+    display: inline-block;
+    font-size: 36px;
+    line-height: 120px;
+    margin-left: 2em;
+}
+
+#dashboard-big-msg {
+    position: absolute;
+    width: 100%;
+    top: 3em;
+    color: rgba(0, 0, 0, 0.1);
+    -webkit-text-shadow: 1px 4px 6px #DAD7C1, 0 0 0 #000, 1px 4px 6px #DAD7C1;
+    text-shadow: 0 0 6px #DAD7C1, 0 0 0 #000, 0 0 6px #DAD7C1;
+    text-align: center;
+    font-size: 5em;
+    line-height: 1em;
+    font-weight: bold;
+}
+
+/* icon buttons */
+.add{
+    padding-left: 22px;
+    background: transparent url('../images/add-icon.png') left center no-repeat;
+    cursor: pointer;
+}
+
+.edit{
+    padding-left: 22px;
+    background: transparent url('../images/edit-icon.png') left center no-repeat;
+    cursor: pointer;
+}
+
+.remove{
+    padding-left: 22px;
+    background: transparent url('../images/remove-icon.png') left center no-repeat;
+    cursor: pointer;
+}
+
+.datepicker{
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    background: transparent url('../images/date-icon.png') left center no-repeat;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Rename dashboard popup */
+#rename-dashboard-popup > form > input[type=text] {
+    width: 90%;
+}
+
+/* Create widget popup */
+.widget-form label{
+    display: inline-block;
+    min-width: 10em;
+    text-align: left;
+    margin-left: 0.5em;
+}
+
+/* Dashboard core and Parts */
+
+#dashboard {
+    position: relative;
+}
+
+
+#dashboard > ul >li {
+    background-color: #222;
+    color: #eee;
+    position: absolute;
+    box-shadow: 0 1px 3px #444;
+    overflow: hidden;
+}
+
+.overview {
+    width: 100%;
+}
+
+.close {
+    background: url('../images/icon_close.png') no-repeat scroll center center transparent;
+    cursor: pointer;
+    height: 20px;
+    width: 20px;
+    overflow: hidden;
+    position: absolute;
+    right: 1em;
+    top: 0.5em;
+    z-index: 5;
+    border:none;
+}
+
+#dashboard-controls {
+    float: right;
+    overflow: hidden;
+}
+
+/* Create dashboard popup */
+
+#create-dashboard-popup > form > input[type=text] {
+    width: 90%;
+}
+
+/* Add widget popup */
+
+#add-widget-popup {
+    width: 40em;
+    height: 30em;
+}
+
+#add-widget-popup ul > li > a {
+    display: block;
+    line-height: 34px;
+    padding: 2px;
+    text-decoration: none;
+    color: rgb(60, 59, 53);
+    font-weight: bold;
+    font-size: 110%;
+    text-shadow: none;
+}
+
+#add-widget-popup ul > li > a:hover {
+    -moz-box-shadow: inset 0px 0px 10px 0px rgba(166, 164, 162, 0.5);
+    -webkit-box-shadow: inset 0px 0px 10px 0px rgba(166, 164, 162, 0.5);
+    box-shadow: inset 0px 0px 10px 0px rgba(166, 164, 162, 0.5);
+}
+
+/* Widgets box rules */
+
+/* widgets headers */
+.widget-header{
+    height: 40px;
+    line-height: 40px;
+    background-color: #55646b;
+}
+
+.widget-header h2 {
+    display: inline;
+    padding: 5px;
+}
+
+.widget-command-rename {
+    background-image: url('../images/edit-icon.png');
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    display: inline-block;
+    cursor: pointer;
+    margin-top: -3px;
+}
+
+.widget-header .datepicker{
+    float: right;
+    padding: 5px;
+}
+
+.widget-header .actions{
+    float: right;
+    width: 45px;
+    height: 40px;
+    background: rgba(0,0,0,0.3) url('../images/dropdown-1.png') center center no-repeat;;
+}
+
+.widget-header .dropmenu{
+    display: inline-block;
+    cursor: pointer;
+}
+
+.widget-header .dropmenu > ul{
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 39px;
+}
+
+.widget-header .dropmenu:hover > ul{
+    display: block;
+    z-index: 999;
+}
+
+.widget-header .dropmenu > ul > li{
+    text-transform: uppercase;
+    border: 1px solid black;
+    font-weight: bold;
+    background-color: #333;
+    padding-right:10px;
+    padding-left: 22px;
+}
+
+.widget-header .dropmenu > ul > li:hover{
+    background-color: #fff;
+    color: black;
+    text-shadow: none;
+}
+
+.widget-header .dropmenu li.passive:hover{
+    background-color: #333;
+    color: #fff;
+    text-shadow: inherit;
+    cursor: default;
+}
+
+/* widget commands */
+.widget-commands {
+    display: block;
+    height: 45px;
+    line-height: 45px;
+    border: 1px solid #353535;
+    margin-bottom: 5px;
+}
+
+.widget-commands > div {
+    background-position: left top;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    display: inline-block;
+    height: 20px;
+    margin-right: 6px;
+    overflow: hidden;
+    vertical-align: middle;
+}
+
+.widget-command {
+    color:#57b4dc;
+    font-weight: bold;
+    border: 1px solid #57b4dc;
+    box-shadow: 1px 0 rgba(200,200,200,0.4) inset;
+    background-color: transparent;
+    background-image: -webkit-linear-gradient(top,#fff,#e0e0e0);
+    background-image:    -moz-linear-gradient(top,#fff,#e0e0e0);
+    background-image:      -o-linear-gradient(top,#fff,#e0e0e0);
+    background-image:     -ms-linear-gradient(top,#fff,#e0e0e0);
+    background-image:         linear-gradient(top,#fff,#e0e0e0);
+    cursor: pointer;
+    margin: 0 4px;
+    vertical-align: middle;
+}
+
+.widget-command:hover {
+    background-image: none;
+    background-color: #fff;
+}
+
+.widget-title-edit {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    font-size: 13.5pt;
+    color: #fff;
+}
+
+/* Panel element */
+.panel{
+    position: absolute;
+    transition: transform 0.5s;
+    -moz-transition: -moz-transform 0.5s;
+    -webkit-transition: -webkit-transform 0.5s;
+    -ms-transition: -ms-transform 0.5s;
+    -o-transition: -o-transform 0.5s;
+    width: 100%;
+    height: 100%;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    overflow: hidden;
+}
+
+.panel > div{
+    margin: 1em;
+}
+
+/* Log panel */
+.panel .logPanel{
+    padding: 0.5em;
+    height: 100%;
+    overflow:auto;
+    background: black;
+}
+
+.panel .logContainer{
+    display: table-row;
+    background-color: black;
+}
+
+.logContainer.log{
+    font-weight: bold;
+    transition: background 0.25s, color 0.25s;
+    -moz-transition: background 0.25s, color 0.25s;
+    -webkit-transition: background 0.25s, color 0.25s;
+    -ms-transition: background 0.25s, color 0.25s;
+    -o-transition: background 0.25s, color 0.25s;
+
+}
+
+.logContainer.log:hover{
+    background-color: #E63C3E;
+    color: white;
+}
+
+.logContainer.warning{
+    color:#FBDC0C;
+}
+
+.logContainer.error{
+    color:#E63C3E;
+}
+
+.logContainer.legend{
+    font-style: italic;
+    border-botom: 1px solid white;
+    text-align: center;
+}
+
+.panel .logContainer > span{
+    display: table-cell;
+    padding: 0.5em;
+}
+
+/* Add Panel */
+.panel .color{
+    display: block;
+    line-height: 13px;
+}
+
+.panel .color span{
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 1px solid #555;
+    margin: 0;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.panel .color .selected, .panel .color span:hover{ border: 1px solid #57b4dc; opacity: 1; }
+
+/* Edit Panel */
+.panel .editPanel{
+    height: 80%;
+    overflow:auto;
+    position:relative;
+}
+
+.panel > .editPanel > .editGroup{
+    overflow:auto;
+    height:2.2em;
+    border-bottom:1px solid white;
+    padding:0.25em;
+    margin:0.25em;
+}
+
+.panel > .editPanel > .editContent{
+    display: table-row;
+    width:100%;
+}
+
+.panel > .editPanel > .editContent > *{
+    padding: 0 0.5em;
+}
+
+.panel > .editPanel > .editContent > .remove{
+    font-weight: bold;
+    color: red;
+    display: table-cell;
+    cursor:pointer;
+    margin:0;
+    vertical-align:middle;
+    height: initial;
+}
+/* Date/Time picker */
+.date{
+    display: table;
+    padding-bottom: 10px;
+}
+
+.date > p{
+    display: table-row;
+    line-height: 25px;
+}
+
+.date > p > *{
+    display: table-cell;
+}
+
+.datePicker{
+    font-size: 0.65em;
+    cursor: pointer;
+    vertical-align: middle;
+    width: 7em;
+}
+
+.onoc-time-picker, .onoc-date-picker{
+    position: absolute;
+    top: 0;
+    text-align: center;
+    background-color: #fff;
+    color: #666;
+    padding: 20px 5px 15px;
+    z-index: 1000;
+    width: 225px;
+    right: 0;
+    text-shadow: none;
+    line-height: initial;
+}
+
+/* date */
+.onoc-date-picker{
+    text-align: center;
+    font-size: 11px;
+}
+
+.onoc-date-picker .month{
+    text-align: center;
+}
+
+.onoc-date-picker .prev, .onoc-date-picker .next{
+    width: 14px;
+    height: 1em;
+    vertical-align: middle;
+    cursor: pointer;
+    display: inline-block;
+    border: none;
+}
+
+.onoc-date-picker .prev{
+    float: left;
+    background: transparent url('../images/hz_arrows.png') left center no-repeat;
+}
+
+.onoc-date-picker .next{
+    float: right;
+    background: transparent url('../images/hz_arrows.png') right center no-repeat;
+}
+
+.onoc-date-picker .current{
+    line-height: 1em;
+}
+
+.onoc-date-picker ol{
+    clear: both;
+    margin: auto;
+    padding: 0.15em;
+    display: table;
+}
+
+.onoc-date-picker li{
+    display: table-row;
+}
+
+.onoc-date-picker li span{
+   display: table-cell;
+   padding: 0.5em;
+}
+
+.onoc-date-picker .legend{
+    text-align: center;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.onoc-date-picker .week .day{
+    backgrund-color: #fff;
+    transition: background 0.25s,color 0.25s;
+    -moz-transition: background 0.25s,color 0.25s;
+    -webkit-transition: background 0.25s,color 0.25s;
+    -ms-transition: background 0.25s,color 0.25s;
+    -o-transition: background 0.25s,color 0.25s;
+    cursor: pointer;
+}
+
+.onoc-date-picker .legend, .onoc-date-picker .week .day:hover{
+    background: #d44f4d;
+    color: #fff;
+}
+
+.onoc-date-picker .selected{
+    background: #d44f4d;
+    color: #fff;
+    font-weight: bold;
+}
+
+.onoc-date-picker .close{
+    border: none;
+    right: 0.1em;
+    top: 0.1em;
+}
+
+/* time */
+.onoc-time-picker select{
+    height: 2em;
+    padding: 4px;
+    vertical-align: top;
+}
+.onoc-time-picker button{
+    height: 2em;
+    font-size: 1em;
+    padding: 4px;
+}
+.onoc-time-picker .close{
+    position: initial;
+    vertical-align: top;
+    border: none;
+}
+
+/* spinner */
+.spinner{
+    position: absolute;
+    left: 49%;
+    top: 49%;
+    z-index: 999;
+}
+
+/* buttons */
+.formButton{
+    cursor: pointer;
+    color:#57b4dc;
+    font-weight: bold;
+    border: 1px solid #57b4dc;
+    box-shadow: 1px 0 rgba(200,200,200,0.4) inset;
+    background-color: transparent;
+    background-image: -webkit-linear-gradient(top,#fff,#d0d0d0);
+    background-image:    -moz-linear-gradient(top,#fff,#d0d0d0);
+    background-image:      -o-linear-gradient(top,#fff,#d0d0d0);
+    background-image:     -ms-linear-gradient(top,#fff,#d0d0d0);
+    background-image:         linear-gradient(top,#fff,#d0d0d0);
+    cursor: pointer;
+    margin: 0 0.5em;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.formButton:hover{
+    background: #fff;
+}

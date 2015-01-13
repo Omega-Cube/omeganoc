@@ -1,0 +1,13 @@
+.presentation {
+    padding: 2em;
+}
+
+.presentation h1 {
+    margin: 2em 0 1em 0;
+    font-size: 200%
+}
+
+.presentation h2 {
+    margin: 1.5em 0 0.5em 0;
+    font-size: 150%;
+}

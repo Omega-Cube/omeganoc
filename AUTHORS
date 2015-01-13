@@ -1,0 +1,42 @@
+Omega Noc uses at various extents the following products:
+- Shinken (http://www.shinken-monitoring.org)
+- Flask (http://flask.pocoo.org)
+- Raphaël.js (http://raphaeljs.com)
+- Dracula Graph Library (http://www.graphdracula.net)
+
+The following people contributed to the project:
+    Xavier Roger-Machart, xrm@omegacube.fr
+    Kiril Gashteovski, kiril@omegacube.fr
+    Francine NGuyen, francine@omegacube.fr
+    Clement Papazian, clement@omegacube.fr
+    Nicolas Lantoing, nicolas@omegacube.fr
+
+=====================
+OmegaNoc uses the Flask project:
+
+Development Lead
+
+    Armin Ronacher <armin.ronacher@active-4.com>
+
+Patches and Suggestions
+
+    Adam Zapletal
+    Ali Afshar
+    Chris Edgemon
+    Chris Grindstaff
+    Christopher Grebs
+    Florent Xicluna
+    Georg Brandl
+    Justin Quick
+    Kenneth Reitz
+    Marian Sigler
+    Matt Campell
+    Matthew Frazier
+    Michael van Tellingen
+    Ron DuPlain
+    Sebastien Estienne
+    Simon Sapin
+    Stephane Wirtel
+    Thomas Schranz
+    Zhao Xiaohong
+

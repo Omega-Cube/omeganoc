@@ -1,0 +1,121 @@
+/*
+ * This file is part of Omega Noc
+ * Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ * Nicolas Lantoing, nicolas@omegacube.fr
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+.widget-header.sla{
+    background-color: #668699;
+}
+
+.widget-header.sla .dropmenu > ul > li.passive:hover{
+    background-color: #668699;
+}
+
+.widget-header.sla .dropmenu > ul > li{
+    background-color: #668699;
+}
+
+/* svg */
+.svg .tick text{
+    fill: #ccc;
+    font-size: 10px;
+}
+
+.svg .axis path, .svg .axis line{
+    stroke: #ccc;
+    fill: none;
+}
+
+.svg .part{
+    fill-opacity: 0.8;
+}
+
+.svg .part:hover{
+    fill-opacity: 1;
+}
+
+/* Commands */
+.sla-request{
+    margin: 0.25em 0.5em;
+}
+
+.sla-request label{
+    margin: 0.1em 0.5em;
+}
+
+.sla-request select{
+    padding: 0;
+    margin: 0 0.5em;
+    background-color: #777;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px #333;
+    border: 1px solid #555;
+}
+
+/* Result container */
+.slacontainer{
+    position: relative;
+    height: calc(100% - 5em);
+}
+
+ul.sla{
+    display:table;
+    border: 2px solid black;
+    margin: 1em;
+    width: calc(100% - 2em);
+}
+
+ul.sla li{
+    display: table-row;
+}
+
+ul.sla .alt{
+    background-color: rgba(196,186,13,0.4);
+}
+
+ul.sla li:hover{
+    background-color: rgba(255,255,255,0.7);
+}
+
+ul.sla > li > label, ul.sla > li > span{
+    display: table-cell;
+    text-align: center;
+    padding: 0.4em 0.75em;
+}
+
+ul.sla label{
+    font-weight: bold;
+}
+
+.sla .up{
+    color: green;
+    font-weight: bold;
+    text-shadow: 1px 1px rgba(0,0,0,0.7);
+}
+
+.sla .down{
+    color: rgb(230,60,62);
+    font-weight: bold;
+    text-shadow: 1px 1px rgba(0,0,0,0.7);
+}
+
+.sla .warn{
+    color: rgb(251,220,12);
+    font-weight: bold;
+    text-shadow: 1px 1px rgba(0,0,0,0.7);
+}

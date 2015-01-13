@@ -1,0 +1,77 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/users.css') }}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<h3 class="title">
+  {% if isnew %}
+  Create user
+  {% else %}
+  Edit Profile
+  {% endif %}
+</h3>
+
+<form id="edit_userScreen" action="#" method="post">
+  <div> {{ form.username.label(class="formLabel") }} {{ form.username(class="formField") }} </div>
+  {% if form.username.errors %}
+  <ul class="errors">
+    {% for error in form.username.errors %}
+    <li> {{ error }} </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <div> {{ form.password.label(class="formLabel") }} {{ form.password(class="formField") }} </div>
+  {% if form.password.errors %}
+  <ul class="errors">
+    {% for error in form.password.errors %}
+    <li> {{ error }} </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <div> {{ form.confirm_password.label(class="formLabel") }} {{ form.confirm_password(class="formField") }} </div>
+  {% if form.confirm_password.errors %}
+  <ul class="errors">
+    {% for error in form.confirm_password.errors %}
+    <li> {{ error }} </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <div>{{ form.shinken_contact.label(class="formLabel") }} {{ form.shinken_contact(class="formField") }} </div>
+  {% if isadmin %}
+  <div>{{ form.is_super_admin.label(class="formLabel") }} {{ form.is_super_admin(class="formField") }}</div>
+  {% endif %}
+
+  <div>
+    <input type="submit" value="{% if isnew %}Create{% else %}Save changes{% endif %}" class="button submit"/>
+    <a class="button cancel" href="{{url_for('list_users')}}">Cancel</a>
+  </div>
+</form>
+
+<script src="/static/scripts/users.js"></script>
+<script>
+  window._ISNEW = {{'true' if isnew else 'false'}};
+</script>
+
+{% endblock %}

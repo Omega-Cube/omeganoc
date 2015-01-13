@@ -1,0 +1,15 @@
+#loginScreen {
+    width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10%;
+    text-align: center;
+}
+
+#loginScreen .button.add{
+    border-radius: 2px;
+    color: #636363;
+    text-shadow: none;
+    display: inline-block;
+    line-height: 24px;
+}

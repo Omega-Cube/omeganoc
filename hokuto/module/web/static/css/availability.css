@@ -1,0 +1,108 @@
+#onoc-availability{
+    height: 100%;
+}
+
+#onoc-availability .select{
+    margin: 1em;
+    text-align: center;
+}
+
+#onoc-availability .results{
+    height: calc(100% - 120px);
+    overflow: auto;
+}
+
+#onoc-availability .results ul{
+    display:table;
+    border: 1px solid black;
+    margin: 1em;
+}
+
+#onoc-availability .results ul li{
+    display: table-row;
+}
+
+#onoc-availability .results ul .alt{
+    background-color: rgba(196,186,13,0.4);
+}
+
+#onoc-availability .results ul li:hover{
+    background-color: rgba(255,255,255,0.7);
+}
+
+#onoc-availability .results ul > li > label, #onoc-availability .results ul > li > span{
+    display: table-cell;
+    text-align: center;
+    padding: 0.4em 0.75em;
+}
+
+#onoc-availability .results ul label{
+    font-weight: bold;
+}
+
+#onoc-availability .up{
+    color: green;
+    font-weight: bold;
+}
+
+#onoc-availability .down{
+    color: rgb(230,60,62);
+    font-weight: bold;
+}
+
+#onoc-availability .warn{
+    color: rgb(251,220,12);
+    font-weight: bold;
+    text-shadow: 1px 1px rgba(0,0,0,0.7);
+}
+
+#onoc-availability .timeline{
+    position: relative;
+    width: 300px;
+    border: 1px solid black;
+    vertical-align: top;
+    height: 1em;
+    line-height: 100%;
+    margin: 0 0.5em;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#onoc-availability .timeline > *{
+    padding: 0;
+    display: inline-block;
+    height: 100%;
+    opacity: 0.7;
+}
+
+#onoc-availability .timeline > *:hover{
+    opacity: 1;
+}
+
+#onoc-availability .timeline-0{
+    background-color: green;
+}
+
+#onoc-availability .timeline-1{
+    background-color: rgb(230,60,62);
+}
+
+#onoc-availability .timeline-2{
+    background-color: #888;
+}
+
+#onoc-availability .servicetimeline-0{
+    background-color: green;
+}
+
+#onoc-availability .servicetimeline-1{
+    background-color: rgb(251,220,12);
+}
+
+#onoc-availability .servicetimeline-2{
+    background-color: rgb(230,60,62);
+}
+
+#onoc-availability .servicetimeline-3{
+    background-color: #bbb;
+}

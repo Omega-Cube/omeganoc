@@ -1,0 +1,45 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/logs.css') }}" rel="stylesheet" type="text/css" />
+<script>
+    onoc_main_modules.push('logs');
+</script>
+
+{% endblock %}
+
+{% block content %}
+<article id="onoc-logs">
+  <section id="logs-switch-1" class="logs_switch">
+    <div class="head">
+      <form name="logs-switch-1-select">
+	<select name="target"></select>
+      </form>
+    </div>
+    <div class="search">
+      <form name="logs-switch-1-search">
+	<input type="text" name="searchbox" />
+      </form>
+    </div>
+    <ol class="logs_list"></ol>
+  </section>
+</article>
+
+{% endblock %}

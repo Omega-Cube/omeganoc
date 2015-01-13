@@ -1,0 +1,1 @@
+# This package is only a container for the widget plugins, installed as sub-packages.

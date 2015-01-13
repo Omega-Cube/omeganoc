@@ -1,0 +1,109 @@
+#content h3.title{
+    background-color: #3A4348;
+    padding: 0 40px;
+    box-shadow: 1px 0px 3px #111;
+    line-height: 80px;
+}
+
+#content .button {
+    border-radius: 0.5em;
+    color: #FFF;
+    display: inline-block;
+    padding: 3px 10px;
+    background: none;
+    border: none;
+    text-transform: capitalize;
+}
+
+/* Users list */
+#mainContent .button.add-user{
+    float: right;
+    margin: 3px 20px;
+    background-color: #019875;
+}
+#mainContent .button.edit-user{
+    background-color: #EEE;
+    color: #111;
+    border: 1px solid #888;
+    text-shadow: none;
+}
+#mainContent .button.block, #mainContent .button.delete{
+    background-color:#d9534f;
+}
+
+.userlist{
+    background-color: #444;
+    margin: 2em 5em;
+    border: 2px solid #555;
+}
+.userlist-title{
+    background-color: #3A4348;
+    overflow: auto;
+    padding: 3px 10px;
+    line-height: 35px;
+}
+
+.users-total{
+    color: #FFF;
+    text-shadow: none;
+}
+
+.userlist li{
+    border-top:1px solid #555;
+    border-bottom: 1px solid #555;
+    overflow: auto;
+    padding: 10px 30px
+}
+
+.userlist .actions{
+    display: inline-block;
+    float: right;
+}
+
+.userlist .admin{
+    color: #E63C3E;
+}
+
+.userlist .disabled{
+    color: #CCC;
+    font-style: italic;
+}
+
+.userlist .contact{
+    margin-right: 15px;
+}
+
+/* edit/create user */
+#edit_userScreen{
+    margin: 2em 5em;
+}
+#edit_userScreen > div{
+    line-height: 45px;
+    display: table-row;
+}
+
+#edit_userScreen .formLabel{
+    display: table-cell;
+    font-weight: bold;
+}
+
+#edit_userScreen .formField{
+    display: table-cell;
+    padding-left: 10px;
+}
+
+#edit_userScreen .error{
+    position: initial;
+}
+
+#edit_userScreen .button.submit{
+    background-color:#019875;
+}
+
+#edit_userScreen .button.cancel{
+    background-color:#d9534f;
+}
+
+#edit_userScreen .errors{
+    color: #E63C3E;
+}
