@@ -20,7 +20,7 @@ cpan install Net::SNMP
 
 useradd --user-group shinken
 useradd --user-group graphite
-pip install pycurl cherrypy shinken
+pip install pycurl cherrypy shinken==2.0.3
 
 # Initialize Shinken
 shinken --init

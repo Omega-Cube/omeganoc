@@ -3,7 +3,7 @@ INSTALL
 
 Dependencies:
 ------------
-shinken
+shinken == 2.0.3
 sqlite3
 graphviz
 graphviz-devel
@@ -27,7 +27,7 @@ libxml2-devel
 Shinken install
 
     useradd --user-group shinken
-    pip install shinken
+    pip install shinken==2.0.3
     shinken --init
 
 INSTALL
@@ -86,6 +86,11 @@ About how to add/edit hosts, services, contacts and monitoring data see [shinken
 
 TROUBLESHOOTING
 ===============
+
+*Shinken is (re)starting normaly but I can't reach the webserver
+
+For the moment hokuto is build for shinken 2.0.x, if you are using shinken >= 2.2.0 hokuto and livestatus will not load properly.
+Run pip install shinken==2.0.3 to resolve this issue (don't forget to backup your hosts/services configuration from /etc/shinken before).
 
 *I can't see any host/probe*
 
