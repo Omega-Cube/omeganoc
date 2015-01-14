@@ -20,7 +20,7 @@ WHOAMI = $(shell whoami)
 
 #clear out the suffix list
 .SUFFIXES:
-.IGNORE: check-dependencies graphite-prebuild graphviz-prebuild shinken-prebuild
+.IGNORE: check-dependencies graphite-prebuild shinken-prebuild
 
 #prevent up-to-date return
 .PHONY: mock help default install clean test
@@ -53,7 +53,6 @@ check-dependencies:
 	@command -v autoconf 2>&1 || { echo >&2 "Missing autoconf."; exit 1;}
 	@echo "Checking graphite dependencies..."
 	@command -v pip 2>&1 || { echo >&2 "Missing pip."; exit 1;}
-    
 
 clean: on-reader-clean
 

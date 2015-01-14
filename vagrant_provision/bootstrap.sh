@@ -38,7 +38,7 @@ cp /vagrant/vagrant_provision/livestatus.cfg.template /etc/shinken/modules/lives
 # We do not use the "install" target as it will  install the on-reader lib by copying the files
 # Instead we'll create links to directly manipulate the files during development
 cd /vagrant
-make dependencies graphviz graphite shinken r-install-plugins clean
+make dependencies sudoer graphite shinken clean
 
 # Auto start the carbon daemon on launch
 cp /vagrant/vagrant_provision/carbon.init.template /etc/init.d/carbon

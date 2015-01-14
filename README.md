@@ -13,12 +13,7 @@ libxml2-devel
 
 *For Debian/Ubuntu*
 
-     # Add R 3.0 repository
-     sed -i '$ a\deb http://cran.univ-lyon1.fr/bin/linux/debian wheezy-cran3/' /etc/apt/sources.list
-     apt-key adv --keyserver keys.gnupg.net --recv-key 381BA480
-     apt-get update
-     
-     apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev r-base-core
+     apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev
 *For CentOS 7+*
 
      # install setup tools
@@ -27,7 +22,7 @@ libxml2-devel
      curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
      easy_install pip
      
-     yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel R readline-devel
+     yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
 
 Shinken install
 
@@ -107,7 +102,3 @@ To import all data from archived livestatus logs run
 
     make import-sla
 From your installation directory.
-
-*make install fail with error `Tried to guess R's HOME but no command (R) in the PATH.`*
-
-You are trying to build from python 2.6.x or an older version, you need at least python 2.7.
