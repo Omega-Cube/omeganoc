@@ -109,8 +109,8 @@ on-reader: sudoer
 	@echo -n "\033]0;Installing livestatus libraries.\007"
 	@cd lib/on_reader && python setup.py install
 
-on-reader-clean:
-	@cd lib/on_reader && sudo python setup.py clean
+on-reader-clean: sudoer
+	@cd lib/on_reader && python setup.py clean
 	@rm -rf lib/on_reader/build
 
 #prebuilds messages
