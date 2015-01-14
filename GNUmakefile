@@ -75,7 +75,7 @@ shinken-dependencies:
 	@command -v python 2>&1 || { echo >&2 "Missing python"; exit 1;}
 	@command -v shinken 2>&1 || { echo >&2 "Missing shinken"; exit 1;}
 
-Shinken-install-dependencies: sudoer
+shinken-install-dependencies: sudoer
 	@echo -n "\033]0;Installing shinken plugins dependencies\007"
 	pip install pycurl flask flask-login flask-sqlalchemy flask-babel python-igraph wtforms flask-assets whisper carbon 'Twisted<12.0' networkx graphviz pygraphviz graphite-query python-mk-livestatus
 
