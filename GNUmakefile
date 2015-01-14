@@ -17,6 +17,13 @@
 
 SHELL = /bin/sh
 WHOAMI = $(shell whoami)
+SHINKENVERSION := $(shell shinken --version | cut -f2 -d\ )
+SHINKENGT203 := $(shell expr $(SHINKENVERSION) \> 2.0.3)
+ifeq "$(SHINKENGT203)" "1"
+	LIVESTATUSSOURCE = --local
+else
+	LIVESTATUSSOURCE =
+endif
 
 #clear out the suffix list
 .SUFFIXES:
@@ -81,7 +88,7 @@ shinken-install-dependencies: sudoer
 shinken-install-plugins: sudoer
 	-useradd --user-group graphite
 	@echo -n "\033]0;Installing shinken - livestatus plugin\007"
-	shinken install livestatus
+	shinken install $(LIVESTATUSSOURCE) livestatus
 	@echo -n "\033]0;Installing shinken - graphite plugin\007"
 	shinken install graphite
 	@echo -n "\033]0;Installing shinken - logstore-sqlite plugin\007"

@@ -3,7 +3,7 @@ INSTALL
 
 Dependencies:
 ------------
-shinken == 2.0.3
+shinken >= 2.0
 sqlite3
 graphviz
 graphviz-devel
@@ -27,7 +27,7 @@ libxml2-devel
 Shinken install
 
     useradd --user-group shinken
-    pip install shinken==2.0.3
+    pip install shinken
     shinken --init
 
 INSTALL
@@ -89,8 +89,13 @@ TROUBLESHOOTING
 
 *Shinken is (re)starting normaly but I can't reach the webserver
 
-For the moment hokuto is build for shinken 2.0.x, if you are using shinken >= 2.2.0 hokuto and livestatus will not load properly.
-Run pip install shinken==2.0.3 to resolve this issue (don't forget to backup your hosts/services configuration from /etc/shinken before).
+There have been some major change between shinken 2.0.x and shinken 2.2, if you have installed livestatus and shinken manually they may be incompatible (livestatus from shinken.io, which you get when you launch `shinken install livestatus`, don't work with the latest version of shinken).
+* If you are using shinken >= 2.0 install livestatus from sources
+
+  cd </omeganoc/directory> && shinken install --local livestatus
+* If you are using shinken 2.0.x install livestatus from shinken.io
+
+  shinken install livestatus
 
 *I can't see any host/probe*
 
