@@ -3,13 +3,13 @@ INSTALL
 
 Dependencies:
 ------------
-shinken >= 2.0
-sqlite3
-graphviz
-graphviz-devel
-python >= 2.6
-python-devel
-libxml2-devel
+* shinken >= 2.0
+* sqlite3
+* graphviz
+* graphviz-devel
+* python >= 2.6
+* python-devel
+* libxml2-devel
 
 *For Debian/Ubuntu*
 
@@ -82,7 +82,7 @@ Don't forget to restart the service after any change:
 
 You can then access hokuto from http://<host>:<port>
 
-About how to add/edit hosts, services, contacts and monitoring data see [shinken settings and configuration (https://shinken.readthedocs.org/en/latest/05_thebasics/index.html)] .
+About how to add/edit hosts, services, contacts and monitoring data see [shinken settings and configuration](https://shinken.readthedocs.org/en/latest/05_thebasics/index.html).
 
 TROUBLESHOOTING
 ===============
@@ -101,7 +101,7 @@ There have been some major change between shinken 2.0.x and shinken 2.2, if you 
 
 By default all users are created with the shinken contact 'None' which prevent the user to get information from any host.
 Edit your profile with the proper shinken contact (or ask an admin for it).
-Shinken contact are imported from shinken, for more information see [Shinken contact configuration(https://shinken.readthedocs.org/en/latest/08_configobjects/contact.html)].
+Shinken contact are imported from shinken, for more information see [Shinken contact configuration](https://shinken.readthedocs.org/en/latest/08_configobjects/contact.html).
 
 Another reason can be that carbon daemon is not running, carbon doesn't start on startup by default and need to be launch after each reboot.
 

@@ -26,7 +26,7 @@ echo Building $BUILDNAME archive...;
 #create the archive
 echo Copying files to the temporary directory
 mkdir $BUILDNAME
-rsync -av --exclude='tools' --exclude='mock' ../../omeganoc/* $BUILDNAME/
+rsync -av --exclude='tools' --exclude='mock' ../* $BUILDNAME/
 
 #uglify
 echo Uglify static files
