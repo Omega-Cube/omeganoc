@@ -58,9 +58,11 @@
   </ul>
   {% endif %}
 
-  <div>{{ form.shinken_contact.label(class="formLabel") }} {{ form.shinken_contact(class="formField") }} </div>
   {% if isadmin %}
+  <div>{{ form.shinken_contact.label(class="formLabel") }} {{ form.shinken_contact(class="formField") }} </div>
   <div>{{ form.is_super_admin.label(class="formLabel") }} {{ form.is_super_admin(class="formField") }}</div>
+  {% else %}
+  <div>{{ form.shinken_contact.label(class="formLabel") }} {{ form.shinken_contact.data }} </div>
   {% endif %}
 
   <div>

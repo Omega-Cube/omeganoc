@@ -186,10 +186,9 @@ class EditUserForm(Form):
 
 @app.route('/edit-user', methods=['GET', 'POST'])
 @app.route('/edit-user/<userid>', methods=['GET', 'POST'])
-@login_required
 def edit_user(userid=None):
     """ Action that edits an existing user or creates a new one """
-    # True is user is new
+    # True if user is new
     is_new = False
     is_admin = False
     if current_user.is_anonymous():
@@ -215,7 +214,7 @@ def edit_user(userid=None):
             user.username = form.username.data
             user.is_super_admin = form.is_super_admin.data if is_admin else False
             user.is_disabled = form.is_disabled.data
-            user.shinken_contact = form.shinken_contact.data
+            user.shinken_contact = form.shinken_contact.data if is_admin else user.shinken_contact
             if form.password.data:
                 user.set_password(form.password.data)
             db.session.commit()
@@ -225,11 +224,11 @@ def edit_user(userid=None):
                         form.password.data,
                         form.is_super_admin.data  if is_admin else False)
             user.is_disabled = form.is_disabled.data
-            user.shinken_contact = form.shinken_contact.data
+            user.shinken_contact = form.shinken_contact.data if is_admin else 'None'
             db.session.add(user)
             db.session.commit()
-            if current_user.is_anonymous():
-                return redirect(url_for('login'))
+        if current_user.is_anonymous():
+            return redirect(url_for('login'))
         return redirect(url_for("list_users"))
     else:
         if userid:
