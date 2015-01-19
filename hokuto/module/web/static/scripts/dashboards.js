@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-require(['jquery', 'dashboards.manager', 'onoc.createurl', 'dashboards.widget', 'dashboards.messagepane', 'gridster', 'scrollbar', 'jquery.validate', 'jquery.bpopup'], function (jQuery, DashboardsManager, createurl, Widget) {
+require(['jquery', 'dashboards.manager', 'onoc.createurl', 'dashboards.widget', 'dashboards.messagepane', 'jquery.validate', 'jquery.bpopup'], function (jQuery, DashboardsManager, createurl, Widget) {
     /**
      * Create Dashboard button behavior
      */
@@ -85,7 +85,7 @@ require(['jquery', 'dashboards.manager', 'onoc.createurl', 'dashboards.widget', 
                 setTimeout(function(){
                     var newwidget = $('#dashboard > ul > li');
                     newwidget = newwidget[newwidget.length - 1];
-                    $('[data-scrollbar]').tinyscrollbar_update(newwidget.offsetTop);
+                    $('#dashboard').scrollTop(newwidget.offsetTop);
                 },150);
             });
         });

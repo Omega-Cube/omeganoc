@@ -39,18 +39,10 @@
   </div>
 </section>
 
-<section id="dashboard-container" data-scrollbar="150">
-    <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
-    <div class="viewport">
-        <div class="overview">
-            <div id="dashboard">
-                <div id="dashboard-big-msg">Loading...</div>
-                <ul>
-                </ul>
-            </div>
-        </div>
-    </div>
-</section>
+<div id="dashboard">
+  <div id="dashboard-big-msg">Loading...</div>
+  <ul></ul>
+</div>
 
 <div id="create-dashboard-popup" class="popup hidden">
     <h2>Create a dashboard</h2>
@@ -63,15 +55,7 @@
 
 <div id="add-widget-popup" class="popup hidden">
     <h2>Add a widget</h2>
-    <div data-scrollbar="50">
-        <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
-        <div class="viewport">
-            <div class="overview">
-                <ul id="add-widget-list">
-                </ul>
-            </div>
-        </div>
-    </div>
+    <ul id="add-widget-list"></ul>
     <input type="reset" value="Close" class="popup-btn popup-btn-1" />
 </div>
 

@@ -97,11 +97,16 @@
 }
 
 /* Dashboard core and Parts */
-
 #dashboard {
     position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: -moz-calc(100% - 120px);
+    height: -webkit-calc(100% - 120px);
+    height: -ms-calc(100% - 120px);
+    height: -o-calc(100% - 120px);
+    height: calc(100% - 120px);
 }
-
 
 #dashboard > ul >li {
     background-color: #222;
@@ -143,7 +148,7 @@
 
 #add-widget-popup {
     width: 40em;
-    height: 30em;
+    max-height: 30em;
 }
 
 #add-widget-popup ul > li > a {

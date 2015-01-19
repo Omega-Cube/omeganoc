@@ -67,23 +67,13 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'gridster', 
             });
 
             var eParent = target.parent();
-            eParent.on('gridster:dragstart', function () {
-                // Update the containing scrollbar
-                $(document).trigger('updatescrollbar.onoc');
-            });
 
             eParent.on('gridster:dragstop', function () {
-                // Update the containing scrollbar
-                $(document).trigger('updatescrollbar.onoc');
-
                 // Scan to check whose elements moved; save new positions
                 DashboardsManager._scanChangedPositions();
             });
 
             eParent.on('gridster:resizestop', function () {
-                // Update the containing scrollbar
-                $(document).trigger('updatescrollbar.onoc');
-
                 // Scan to check whose elements moved; save new positions
                 DashboardsManager._scanChangedSize();
                 DashboardsManager._scanChangedPositions();
@@ -142,9 +132,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'gridster', 
                         DashboardsManager._createPart(value, widget, false);
                     });
                 });
-
-                // Update the scroll bar
-                $(document).trigger('updatescrollbar.onoc');
 
                 // Update the dashboard title
                 DashboardsManager._setDashboardTitle(dashboardName);
@@ -270,12 +257,10 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'gridster', 
 
         /**
          * Internal logic for displaying a part
-         * @param {Object} partData          - Part's config
-         * @param {Object} widget            - Part's widget
-         * @param {Boolean} autoUpdateScroll - Define if we need to update the scrollbar
+         * @param {Object} partData - Part's config
+         * @param {Object} widget   - Part's widget
          */
-        _createPart: function (partData, widget, autoUpdateScroll) {
-            autoUpdateScroll = !autoUpdateScroll;
+        _createPart: function (partData, widget) {
             var container = DashboardsManager._createWidgetContainer(widget);
             container.attr('data-part-id', partData.id);
             partData.controller = widget.fillPart(container, partData, DashboardsManager);
@@ -283,9 +268,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'gridster', 
             try
             {
                 DashboardsManager.gridster.add_widget(container[0], partData.width, partData.height, partData.col, partData.row);
-                if (autoUpdateScroll) {
-                    $(document).trigger('updatescrollbar.onoc');
-                }
             }
             catch(e){
                 console.log('Oh sh....');
@@ -465,8 +447,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'gridster', 
                 DashboardsManager.gridster.remove_widget(e, true);
             });
 
-            //scrollup to the top
-            $('[data-scrollbar]').tinyscrollbar_update(0);
             DashboardsManager._showDashboardControls(false);
             //TODO: flush worker too
         },
