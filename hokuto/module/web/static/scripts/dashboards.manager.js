@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'gridster', 'jquery.hashchange', 'onoc.message'], function (jQuery, Widget, Console, createUrl) {
+define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.timeline', 'gridster', 'jquery.hashchange', 'onoc.message'], function (jQuery, Widget, Console, createUrl, DashboardTimeline) {
     /**
      * Manages the user's dashboards data and display
      * @property {Gridster} gridster         - Handle parts size and position
@@ -50,6 +50,11 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'gridster', 
 
             // Initialize the central message
             jQuery('#dashboard-big-msg').onocMessage();
+
+            // Initialize global timeline element
+            DashboardsManager.timeline = new DashboardTimeline($('#dashboard-global-timeline'));
+            //TODO: moveme, we should display the timeline only if there is an active dashboard.
+            DashboardsManager.timeline.show();
 
             // Initialize Gridster
             DashboardsManager.gridster = target.gridster({

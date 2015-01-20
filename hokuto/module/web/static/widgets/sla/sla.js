@@ -136,6 +136,9 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
                 this.conf.brush.start = new Date(options.conf.brushstart * 1000);
             if(Number(options.conf.brushend))
                 this.conf.brush.end = new Date(options.conf.brushend * 1000);
+
+            //update globale timeline
+            DashboardManager.timeline.update(this.start, this.end);
         }
 
         this.buildCommands();
@@ -143,6 +146,19 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
 
         if(this.host)
             this.changeTarget();
+
+        //main timeline events
+        $('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
+            this.conf.brush.start = start;
+            this.conf.brush.end = end;
+            if(start < this.start)
+                this.start = start;
+            if(end > this.end)
+                this.end = end;
+
+            this.changeTarget();
+        }.bind(this));
+
     }
 
     /**
@@ -163,6 +179,8 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
             this.conf.brush.start = false;
             this.conf.brush.end = false;
             this.changeTarget();
+            //update globale timeline
+            DashboardManager.timeline.update(this.start, this.end);
         }.bind(this);
 
         var untildatechange = function(t){
@@ -171,6 +189,8 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
             this.conf.brush.start = false;
             this.conf.brush.end = false;
             this.changeTarget();
+            //update globale timeline
+            DashboardManager.timeline.update(this.start, this.end);
         }.bind(this);
 
         // Date commands

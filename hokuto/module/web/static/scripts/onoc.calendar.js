@@ -192,10 +192,10 @@ define(['jquery'],function(jQuery){
     onocCalendar.prototype.choose = function(e){
         if(e.target.tagName !== 'SPAN') return;
         if(!e.target.getAttribute('data-day')) return;
-        
+
         this.day = Number(e.target.getAttribute('data-day'));
         this.selected = new Date(this.year,this.month,this.day);
-        this.input[0].value = this.selected.toLocaleDateString();
+        this.input.attr('value',this.selected.toLocaleDateString());
         this.close();
         if(this.callback){
             this.callback(this.selected.getTime());
@@ -236,6 +236,6 @@ define(['jquery'],function(jQuery){
         this.target = target;
         return this;
     };
-    
+
     return onocCalendar;
 });

@@ -90,7 +90,7 @@ TROUBLESHOOTING
 *Shinken is (re)starting normaly but I can't reach the webserver
 
 There have been some major change between shinken 2.0.x and shinken 2.2, if you have installed livestatus and shinken manually they may be incompatible (livestatus from shinken.io, which you get when you launch `shinken install livestatus`, don't work with the latest version of shinken).
-* If you are using shinken >= 2.0 install livestatus from sources
+* If you are using shinken < 2.2 install livestatus from sources
 
   cd </omeganoc/directory> && shinken install --local livestatus
 * If you are using shinken 2.0.x install livestatus from shinken.io

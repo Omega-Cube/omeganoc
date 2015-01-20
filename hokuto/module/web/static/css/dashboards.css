@@ -13,9 +13,10 @@
     -ms-box-shadow:     1px 0px 3px #111;
     -o-box-shadow:      1px 0px 3px #111;
     box-shadow:         1px 0px 3px #111;
-    padding-top: 2px;
-    overflow: auto;
+    padding: 2px 0 1px;
+    overflow: visible;
     background-color: #3a4348;
+    margin-bottom: 10px;
 }
 
 #dashboard-header a{
@@ -36,10 +37,61 @@
 
 #dashboard-title{
     color: #fff;
-    display: inline-block;
+    float: left;
     font-size: 36px;
-    line-height: 120px;
     margin-left: 2em;
+    max-width: 20%;
+}
+
+/* global timeline */
+#dashboard-global-timeline{
+    display: none;
+    position: relative;
+    width: 100%;
+    margin: 45px auto 0;
+    box-shadow: 0 1px 3px #444;
+    background-color: #222;
+    vertical-align: middle;
+    height: 70px;
+}
+
+#dashboard-global-timeline .domain{
+    stroke-width: 1;
+}
+
+.dashboard-timeline-header{
+    height: 30px;
+    background-color: #8d8e90;
+    text-align: right;
+    padding-right: 1em;
+}
+
+.dashboard-timeline-header h3{
+    display: inline-block;
+    float: left;
+    font-size: 1.5em;
+    line-height: 30px;
+    margin-left: 1em;
+    font-weight: bold;
+}
+
+.dashboard-timeline-header span{
+    font-weight: bold;
+    margin: 0 0.25em;
+}
+
+.dashboard-timeline-header .datepicker, .dashboard-timeline-header .datePicker{
+    vertical-align: middle;
+    margin: 0 0.25em;
+}
+
+.dashboard-timeline-header .datepicker{
+    cursor: initial;
+}
+
+.dashboard-timeline-header .datePicker{
+    width: 9em;
+    text-align: center;
 }
 
 #dashboard-big-msg {
@@ -315,7 +367,11 @@
 /* Log panel */
 .panel .logPanel{
     padding: 0.5em;
-    height: 100%;
+    height: -webkit-calc(100% - 2em);
+    height: -moz-calc(100% - 2em);
+    height: -o-calc(100% - 2em);
+    height: -ms-calc(100% - 2em);
+    height: calc(100% - 2em);
     overflow:auto;
     background: black;
 }

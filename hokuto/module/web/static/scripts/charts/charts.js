@@ -164,6 +164,9 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
                 this.conf.untilDate = new Date(options.conf.untildate);
         }
 
+        //update globale timeline
+        DashboardManager.timeline.update(this.conf.fromDate, this.conf.untilDate);
+
         this.container.main = jQuery(container);
         this.id = options.id;
         this.setBox(options);
@@ -292,6 +295,38 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
             }
         }.bind(this),this.id);
 
+        //main timeline events
+        $('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
+            var domain = this.axis.x2.domain();
+            this.conf.brushstart = start;
+            this.conf.brushend = end;
+            if(start >= domain[0] && end <= domain[1]){
+                this.axis.x.domain([start,end]);
+
+                for(var c in this.content)
+                    this.content[c].redraw();
+                this.drawLogs();
+                this.container.focus.select(".x.axis").call(this.axis.xAxis);
+                this.drawGrid();
+                this.container.brush.extent([start,end]);
+                this.container.context.call(this.container.brush);
+
+                //check if require to update scale range
+                DashboardProbes.worker.postMessage([8,{
+                    'probes': this.probes,
+                    'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
+                    'focusTimeline': [start.getTime(),end.getTime()],
+                    'mode': this.conf.mode
+                },this.id]);
+
+            }else{
+                if(start < domain[0])
+                    this.updateFromDate(start.getTime());
+                if(end > domain[1])
+                    this.updateUntilDate(end.getTime());
+            }
+        }.bind(this));
+        
         //logs return event
         DashboardProbes.worker.on('logs',function(data){
             //flush cache
@@ -523,6 +558,9 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
             x.max = this.conf.untilDate;
 
         this.axis.x2.domain([x.min, x.max]);
+        //update global timeline if needed
+        DashboardManager.timeline.update(x.min, x.max);
+        
         if(this.container.brush.empty())
             this.axis.x.domain([x.min, x.max]);
         else
@@ -2710,6 +2748,9 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
                 "brushend": false
             })
         });
+        //update globale timeline
+        if(this.conf.fromDate)
+            DashboardManager.timeline.update(this.conf.fromDate, this.conf.untilDate);
     };
 
     /**
@@ -2738,6 +2779,10 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
                 "brushend": false
             })
         });
+        //update globale timeline
+        if(this.conf.untilDate)
+            DashboardManager.timeline.update(this.conf.fromDate, this.conf.untilDate);
+
     };
 
     /**
