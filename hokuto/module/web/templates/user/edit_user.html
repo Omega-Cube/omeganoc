@@ -67,7 +67,7 @@
 
   <div>
     <input type="submit" value="{% if isnew %}Create{% else %}Save changes{% endif %}" class="button submit"/>
-    <a class="button cancel" href="{{url_for('list_users')}}">Cancel</a>
+    <a class="button cancel" href="{% if isadmin %}{{url_for('list_users')}}{% else %}{{url_for('login')}}{% endif %}">Cancel</a>
   </div>
 </form>
 

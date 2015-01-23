@@ -372,9 +372,9 @@ header ul li
     padding: 0 15px;
 }
 
-.errors
-{
+.errors{
     color: #FF0000;
+    margin-bottom: 0.5em;
 }
 
 .tree

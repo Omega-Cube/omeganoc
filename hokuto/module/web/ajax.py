@@ -19,27 +19,27 @@
 
 """ Ajax helpers
 This module contains miscanellous tools to be used when working with Ajax requests
-""" 
+"""
 
 from flask import request, jsonify, json, render_template, get_flashed_messages, redirect
 
 def request_is_ajax():
-    """ Determines if an incoming request is an AJAX 
+    """ Determines if an incoming request is an AJAX
         (XMLHttpRequest) request.
     """
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 def template_or_json(template_name, **context):
-    """ Returns the rendered template is the request is traditionnal request, 
+    """ Returns the rendered template is the request is traditionnal request,
         or a JSON version of the context if the request is an AJAX request.
-        
+
         When in AJAX mode, this function also automatically creates a flash
         member in the json object, containing an array of {message, category}
         objects.
     """
     if request_is_ajax():
         msg = get_flashed_messages(with_categories=True)
-        context.flash = [{message:m[1], category:m[0]} for m in msg]
+        context['flash'] = [{'message':m[1], 'category':m[0]} for m in msg]
         return jsonify(context)
     else:
         return render_template(template_name, **context)

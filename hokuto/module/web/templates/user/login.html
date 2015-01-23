@@ -27,7 +27,6 @@
 
   {% for message in get_flashed_messages() %}
   <div class="errors"> {{ message }} </div>
-  <br />
   {% endfor %}
 
   <div> {{ form.username.label(class="formLabel") }} {{ form.username(class="formField", autofocus=True, required=True) }} </div>

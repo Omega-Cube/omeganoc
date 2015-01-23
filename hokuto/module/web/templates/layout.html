@@ -26,8 +26,11 @@
         <!--link href="http://code.jquery.com/ui/1.8.15/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" /-->
 
         <script type="text/javascript">
+          {% if not current_user.is_anonymous() %}
             var onoc_main_modules = ['onoc.alerts'];
-
+          {% else%}
+            var onoc_main_modules = [];
+          {% endif %}
             var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
         </script>
 

@@ -121,12 +121,12 @@ def init(config):
     if app.config.get('LIVESTATUS_SOCKET', None) is not None:
         livestatus.set_server_address(app.config['LIVESTATUS_SOCKET'])
     else:
-        livestatus.set_server_address((app.config.get('LIVESTATUS_HOST', '127.0.0.1'), 
+        livestatus.set_server_address((app.config.get('LIVESTATUS_HOST', '127.0.0.1'),
                                                int(app.config.get('LIVESTATUS_PORT', 50000))))
-    
+
     # Security session manager
     login_manager = LoginManager()
-    login_manager.setup_app(app, add_context_processor=True)
+    login_manager.init_app(app, add_context_processor=True)
     login_manager.login_message = gettext('Please log in to access this page')
     login_manager.login_view = 'login'
 
