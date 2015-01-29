@@ -27,7 +27,7 @@ Dependencies:
 Shinken install
 
     useradd --user-group shinken
-    pip install shinken
+    make shinken-install
     shinken --init
 
 INSTALL

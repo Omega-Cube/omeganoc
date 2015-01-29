@@ -16,7 +16,9 @@ cpan install Net::SNMP
 
 useradd --user-group shinken
 useradd --user-group graphite
-pip install pycurl cherrypy shinken
+pip install pycurl cherrypy
+cd /vagrant
+make shinken-install
 
 # Initialize Shinken
 shinken --init
@@ -33,7 +35,6 @@ cp /vagrant/vagrant_provision/livestatus.cfg.template /etc/shinken/modules/lives
 # Launch the installer
 # We do not use the "install" target as it will  install the on-reader lib by copying the files
 # Instead we'll create links to directly manipulate the files during development
-cd /vagrant
 make install
 
 # Auto start the carbon daemon on launch

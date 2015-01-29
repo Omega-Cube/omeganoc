@@ -17,13 +17,6 @@
 
 SHELL = /bin/sh
 WHOAMI = $(shell whoami)
-SHINKENVERSION := $(shell shinken --version | cut -f2 -d\ )
-SHINKENGT203 := $(shell expr $(SHINKENVERSION) \> 2.0.3)
-ifeq "$(SHINKENGT203)" "1"
-	LIVESTATUSSOURCE = --local
-else
-	LIVESTATUSSOURCE =
-endif
 
 #clear out the suffix list
 .SUFFIXES:
@@ -51,14 +44,8 @@ dependencies: shinken-dependencies graphite-dependencies
 check-dependencies:
 	@echo "Checking global dependencies..."
 	@command -v python 2>&1 || { echo >&2 "Missing python"; exit 1;}
-	@command -v shinken 2>&1 || { echo >&2 "Missing shinken"; exit 1;}
+	@command -v shinken 2>&1 || { echo >&2 "Missing shinken, please run 'make shinken-install'"; exit 1;}
 	@command -v R 2>&1 || { echo >&2 "Missing R"; exit 1;}
-	@echo "Checking graphviz dependencies..."
-	@command -v unzip 2>&1 || { echo >&2 "Missing unzip."; exit 1;}
-	@command -v yacc 2>&1 || { echo >&2 "Missing yacc."; exit 1;}
-	@command -v flex 2>&1 || { echo >&2 "Missing flex."; exit 1;}
-	@command -v autoconf 2>&1 || { echo >&2 "Missing autoconf."; exit 1;}
-	@echo "Checking graphite dependencies..."
 	@command -v pip 2>&1 || { echo >&2 "Missing pip."; exit 1;}
 
 clean: on-reader-clean
@@ -88,11 +75,11 @@ shinken-install-dependencies: sudoer
 shinken-install-plugins: sudoer
 	-useradd --user-group graphite
 	@echo -n "\033]0;Installing shinken - livestatus plugin\007"
-	shinken install $(LIVESTATUSSOURCE) livestatus
+	shinken install --local vendor/livestatus
 	@echo -n "\033]0;Installing shinken - graphite plugin\007"
 	shinken install graphite
 	@echo -n "\033]0;Installing shinken - logstore-sqlite plugin\007"
-	shinken install logstore-sqlite
+	shinken install --local vendor/logstore-sqlite
 	@echo -n "\033]0;Installing shinken - hokuto plugin\007"
 	shinken install --local hokuto
 
@@ -109,6 +96,13 @@ shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins s
 	@echo Omeganoc have been succefully installed
 	@echo Add "'modules graphite, livestatus, hokuto'" to your broker-master.cfg file
 	@echo Add modules logstore-sqlite to livestatus.cfg.
+
+#install shinken from sources
+vendors:
+	@if ! ls vendor/shinken >/dev/null 2>&1; then echo "Missing vendors file, please run 'git submodules update'" & exit 1; fi
+
+shinken-install: vendors sudoer
+	@cd vendor/shinken && python setup.py install clean
 
 #libs
 on-reader: sudoer

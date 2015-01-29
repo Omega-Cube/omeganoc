@@ -1,0 +1,9 @@
+[submodule "vendor/livestatus"]
+	path = vendor/livestatus
+	url = https://github.com/shinken-monitoring/mod-livestatus.git
+[submodule "vendor/shinken"]
+	path = vendor/shinken
+	url = https://github.com/naparuba/shinken.git
+[submodule "vendor/logstore-sqlite"]
+	path = vendor/logstore-sqlite
+	url = https://github.com/shinken-monitoring/mod-logstore-sqlite
