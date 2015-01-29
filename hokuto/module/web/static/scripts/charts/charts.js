@@ -318,15 +318,26 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
                     'focusTimeline': [start.getTime(),end.getTime()],
                     'mode': this.conf.mode
                 },this.id]);
-
             }else{
                 if(start < domain[0])
                     this.updateFromDate(start.getTime());
                 if(end > domain[1])
                     this.updateUntilDate(end.getTime());
+                domain = this.axis.x2.domain();
+                if(start != domain[0] || end != domain[1]){
+                    this.container.brush.extent([start,end]);
+                    this.container.context.call(this.container.brush);
+                    //check if require to update scale range
+                    DashboardProbes.worker.postMessage([8,{
+                        'probes': this.probes,
+                        'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
+                        'focusTimeline': [start.getTime(),end.getTime()],
+                        'mode': this.conf.mode
+                    },this.id]);
+                }
             }
         }.bind(this));
-        
+
         //logs return event
         DashboardProbes.worker.on('logs',function(data){
             //flush cache
@@ -560,7 +571,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         this.axis.x2.domain([x.min, x.max]);
         //update global timeline if needed
         DashboardManager.timeline.update(x.min, x.max);
-        
+
         if(this.container.brush.empty())
             this.axis.x.domain([x.min, x.max]);
         else
