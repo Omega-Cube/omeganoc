@@ -151,6 +151,10 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
         $('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
             this.conf.brush.start = start;
             this.conf.brush.end = end;
+            if(start <= this.start && end >= this.end){
+                this.conf.brush.start = false;
+                this.conf.brush.end = false;
+            }
             if(start < this.start)
                 this.start = start;
             if(end > this.end)
@@ -625,6 +629,9 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
             this.containers.brush.extent([this.conf.brush.start, this.conf.brush.end]);
             this.containers.svg.select('.x.brush').call(this.containers.brush);
             this.scales.x.domain([this.conf.brush.start, this.conf.brush.end]).range([20,this.conf.width]);
+        }else{
+            this.containers.brush.clear();
+            this.containers.brush(this.containers.svg.select('.x.brush'));
         }
 
         //draw the svg
