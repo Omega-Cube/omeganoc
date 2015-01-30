@@ -69,6 +69,7 @@ var _request = function(service,data,callback){
  * @prop {Number} _interval               - The check interval in livestatus unit (1 = 60s)
  * @prop {Number} _step                   - The duration between two values (see @._data).
  * @prop {Array} _data                    - Array of values returned by the server.
+ * @prop {Object} _predicted              - Predicted data for this probe
  * @prop {Object} _cache                  - Store @.getCursor() requests results.
  */
 var Probe = function(){
@@ -79,6 +80,7 @@ var Probe = function(){
     this._interval = false;
     this._step = false;
     this._data = [];
+    this._predicted = false;
     this._cache = {};
     return this;
 };
@@ -148,6 +150,10 @@ Probe.prototype.getCursor = function(date){
             var time = date - start;
             var offset = Math.round(time/step);
             result = data[offset] || 0;
+        }else if(this._predicted && date >= this._predicted.start && date <= this._predicted.end){
+            var time = date - this._predicted.start;
+            var offset = Math.round(time/this._predicted.step);
+            result = this._predicted.values[offset].value;
         }
         this._cache[date] = result;
     }else
@@ -211,6 +217,28 @@ Probe.prototype.setRequestedDate = function(start,end){
         //update until values
         if(!this._lastRequestedUntilDate || end > this._lastRequestedUntilDate)
             this._lastRequestedUntilDate = end;
+    }
+};
+
+/**
+ * Set predicted data
+ * @param {Object} data - Object returned by the server (without formating)
+ */
+Probe.prototype.setPredicted = function(data){
+    if(!!data.values){
+        var formated = {};
+        var values = [];
+        for(var v in data.values){
+            values.push({
+                'date': Number(v),
+                'value': data.values[v][2]
+            });
+        }
+        formated.values = values;
+        formated.step = (values[1].date - values[0].date) * 1000;
+        formated.start = new Date(values[0].date * 1000);
+        formated.end = new Date(values[values.length - 1].date * 1000);
+        this._predicted = formated;
     }
 };
 
@@ -885,6 +913,9 @@ var Data = {
         var query = { 'probes': probes};
         _request(url, query, function(data){
             postMessage([11,data,sig]);
+            
+            for(var p in data)
+                this.probes[p].setPredicted(data[p]);
         }.bind(this));
     },
 
