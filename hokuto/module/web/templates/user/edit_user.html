@@ -31,6 +31,10 @@
 </h3>
 
 <form id="edit_userScreen" action="#" method="post">
+  {% for message in get_flashed_messages() %}
+  <div class="errors"> {{ message }} </div>
+  {% endfor %}
+  
   <div> {{ form.username.label(class="formLabel") }} {{ form.username(class="formField") }} </div>
   {% if form.username.errors %}
   <ul class="errors">

@@ -220,6 +220,9 @@ def edit_user(userid=None):
             db.session.commit()
         else:
             # Create new
+            if User.query.filter_by(username= form.username.data).first():
+                flash(_('Username already taken!'),'error')
+                return redirect(url_for('edit_user'))
             user = User(form.username.data,
                         form.password.data,
                         form.is_super_admin.data  if is_admin else False)
