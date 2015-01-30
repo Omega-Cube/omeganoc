@@ -127,6 +127,7 @@ class LoginForm(Form):
 def login():
     """ Action that logs a user in """
     form = LoginForm(request.form)
+    redir = request.args.get('next')
     if request.method == 'POST' and form.validate():
         # Try to find the user by name
         user = User.query.filter(
@@ -141,7 +142,7 @@ def login():
                     return redirect('/')
         flash(_('Invalid username or password'), 'error')
 
-    return template_or_json('user/login.html', form=form)
+    return template_or_json('user/login.html', form=form, redir=redir)
 
 @app.route('/logout')
 @login_required

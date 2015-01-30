@@ -22,8 +22,7 @@
 {% endblock %}
 
 {% block content %}
-
-<form id="loginScreen" action="{{url_for('login')}}" method="post">
+<form id="loginScreen" action="{{url_for('login',next=redir)}}" method="post">
 
   {% for message in get_flashed_messages() %}
   <div class="errors"> {{ message }} </div>
@@ -55,36 +54,7 @@
 
 </form>
 
-{% endblock %}
-
-<script src="{{ url_for('static', filename='scripts/jquery-1.7.1.min.js') }}"></script>
-<script src="{{ url_for('static', filename='scripts/jquery.validate.js') }}"></script>
-
-<script>
-    $().ready(function () {
-        $("#loginScreen").validate({
-            rules: {
-                username: {
-                    required: true,
-                    minlength: 4,
-                    maxlength: 20
-                },
-                password: {
-                    required: true
-                }
-            },
-            messages: {
-                username: {
-                    required: "Please entrer a username",
-                    minlength: "Username should contain between 4 and 20 characters",
-                    maxlength: "Username should contain between 4 and 20 characters"
-                },
-                password: {
-                    required: "Please entrer a password"
-                }
-            }
-        });
-        $(this).css({ 'color': '#FF0000' })
-    });
-
+<script type="text/javascript">
+  if(document.location.hash) window.loginScreen.action += document.location.hash;
 </script>
+{% endblock %}
