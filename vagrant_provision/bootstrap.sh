@@ -5,7 +5,7 @@ export PERL_MM_USE_DEFAULT=true
 
 aptitude -q update
 aptitude -y -q full-upgrade
-aptitude -y -q install vim python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev
+aptitude -y -q install vim git python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev
 
 # Configure snmpd
 cp /vagrant/vagrant_provision/snmpd.conf.template /etc/snmp/snmpd.conf
@@ -18,6 +18,8 @@ useradd --user-group shinken
 useradd --user-group graphite
 pip install pycurl cherrypy
 cd /vagrant
+git submodule init
+git submodule update
 make shinken-install
 
 # Initialize Shinken
