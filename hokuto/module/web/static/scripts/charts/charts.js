@@ -31,6 +31,8 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
      * @property {Boolean} opposate         - Setted to true if there is probe in reverse mode (bottom)
      * @property {Date} cursorPos           - Current cursor position date
      * @property {Object} logs              - Store logs
+     * @property {Object} probes            - Store probes local config (aka color and order)
+     * @property {Number} counter           - Current probes length
      * @property {Object} _stackedLogsCache - Cache and store logs stacks
      * @property {Obkect} data              - Full timeline aggregated data
      * @property {Obkect} currentData       - Currently focused aggregated data
@@ -65,6 +67,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         this.opposate = false;
         this.cursorPos = false;
         this.logs = false;
+        this.probes = false;
         this._stackedLogsCache = {};
         this.data = false;
         this.currentData = false;
@@ -190,16 +193,27 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         for(var s in options.conf.scales)
             this.addScale(s,options.conf.scales[s]);
 
+        var order = 0;
         for(var p in this.probes){
+            order++;
             //GRUICKKKKKK
             this.probes[p].stacked = Boolean(eval(this.probes[p].stacked));
+
+            if(!this.probes[p]['order']) this.probes[p]['order'] = order;
+            if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
 
             DashboardProbes.addProbe(p);
             this.legends[p] = this.legendManager.addLegend({
                 'name': p,
                 'color': this.probes[p].color
             });
+
+            this.legendManager.getProbeContainer(p).on('click',function(){
+                this.context.moveOrderToTop(this.probe);
+            }.bind({"context": this, "probe": p}));
         }
+        this.counter = order;
+
         //draw the legend and resize the box
         var setLegend = function(){
             var check = this.legendManager.redraw();
@@ -1379,6 +1393,87 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
                 }
             }
         }
+
+        //set order
+        this.orderProbes();
+    };
+
+    /**
+     * Clean and save probes order
+     */
+    DashboardChart.prototype.cleanProbesOrder = function(){
+        var tmp = [], counter = 0, conf = { 'probes' : {}};
+        for(var p in this.probes) tmp[this.probes[p].order] = p;
+        for(var i = 0, len = tmp.length; i<len;i++){
+            if(tmp[i]){
+                this.probes[tmp[i]].order = counter++;
+                conf.probes[tmp[i]] = { 'order' : counter};
+            }
+        }
+        this.counter = counter;
+        //save new probes order conf
+        var data = {
+            'id': this.id,
+            'conf': JSON.stringify(conf)
+        };
+        DashboardManager.savePartData(data);
+        this.orderProbes();
+    };
+
+
+    /**
+     * Move probe position
+     * @param {String} probe - Probe's name
+     * @param {Number} move  - Direction of the move (-1 | 1)
+     * @return New probe's offset
+     */
+    DashboardChart.prototype.moveOrder = function(probe,move){
+        var target = this.probes[probe], len = this.counter, order = [];
+        if(target.order >= len && move > 0) return target.order;
+        if(target.order <= 0 && move < 0) return 0;
+        for(var p in this.probes) order[this.probes[p].order] = p;
+        var newOffset = target.order;
+        do{
+            newOffset += move;
+        }while(!order[newOffset] && newOffset >= order.length && newOffset <= 0);
+        if(!order[newOffset]){
+            this.probes[probe].order = newOffset;
+        }else{
+            this.probes[order[newOffset]].order = target.order;
+            target.order = newOffset;
+        }
+        this.cleanProbesOrder();
+
+        return newOffset;
+    };
+
+    /**
+     * Move probe to top position
+     * @param {String} probe - Probe's name
+     * @return New probe's offset
+     */
+    DashboardChart.prototype.moveOrderToTop = function(probe){
+        var target = this.probes[probe], len = this.counter;
+        if(target.order >= len) return target.order;
+        this.probes[probe].order = ++len;
+        this.cleanProbesOrder();
+
+        return len;
+    };
+
+    /**
+     * Sort probes chart elements by order.
+     */
+    DashboardChart.prototype.orderProbes = function(){
+        //TODO: we should rework all the drawing process, use .data to generate g elements and then fill theme with charts
+        var data = [];
+        for(var p in this.probes) data.push({
+            'order': Number(this.probes[p].order),
+            'name': 'chart_'+p.split('.').join('_')
+        });
+        this.container.focus.selectAll('.ordered').data(data,function(d,e){
+            return  d ? d.name : this.id;
+        }).sort(function(d,e){ return d.order - e.order;});
     };
 
     /**
@@ -1641,7 +1736,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         // Fill the container
         var g = this.container.focus.insert("g",":first-child")
             .attr("clip-path", clippath)
-            .attr("class","chart focus_"+probe)
+            .attr("class","chart ordered focus_"+probe)
             .attr("id","chart_"+probe.split('.').join('_'));
 
         var g2 = this.container.context.insert("g",":first-child")
@@ -1656,14 +1751,12 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
 
         // Create the area generator for the main graph...
         var area = d3.svg.area()
-            //.interpolate("monotone") // With cubic interpolation
-            .x(function (d) { return x(d.x); }) // Turns the current element's date into a position for display (?)
+            .x(function (d) { return x(d.x); })
             .y0(function(d){ return y(d.y0) || this.conf.chartHeight }.bind(this))
             .y1(function (d) { return y((d.y0 || 0) + d.y); });
 
         // ... and for the tracker
         var area2 = d3.svg.area()
-            //.interpolate("monotone")
             .x(function (d) { return x2(d.x); })
             .y0(function(d){ return y2(d.y0) || this.conf.chartHeight }.bind(this))
             .y1(function (d) { return y2(d.y0 + d.y); });
@@ -1781,7 +1874,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
 
         var g = this.container.focus.insert("g",":first-child")
             .attr("clip-path", clippath)
-            .attr("class","chart line focus_"+probe)
+            .attr("class","chart ordered line focus_"+probe)
             .attr("id","chart_"+probe.split('.').join('_'));
 
         var g2 = this.container.context.insert("g",":first-child")
@@ -2051,7 +2144,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         var col2width = this.axis.x2(interval) - this.axis.x2(0);
 
         var focusGroup = this.container.focus.insert('g',":first-child")
-            .attr('class','columns')
+            .attr('class','columns ordered')
             .attr('clip-path',clippath)
             .attr("id","chart_"+probe.split('.').join('_'));;
         var contextGroup = this.container.context.insert('g',":first-child")
@@ -2060,7 +2153,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         var dots = this.container.focus.append('g')
             .attr('class','chart dots focus_'+probe)
             .attr('clip-path',clippath)
-            .attr("id","dots_"+probe.split('.').join('_'));;
+            .attr("id","dots_"+probe.split('.').join('_'));
 
         dots.selectAll(".dots")
             .data(data)
@@ -2523,7 +2616,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
             var unit = form.unit.value;
             var orient= form.orient.value;
             var direction= form.reversed.value;
-            var scale= this.getScale(unit, orient, direction, false);;
+            var scale= this.getScale(unit, orient, direction, false);
 
             var query = '';
             if(form[1].value === color)
@@ -2539,12 +2632,14 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
             var addCount = 0;
             for(var i in probeList){
                 var name = probeList[i];
+                var order = ++this.counter;
 
                 if(this.probes[name]) continue;
                 addCount++;
                 data.conf.probes[name] = {
                     'color': color,
                     'type': type,
+                    'order': order,
                     'scale': scale,
                     'stacked': false
                 }

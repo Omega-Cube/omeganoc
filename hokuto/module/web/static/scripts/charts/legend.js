@@ -109,6 +109,7 @@ define(['d3'],function(d3){
             .attr('y',12)
             .attr('fill',data.color)
             .attr('font-size',12)
+            .attr('style','cursor:pointer;')
             .text(service);
 
         var legendValue = container.append('g')
@@ -125,6 +126,15 @@ define(['d3'],function(d3){
      */
     Legends.prototype.getCurrentHeight = function(){
         return (this.currentHeight > 42) ? this.currentHeight + 4 : 42;
+    };
+
+    /**
+     * Return legend's container
+     * @param {String} probe - Probe's name
+     */
+    Legends.prototype.getProbeContainer = function(probe){
+        if(typeof this._probes[probe] === 'undefined') return false;
+        return this.elements[this._probes[probe]];
     };
 
     /**
@@ -207,20 +217,7 @@ define(['d3'],function(d3){
                 this.elements[i].select('g').attr('transform','translate('+this.groups[host].width+',1)');
             }
         }
-        /*for(var i =0, len = this.elements.length;i<len;i++){
-            var boxWidth = this.elements[i].select('text')[0][0].getBoundingClientRect().width + 10;
-            if(!boxWidth || boxWidth === 10){
-                check = false;
-                break;
-            }
-            if(this.remainingWidth - boxWidth < 0){
-                this.currentHeight += 30;
-                this.remainingWidth = this.availableWidth;
-            }
-            this.elements[i].attr('transform','translate('+(this.availableWidth - this.remainingWidth)+','+(this.currentHeight - 25)+')');
-            this.elements[i].select('rect').attr('width',boxWidth + 4)
-            this.remainingWidth-= boxWidth + 6;
-        }*/
+
         return check;
     };
 
