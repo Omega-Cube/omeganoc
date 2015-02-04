@@ -143,9 +143,12 @@ define(['d3'],function(d3){
      */
     Legends.prototype.removeLegend = function(probe){
         var container = this.elements[this._probes[probe]];
+        var host = probe.split('.')[0];
+        var group = this.getHostGroup(host);
         container.remove();
         this.elements.splice(this._probes[probe],1);
         delete this._probes[probe];
+        group.count--;
         this.redraw();
     };
 
