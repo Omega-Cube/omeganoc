@@ -2027,9 +2027,9 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         areas.push({
             'area': predict[0].concat(predict[1].concat().reverse()),
             'color': 'rgb('.concat(
-                Math.round(red * 0.8),',',
-                Math.round(green * 0.8),',',
-                Math.round(blue * 0.8),')'
+                Math.round(red * 0.6),',',
+                Math.round(green * 0.6),',',
+                Math.round(blue * 0.6),')'
             ),
             'type': 'lower 80'
         });
@@ -2037,9 +2037,9 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         areas.push({
             'area': predict[0].concat(predict[2].concat().reverse()),
             'color': 'rgb('.concat(
-                Math.round(red * 0.9),',',
-                Math.round(green * 0.9),',',
-                Math.round(blue * 0.9),')'
+                Math.round(red * 0.8),',',
+                Math.round(green * 0.8),',',
+                Math.round(blue * 0.8),')'
             ),
             'type': "lower 95"
         });
@@ -2047,9 +2047,9 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         areas.push({
             'area': predict[4].concat(predict[3].concat().reverse()),
             'color': 'rgb('.concat(
-                Math.min(Math.round(red * 1.2),255),',',
-                Math.min(Math.round(green * 1.2),255),',',
-                Math.min(Math.round(blue * 1.2),255),')'
+                Math.min(Math.round(red * 0.6),255),',',
+                Math.min(Math.round(green * 0.6),255),',',
+                Math.min(Math.round(blue * 0.6),255),')'
             ),
             'type': "upper 80"
         });
@@ -2057,9 +2057,9 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         areas.push({
             'area': predict[2].concat(predict[4].concat().reverse()),
             'color': 'rgb('.concat(
-                Math.min(Math.round(red * 1.1),255),',',
-                Math.min(Math.round(green * 1.1),255),',',
-                Math.min(Math.round(blue * 1.1),255),')'
+                Math.min(Math.round(red * 0.8),255),',',
+                Math.min(Math.round(green * 0.8),255),',',
+                Math.min(Math.round(blue * 0.8),255),')'
             ),
             'type': 'upper 95'
         });
@@ -2072,19 +2072,19 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         var path = g.selectAll('path.predict').data(areas);
         path.exit().remove();
         path.enter().append('path')
-            .attr('stroke',function(d){ return d.color;})
+            //.attr('stroke',function(d){ return d.color;})
             .attr('fill',function(d){ return d.color;})
-            .attr('fill-opacity',0.3)
+            .attr('fill-opacity',0.7)
             .attr('class','predict');
         path.datum(function(d){ return d.area;})
             .attr('d',function(d) { return line(d) + "Z"; });
 
+        var path = g.select('path.mean');
+        if(path.empty()) path = g.append('path').attr('stroke',color).attr('class','mean').attr('fill','none');
+        path.datum(predict[2]).attr('d',line);
+
         //dots
-        var dots = gDots.selectAll("g.predictDots").data(predict);
-        dots.exit().remove();
-        dots.enter().append('g')
-            .attr('class','predictDots');
-        dots = dots.selectAll("circle.predictDot").data(function(d){ return d;});
+        var dots = gDots.selectAll("circle.predictDot").data(predict[2]);
         dots.exit().remove();
         dots.enter().append('circle')
             .attr('class','predictDot')
