@@ -93,6 +93,7 @@ define(['jquery', 'onoc.createurl', 'onoc.loadcss', 'onoc.cachedloader','dataser
                                             '<p><span><input type="text" class="datePicker from" name="from" value="start" /></span>',
                                             '<span><input type="text" class="datePicker until" name="until" value="end" /></span></p>',
                                             '</li></ul></div>'));
+            var refresh = jQuery('<div class="refresh" title="Refresh"></div>');
 
             var actions = jQuery('<div class="dropmenu actions"></div>');
             var menu = jQuery('<ul class="contentmenu"></ul>');
@@ -108,6 +109,7 @@ define(['jquery', 'onoc.createurl', 'onoc.loadcss', 'onoc.cachedloader','dataser
             this._commands = jQuery('<div class="widget-commands"></div>');
             this._header.append(actions);
             this._header.append(datepicker);
+            this._header.append(refresh);
             this._header.append(this._title);
             this._header.append(editTitle);
 

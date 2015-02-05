@@ -228,6 +228,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         //add listeners to the probe worker to update this chart on updates
         DashboardProbes.worker.on('cursor',this.showCursor.bind(this));
         DashboardProbes.worker.on('fetch', function(data){
+            this.container.main.parent().find('.refresh').attr('class','refresh');
             DashboardProbes.worker.postMessage([6,{
                 'probes': this.probes,
                 'start': this.conf.fromDate,
@@ -1021,6 +1022,22 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         this.container.commands = this.container.main.parent().find('.widget-commands');
         var container = this.container.commands;
 
+        //refresh
+        var refresh = this.container.main.parent().find('.refresh');
+        refresh.click(function(e){
+            e.target.setAttribute('class','refresh disabled');
+            var probes = Object.keys(this.probes);
+            var data = {
+                'probes': probes
+            };
+            if(this.conf.fromDate)
+                data.start = this.conf.fromDate.getTime();
+            if(this.conf.untilDate)
+                data.end = this.conf.untilDate.getTime();
+            this.toogleSpinner(this.container.main);
+            DashboardProbes.worker.postMessage([3,data,this.id]);
+        }.bind(this));
+        
         //actions
         var actionsMenu = this.container.main.parent().find('.actions.dropmenu ul');
 

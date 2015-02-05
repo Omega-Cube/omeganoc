@@ -170,6 +170,15 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
      */
     Sla.prototype.buildCommands = function(){
         var container = this.containers.commands;
+
+        //refresh button
+        var refresh = this.containers.header.find('.refresh');
+        refresh.click(function(e){
+            e.target.setAttribute('class','refresh disabled');
+            this.changeTarget();
+        }.bind(this));
+        
+        //menus
         var actionsmenu = this.containers.header.find('.actions ul');
 
         var fromdatechange = function(t){
@@ -547,6 +556,7 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
             'data': data
         }).success(function(response){
             this.drawResults(response);
+            this.containers.header.find('.refresh').attr('class','refresh');
         }.bind(this)).error(function(e){ console.error(e); });
     }
 
