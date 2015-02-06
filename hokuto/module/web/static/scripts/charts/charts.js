@@ -699,7 +699,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         this.setDomain(this.data);
 
         //cursor and brush
-        this.getCursor().setAttribute('height',this.conf.chartHeight);
+        this.getCursor().select('rect').attr('height',this.conf.chartHeight);
         //focus brush
         this.container.focus.select('.brush').selectAll('rect').attr('height',this.conf.chartHeight + 7);
         this.container.focus.select('.brush').select('.background').attr('width',this.conf.width);
@@ -1681,7 +1681,8 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
      */
     DashboardChart.prototype.showCursor = function(event){
         var cursor = this.getCursor();
-        cursor.setAttribute('x',this.axis.x(new Date(event.date)));
+        cursor.attr('transform','translate('+this.axis.x(new Date(event.date))+',0)');
+        cursor.select('text').text(new Date(event.date).toLocaleString());
         for(var legend in this.legends){
             var unit = this.units.units[this.scales[this.probes[legend].scale].unit];
             if(!event.values[legend] && typeof(event.values[legend]) === 'boolean') event.values[legend] = 'unknown';
@@ -1693,7 +1694,8 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
      * Return the cursor element or create it.
      */
     DashboardChart.prototype.getCursor = function(){
-        var cursor = this.container.main.context.getElementsByClassName('parts-cursor')[0] || this.createCursor();
+        var cursor = this.container.focus.select('.parts-cursor');
+        if(cursor.empty()) cursor = this.createCursor();
         return cursor;
     };
 
@@ -1701,13 +1703,20 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
      * Create the cursor
      */
     DashboardChart.prototype.createCursor = function(){
-        var child = document.createElementNS('http://www.w3.org/2000/svg','rect');
-        child.setAttribute('x','0');
-        child.setAttribute('y','0');
-        child.setAttribute('width','2');
-        child.setAttribute('height',this.conf.chartHeight);
-        child.setAttribute('class','parts-cursor');
-        var cursor = this.container.focus[0][0].appendChild(child);
+        var cursor = this.container.focus.append('g').attr('class','parts-cursor');
+        cursor.append('rect')
+            .attr('x','0')
+            .attr('y','0')
+            .attr('width','2')
+            .attr('height',this.conf.chartHeight);
+        cursor.append('text')
+            .attr('class','cursor-date')
+            .attr('x',0)
+            .attr('y',-10)
+            .attr('stroke','#ccc')
+            .attr('font-weight','lighter')
+            .attr('font-size', 8)
+            .attr('text-anchor','middle');
         return cursor;
     };
 
