@@ -843,7 +843,7 @@ var Data = {
             details = probes[i].split('.');
 
             if(!!this.logs[details[0]] && !!this.logs[details[0]][details[1]])
-                this.fetchLog(details[0],details[1], signature);
+                this.fetchLog(details[0],details[1], signature, start, end);
         }
 
         var query = {'probes': probes };
@@ -876,16 +876,19 @@ var Data = {
 
     /**
      * Fetch log data
-     * @param {String} host - Host name
+     * @param {String} host    - Host name
      * @param {String} service - Service name
-     * @param {Number} sig - Requester ID
+     * @param {Number} sig     - Requester ID
+     * @param {Number} start   - Start date timestamp
+     * @param {Number} end     - end date timestamp
      */
-    fetchLog: function(host,service,sig){
+    fetchLog: function(host,service,sig,start,end){
+        if(start) start /= 1000;
+        if(end) end /= 1000;
         if(!this.logs[host][service].getLogs().length){
             var url = '/services/livestatus/get/service/logs/'+host+'/'+service+'/';
-            var columns = 'time,options,plugin_output,host_name,type,state,service_description';
-            url += columns;
-            _request(url,false,function(logs){
+            var data = { 'start': start, 'end': end};
+            _request(url,data,function(logs){
                 this.logs[host][service].setData(logs);
                 var results = {};
                 results[host] = {};

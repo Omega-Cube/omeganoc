@@ -107,11 +107,9 @@ def get_services():
 
     return jsonify({'results': data})
 
-
-@app.route('/services/livestatus/get/service/logs/<string:host>/<string:service>/',defaults={'columns': False})
-@app.route('/services/livestatus/get/service/logs/<string:host>/<string:service>/<string:columns>')
+@app.route('/services/livestatus/get/service/logs/<string:host>/<string:service>/')
 @login_required
-def get_service_formated_logs(host,service,columns):
+def get_service_formated_logs(host,service):
     """ Return logs infos from host's service """
 
     shinken_contact = current_user.shinken_contact
@@ -119,11 +117,16 @@ def get_service_formated_logs(host,service,columns):
     if host not in permissions['hosts']:
         return "User %s is not allowed to get informations from %s"%(shinken_contact,host),403
 
+    from shinken.log import logger
+
     query = livestatus.livestatus.log._query
-    start = time.time() - 30 * 3600 * 24
-    if(columns):
-        columns = columns.split(',')
-        query = query.columns(*columns)
+    start = request.args.get('start') if request.args.get('start') != 'false' else time.time() - 30 * 24 * 3600
+    end = request.args.get('end') if request.args.get('end') != 'false' else time.time()
+    start = int(float(start))
+    end = int(float(end))
+    columns = ['time','options','plugin_output','host_name','type','state','service_description']
+
+    query = query.columns(*columns)
     query = query.filter("host_name = %s"%host)
     query = query.filter("service_description = %s"%service)
     query = query.filter("current_service_state_type = 1")
@@ -138,7 +141,9 @@ def get_service_formated_logs(host,service,columns):
     query = query.filter("state = 2")
     query = query.filter("Or: 2")
     query = query.filter("time >= %d"%start)
-
+    query = query.filter("time <= %d"%end)
+    query = query.filter("And: 2")
+    
     data = query.call()
     return jsonify({'results': data})
 
@@ -186,7 +191,7 @@ def get_current_states():
                 service = service.filter("description = %s"%s)
                 service = service.columns(*('state','last_time_ok','plugin_output','next_check','last_check','host_name','description','check_interval'))
                 services[s] = service.call()
-                host['services'] = services
+        host['services'] = services
 
     return jsonify({'results': results})
 
