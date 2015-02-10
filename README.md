@@ -21,7 +21,7 @@ Dependencies:
      # install pip
      curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
      easy_install pip
-     
+
      yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
 
 Shinken install
@@ -37,10 +37,14 @@ Run the install script with root privileges
 
     cd <omeganoc>/<directory>
     make install
-Add hokuto, graphite and livestatus to the broker's module
+Add hokuto, graphite and livestatus to broker's modules
 
     #/etc/shinken/brokers/broker-master.cfg
     modules    graphite, livestatus, hokuto
+Also if you are working with a lot of log's data set use_aggressive_sql to 1 from logstore-sqlite
+
+     #/etc/shinken/modules/logstore_sqlite.cfg
+     use_aggressive_sql      1   ; Set to 1 for large installations
 Launch or restart daemons
 
     python /opt/graphite/bin/carbon-cache.py start
@@ -97,7 +101,7 @@ There have been some major change between shinken 2.0.x and shinken 2.2, if you 
 
   shinken install livestatus
 
-*I can't see any host/probe*
+*I can't see any host/probe
 
 By default all users are created with the shinken contact 'None' which prevent the user to get information from any host.
 Edit your profile with the proper shinken contact (or ask an admin for it).
@@ -112,3 +116,7 @@ To import all data from archived livestatus logs run
 
     make import-sla
 From your installation directory.
+
+*Dashboard's widget are very slow to loadup and if I try to reload data from one of theme I get an infinite spinner
+
+Enable use_aggressive_sql from logstore-sqlite's configuration. Eitherway logstore will retrieve ALL data from logs and will apply filters from python's side instead of SQLite.
