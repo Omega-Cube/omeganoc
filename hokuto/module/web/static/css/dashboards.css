@@ -126,6 +126,17 @@
     cursor: pointer;
 }
 
+.rescale{
+    background: transparent url('../images/autoscale-icon.png') center center no-repeat;
+    display: inline-block;
+    height: 30px;
+    width: 15px;
+    padding: 2px;
+    margin: 0 0.5em;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
 .refresh{
     background: transparent url('../images/refresh-icon.png') center center no-repeat;
     cursor: pointer;

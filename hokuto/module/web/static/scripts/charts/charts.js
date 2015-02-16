@@ -878,12 +878,8 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         brush.on("brushend",function(e){
             var context = this.axis.x2.domain();
             var focus = this.axis.x.domain();
-            DashboardProbes.worker.postMessage([8,{
-                'probes': this.probes,
-                'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                'mode': this.conf.mode
-            },this.id]);
+            this.autoScale();
+
             //... Dunno why in some case the pointer-event is stuck to "none".
             this.container.context.select('.x.brush').attr("style","pointer-events:all;");
 
@@ -1090,6 +1086,11 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         actionsMenu.prepend(button);
 
         //commands
+        //rescale
+        var button = $('<span class="rescale" title="Fit scales verticaly"></span>');
+        button.click(this.autoScale.bind(this));
+        container.append(button);
+
         //log
         var style = (this.conf.log) ? 'enabled':'disabled';
         var button = $('<button class="log '+style+'">log</button>')
@@ -1715,7 +1716,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
             .attr('y',-10)
             .attr('stroke','#ccc')
             .attr('font-weight','lighter')
-            .attr('font-size', 8)
+            .attr('font-size', 9)
             .attr('text-anchor','middle');
         return cursor;
     };
@@ -2943,6 +2944,46 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         this.updateUntilDate(context);
     };
 
+    /**
+     * Auto-resize focus y scales.
+     */
+    DashboardChart.prototype.autoScale = function(){
+        var lastData = this.currentData;
+
+        //get all max values
+        var tmpMaxScales = {};
+        for(var p in lastData){
+            var s = this.probes[p].scale;
+            if(!tmpMaxScales[s]) tmpMaxScales[s] = 0;
+            var max = 0;
+            for(var v in lastData[p].values){
+                var val = lastData[p].values[v].y + lastData[p].values[v].y0;
+                max = (max < val) ? val : max;
+            }
+            if(max > tmpMaxScales[s]) tmpMaxScales[s] = max;
+
+        }
+        //apply new domains
+        for(var s in this.scales){
+            var y = this.scales[s].y;
+            var max = tmpMaxScales[s];
+            y.domain([0,max]);
+            this.scales[s].y = y;
+        }
+
+        //redraw
+        this.buildAxis();
+        var context = this.axis.x2.domain();
+        var focus = this.axis.x.domain();
+        DashboardProbes.worker.postMessage([8,{
+            'probes': this.probes,
+            'contextTimeline': [context[0].getTime(),context[1].getTime()],
+            'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+            'mode': this.conf.mode
+        },this.id]);
+    };
+
+    
     /**
      * Handle y-zoom (shift + wheel on focus)
      */
