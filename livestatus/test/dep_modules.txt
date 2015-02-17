@@ -1,2 +1,0 @@
-https://github.com/shinken-monitoring/mod-logstore-sqlite.git
-https://github.com/shinken-monitoring/mod-logstore-mongodb.git
