@@ -72,7 +72,7 @@ shinken-install-dependencies: sudoer
 	@echo -n "\033]0;Installing shinken plugins dependencies\007"
 	pip install pycurl flask flask-login flask-sqlalchemy flask-babel python-igraph wtforms flask-assets whisper carbon 'Twisted<12.0' networkx graphviz pygraphviz graphite-query python-mk-livestatus
 
-shinken-install-plugins: sudoer
+shinken-install-plugins: sudoer vendors
 	-useradd --user-group graphite
 	@echo -n "\033]0;Installing shinken - livestatus plugin\007"
 	shinken install --local vendor/livestatus
