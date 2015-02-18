@@ -31,6 +31,7 @@ requirejs.config({
         'jstree': ['jquery'],
         'gridster': ['jquery'],
         'svg.easing': ['svg'],
+        'select2': ['jquery'],
     },
     // Paths
     paths: {

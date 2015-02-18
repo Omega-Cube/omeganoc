@@ -32,6 +32,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.babel import Babel, gettext
 from flask.ext.assets import Environment
 from werkzeug.routing import BaseConverter
+from werkzeug.contrib.cache import SimpleCache
 from shinken.log import logger
 from on_reader.livestatus import livestatus
 
@@ -40,6 +41,7 @@ app = None
 db = None
 babel = None
 login_manager = None
+cache = None
 
 # TODO : Passing the User class as arguments sucks -_-
 def init_db(User):
@@ -79,6 +81,7 @@ def init(config):
     global babel
     global login_manager
     global db
+    global cache
 
     # Main application object
     app = Flask(__name__)
@@ -100,6 +103,9 @@ def init(config):
         handler.level = logging.DEBUG
         app.logger.addHandler(handler)
 
+    # Caching
+    # A little bit simplistic for now, we could improve that
+    cache = SimpleCache()
 
     # SQLAlchemy
     db = SQLAlchemy(app)
@@ -153,7 +159,8 @@ def init(config):
     import livestatusservice # Livestatus services
     import predictservice # predictation tools
     import reports # logs screens
-
+    import configservice # Shinken configuration web services
+    
     #Starting point
     @app.route('/')
     @login_required

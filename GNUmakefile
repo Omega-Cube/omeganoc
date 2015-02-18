@@ -70,7 +70,7 @@ shinken-dependencies:
 
 shinken-install-dependencies: sudoer
 	@echo -n "\033]0;Installing shinken plugins dependencies\007"
-	pip install 'pycurl==7.19.0' 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' carbon 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'graphite-query==0.11.3' 'python-mk-livestatus==0.4'
+	pip install 'pycurl==7.19.0' 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' carbon 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'graphite-query==0.11.3' 'python-mk-livestatus==0.4' pynag chardet
 
 shinken-install-plugins: sudoer vendors
 	-useradd --user-group graphite
@@ -83,7 +83,7 @@ shinken-install-plugins: sudoer vendors
 	@echo -n "\033]0;Installing shinken - hokuto plugin\007"
 	shinken install --local hokuto
 
-shinken-plugins-config: sudoer
+shinken-plugins-config: sudoer watcher
 	@echo -n "\033]0;Initialize livestatus config files\007"
 	@if ! ls /opt/graphite/conf/carbon.conf >/dev/null 2>&1; then\
 		cp /opt/graphite/conf/carbon.conf.example /opt/graphite/conf/carbon.conf; \
@@ -105,6 +105,14 @@ shinken-install: vendors sudoer
 	@cd vendor/shinken && python setup.py install clean
 
 #libs
+watcher: sudoer
+	@echo -n "\033]0;Installing hokuto-watcher scripts.\007"
+	@echo -n "Installing cron routine and restarting cron service...\n"
+	@cp hokuto/shinken_watcher.py /usr/local/bin/
+	@cp hokuto/mplock.py /usr/local/bin/
+	@grep -q 'shinken_watcher.py' /etc/crontab || echo '*  *    * * *   root    /usr/local/bin/shinken_watcher.py' >> /etc/crontab
+	@/etc/init.d/cron restart
+
 on-reader: sudoer
 	@echo -n "\033]0;Installing livestatus libraries.\007"
 	@cd lib/on_reader && python setup.py install

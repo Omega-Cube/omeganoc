@@ -152,6 +152,7 @@ input, select, textarea {
 }
 
 [type=submit], [type=button], [type=reset], .button {
+/*
     background-color: #F1F1EF;
     background-image: -webkit-linear-gradient(center bottom, #E3E3E1 6%, #FDFDFB 53%);
     background-image: -moz-linear-gradient(center bottom, #E3E3E1 6%, #FDFDFB 53%);
@@ -168,6 +169,21 @@ input, select, textarea {
     cursor: pointer;
     padding: 3px 5px;
     text-decoration: none;
+*/
+    border-radius: 0.5em;
+    color: #111;
+    display: inline-block;
+    padding: 3px 10px;
+    background-color: #EEE;
+    border: none;
+    text-transform: capitalize;
+    border: 1px solid #888;
+    text-shadow: none;
+    cursor: pointer;
+}
+
+a.button {
+    color: #111;
 }
 
 form.standout
@@ -308,6 +324,14 @@ header > ul > li > ul > li {
 
 header > ul > li > ul > li a{
     font-size: 0.75em;
+}
+
+header > ul .alert{
+    background-color: #E63C3E;
+}
+
+header > ul .warning{
+    background-color: #EB8C0C;
 }
 
 /* logo */

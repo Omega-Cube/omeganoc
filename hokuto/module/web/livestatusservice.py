@@ -189,7 +189,8 @@ def get_current_states():
                 services[s] = service.call()
         host['services'] = services
 
-    return jsonify({'results': results})
+    from configservice import is_lock_owner
+    return jsonify({'results': results, 'is_conf_owner': is_lock_owner()})
 
 # TODO: now that sla use his own database instead of livestatus we should move all this stuff elsewhere
 @app.route('/services/livestatus/disponibility/hostgroup')

@@ -88,7 +88,7 @@ class HokutoUi(BaseModule, Daemon):
             logger.debug(traceback.format_exc())
             msg = Message(id=0, type='ICrash', data={
                     'name': self.get_name(),
-                    'exception': exp,
+                    'exception': ex,
                     'trace': traceback.format_exc()
             })
             self.from_q.put(msg)

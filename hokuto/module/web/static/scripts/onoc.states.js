@@ -50,6 +50,17 @@ define(['jquery','onoc.createurl'],function(jQuery,createUrl){
 		'url': url,
 		'type': 'GET'
 	    }).success(function(response){
+                //is the conf currently locked by user? if so highlight the correct header section
+                if(response.is_conf_owner){
+                    var classname = 'alert';
+                    if(response.is_conf_owner > 0) classname = 'warning';
+                    jQuery('#menu-admin-list').parent().addClass(classname);
+                    jQuery('#menu-admin-list .config').addClass(classname);
+                }else{
+                    jQuery('#menu-admin-list').parent().removeClass('alert warning');
+                    jQuery('#menu-admin-list .config').removeClass('alert warning');
+                }
+                
 		var tmp = response.results;
 		for(var h in tmp){
 		    tmp[h]['last_time_up'] *= 1000;

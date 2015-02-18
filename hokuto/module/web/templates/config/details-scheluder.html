@@ -1,0 +1,53 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2015 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% extends "config/form_template.html" %}
+{% block form %}
+    {% if not data %}
+    <fieldset>
+      <legend>New file</legend>
+      {{ _rf(form.filename) }}
+    </fieldset>
+    {% endif %}
+
+    <fieldset>
+      <legend>Description</legend>
+      {{ _rf(form.scheluder_name) }}
+      {{ _rf(form.port) }}
+      {{ _rf(form.spare) }}
+      {{ _rf(form.realm) }}
+      {{ _rf(form.modules) }}
+    </fieldset>
+    <fieldset>
+      {{ _rf(form.weight) }}
+      {{ _rf(form.timeout) }}
+      {{ _rf(form.data_timeout) }}
+      {{ _rf(form.max_check_attempts) }}
+      {{ _rf(form.check_interval) }}
+      {{ _rf(form.accept_passive_unknown_check_results) }}
+    </fieldset>
+    <fieldset>
+      {{ _rf(form.skip_initial_broks) }}
+      {{ _rf(form.satellitemap) }}
+    </fieldset>
+    <fieldset class="collapsed">
+      <legend>Templates</legend>
+        {{ _rf(form.name) }}
+        {{ _rf(form.use) }}
+        {{ _rf(form.register) }}
+    </fieldset>
+{% endblock %}

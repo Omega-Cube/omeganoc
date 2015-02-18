@@ -1,0 +1,106 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2015 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% macro _rf(field) %}
+<p {% if not field.flags.optional %} class="required"{% endif %}>
+    {{ field.label }}
+    {{ field(**{'data-tooltip': field.description})|safe }}
+    {% if field.placeholder %}<span class="field-description">{{ field.placeholder }}</span>{% endif %}
+    {% if field.errors %}
+        {% for error in field.errors %}
+            <span class="error"> {{error}} </span>
+        {% endfor %}
+    {% endif %}
+</p>
+{% endmacro %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/config.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ url_for('static', filename='css/config.details.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ url_for('static', filename='css/select2.css') }}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<div id="mainContent">
+    {% if is_locked %}
+  <div class="infobox alert">
+    <div class="actions">
+      <p>
+        <a href="/config/logs" class="button info" data-tooltip="Show last configuration check results" style="margin-top: 1.5em;">
+          View logs
+        </a>
+      </p>
+    </div>
+    <h2>Configuration is currently locked by {{owner_name}}!<small>You will not be able to edit/delete or create new files.</small></h2>
+  </div>
+  {% elif owner_name %}
+  <div class="infobox alert">
+    <div class="actions">
+      {% if is_ready %}
+      <p><button id="conf-apply-changes" class="button apply" data-tooltip="Apply changes (will restart shinken in the process)">Apply</button></p>
+      {% else %}
+      <p><button class="button disabled" data-tooltip="There is errors in your configuration, please check logs and fix them.">Apply</button></p>
+      {% endif %}
+      <p>
+        <a href="/config/logs" class="button info" data-tooltip="Show last configuration check results">View logs</a>
+      </p>
+      <p><button id="conf-reset-changes" class="button info" data-tooltip="Undo all changes made and unlock configuration">Rollback</button></p>
+    </div>
+    <h2 class="alert">Configuration is currently locked by you.<small>Beware that no one will be able to do any modification until you reset or validate your changes!</small></h2>
+  </div>
+  {% else %}
+  <div class="infobox info">
+    <div class="actions">
+      <p><button id="conf-lock" class="button alert" data-tooltip="Only you will be able to modify the configuration until you apply or rollback your modifications.">Start editing</button></p>
+    </div>
+    <h2 class="info">Nobody is currently editing the configuration.</h2>
+  </div>
+  {% endif %}
+
+  {% if data %}
+  <h3 class="title"> Configuring {{ type }} "{{ id }}" </h3>
+  <p class="intro">Defined in file {{ data['meta']['filename'] }} at line {{ data['meta']['line_start'] }}.</p>
+  {% else %}
+  <h3 class="title"> Add new {{ type }} configuration file</h3>
+  {% endif %}
+
+  <form class="details-form" method="POST" name="conf_details">
+    <section>
+      <a href="{{ url_for('config_list') }}#{{ type }}" class="button">Back to list</a>
+      {% if not is_locked %}
+      <input type="submit" value="Save" />
+      {% endif %}
+    </section>
+    {% block form %}{% endblock %}
+    <section>
+      <a href="{{ url_for('config_list') }}#{{ type }}" class="button">Back to list</a>
+      {% if not is_locked %}
+      <input type="submit" value="Save" />
+      {% endif %}
+    </section>
+  </form>
+
+</div>
+
+<script type="text/javascript">
+    var _conf_details_data = {{ data | tojson | safe }};
+    var _conf_details_type = {{ type | tojson | safe }};
+    onoc_main_modules.push('config.details');
+</script>
+{% endblock %}

@@ -131,6 +131,9 @@
             <li>
               <a href="{{ url_for('manage_units') }}">{{ gettext('Manage units') }}</a>
             </li>
+            <li class="config">
+              <a href="{{ url_for('config_list') }}">{{ gettext('Manage Shinken') }}</a>
+            </li>
             {% endif %}
             <li>
               <a href="{{ url_for('manage_dashboards') }}">{{ gettext('Manage dashboards') }}</a>
@@ -152,8 +155,7 @@
   </body>
   {# Setup some environment variable, beware that none of this value are secure and should only be used to ease navigation and display. #}
   <script type="text/javascript">
-    window.ONOC = {
-        'is_admin': ('{{ current_user.is_super_admin }}' === 'True') ? true : false,
-    };
+    window.ONOC = window.ONOC || {};
+    window.ONOC.is_admin = ('{{ current_user.is_super_admin }}' === 'True') ? true : false;
   </script>
 </html>

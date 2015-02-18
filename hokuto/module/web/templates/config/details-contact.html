@@ -1,0 +1,58 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2015 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% extends "config/form_template.html" %}
+{% block form %}
+    {% if not data %}
+    <fieldset>
+      <legend>New file</legend>
+      {{ _rf(form.filename) }}
+    </fieldset>
+    {% endif %}
+    <fieldset>
+        <legend>Description</legend>
+        {{ _rf(form.contact_name) }}
+        {{ _rf(form.alias) }}
+        {{ _rf(form.contactgroups) }}
+        {{ _rf(form.email) }}
+        {{ _rf(form.pager) }}
+        {{ _rf(form.addressx) }}
+        {{ _rf(form.can_submit_commands) }}
+        {{ _rf(form.retain_status_information) }}
+        {{ _rf(form.retain_nonstatus_information) }}
+        {{ _rf(form.min_business_impact) }}
+        {{ _rf(form.is_admin) }}
+    </fieldset>
+
+    <fieldset>
+      <legend>Notifications</legend>
+      {{ _rf(form.host_notification_enabled) }}
+      {{ _rf(form.service_notification_enabled) }}
+      {{ _rf(form.host_notification_period) }}
+      {{ _rf(form.service_notification_period) }}
+      {{ _rf(form.host_notification_options) }}
+      {{ _rf(form.service_notification_options) }}
+      {{ _rf(form.host_notification_commands) }}
+      {{ _rf(form.server_notification_commands) }}
+    </fieldset>
+    <fieldset class="collapsed">
+      <legend>Templates</legend>
+        {{ _rf(form.name) }}
+        {{ _rf(form.use) }}
+        {{ _rf(form.register) }}
+    </fieldset>
+{% endblock %}
