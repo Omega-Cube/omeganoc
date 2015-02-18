@@ -209,3 +209,58 @@ svg.basicchart .parts-cursor{
     border: none;
     cursor: pointer;
 }
+
+/* Duplicate panel */
+.dupPanel label{
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 1.25em;
+    display: block;
+    margin: 0.5em 0;
+}
+
+.dupPanel{ display: table; }
+
+.dupPanel p{
+    display: table-row;
+}
+
+.dupPanel span{
+    font-size: 1em;
+    display: table-cell;
+    padding: 0.1em 0.5em;
+    font-weight: bold;
+}
+
+.dupPanel select{
+    display: table-cell;
+    text-transform: none;
+    font-size: 1em;
+    background-color: #777;
+    color: #FFF;
+    border: 1px solid #555;
+    text-shadow: 1px 1px #333;
+    margin: 0.25em;
+    padding: 0.1em 0.5em;
+    box-shadow: none;
+    font-weight: bold;
+}
+
+.dupPanel select:hover{
+    background-color: #777;
+}
+
+#dup_submit{
+    position: absolute;
+    bottom: 1em;
+    right: 1em;
+    background-color: #D44F4D;
+    color: #FFF;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 1.75em;
+    display: inline-block;
+    padding: 0.15em 0.5em;
+    border: none;
+    cursor: pointer;
+}

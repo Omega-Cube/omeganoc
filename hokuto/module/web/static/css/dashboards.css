@@ -120,6 +120,12 @@
     cursor: pointer;
 }
 
+.clone{
+    padding-left: 22px;
+    background: transparent url('../images/clone-icon.png') left center no-repeat;
+    cursor: pointer;
+}
+
 .remove{
     padding-left: 22px;
     background: transparent url('../images/remove-icon.png') left center no-repeat;

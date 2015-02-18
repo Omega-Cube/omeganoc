@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl','./forms.js','./scales.js','onoc.units','./legend.js', './predict.js', 'onoc.calendar'], function(jQuery, d3, DashboardManager, DashboardProbes, createUrl, form, DashboardChartScale, Units, Legends, Predict, Calendar) {
+define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probes', 'onoc.createurl','./forms.js','./scales.js','onoc.units','./legend.js', './predict.js', 'onoc.calendar'], function(jQuery, d3, DashboardManager, Widget, DashboardProbes, createUrl, form, DashboardChartScale, Units, Legends, Predict, Calendar) {
     /**
      * Basicchart widget class,handle multiple charts
      * @class
@@ -240,6 +240,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
             this.predict.set(data);
             //update scale domains
             for(var p in data){
+                if(!data[p]) continue;
                 var range = [false,false];
                 for(var d in data[p].values){
                     if(data[p].values[d][1] > range[1]) range[1] = data[p].values[d][1];
@@ -255,6 +256,7 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
             this.buildScale();
             this.setDomain(data);
             for(var p in data){
+                if(!data[p] || !probes[p]) continue;
                 if(probes[p].stacked){
                     stacked[probes[p].scale] = stacked[probes[p].scale] || {};
                     stacked[probes[p].scale][p] = probes[p];
@@ -1071,6 +1073,13 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         }.bind(this));
         actionsMenu.prepend(button);
 
+        //clone
+        var button = $('<li class="clone">duplicate</li>');
+        button.click(function(e){
+            this.toogleDupPanel();
+        }.bind(this));
+        actionsMenu.prepend(button);
+
         //edit
         var button = $('<li class="edit">config</li>');
         button.click(function(e){
@@ -1685,6 +1694,10 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
         cursor.attr('transform','translate('+this.axis.x(new Date(event.date))+',0)');
         cursor.select('text').text(new Date(event.date).toLocaleString());
         for(var legend in this.legends){
+            if(!this.probes[legend]){
+                console.log(this.id,legend,this.probes,this.legends);
+                continue;
+            }
             var unit = this.units.units[this.scales[this.probes[legend].scale].unit];
             if(!event.values[legend] && typeof(event.values[legend]) === 'boolean') event.values[legend] = 'unknown';
             this.legends[legend].text(this.units.unitFormat(event.values[legend],unit));
@@ -2528,6 +2541,15 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
     }
 
     /**
+     * Show the dup panel
+     */
+    DashboardChart.prototype.toogleDupPanel = function(){
+        this.buildDupPanel();
+        this.tooglePanel();
+    }
+
+
+    /**
      * Show the edit chart panel
      */
     DashboardChart.prototype.toogleEditPanel = function(){
@@ -2541,6 +2563,98 @@ define(['jquery','d3','dashboards.manager','dashboards.probes', 'onoc.createurl'
     DashboardChart.prototype.toogleAddPanel = function(){
         this.buildAddPanel();
         this.tooglePanel();
+    }
+
+    /**
+     * Construct duplicate panel
+     */
+    DashboardChart.prototype.buildDupPanel = function(){
+        var container = $('<div class="dupPanel"></div>');
+        var title = $('<h3>Copy widget</h3>');
+        var submit = $('<button id="dup_submit">copy</button>');
+        var replaceHosts = $('<div><label>Replace hosts</label></div>');
+        var hosts = {};
+        var metrics = DashboardProbes.getMetrics();
+        var currentConf = DashboardManager.currentParts[this.id];
+        var conf = {
+            'mode': currentConf.conf.mode,
+            'probes': JSON.parse(JSON.stringify(currentConf.conf.probes)),
+            'scales': currentConf.conf.scales
+        };
+
+        //list used hosts
+        for(var p in currentConf.conf.probes){
+            var h = p.split('.')[0];
+            if(!hosts[h]) hosts[h] = h;
+        }
+
+        //Create select host element
+        var hostSelect = $('<select></select>');
+        for(var h in metrics){
+            hostSelect.append($('<option value="'+h+'">'+h+'</option>'))
+        };
+
+        //build replace host part
+        for(var h in hosts){
+            var clone = hostSelect.clone(true);
+            clone.attr('name',h);
+            for(var s in clone[0].options){
+                if(clone[0].options[s].value === h){
+                    clone[0].selectedIndex = clone[0].options[s].index;
+                    break;
+                }
+            }
+            clone.on('change',function(e){
+                var host = e.target.getAttribute('name');
+                hosts[host] = e.target.options[e.target.selectedIndex].value;
+            });
+            var p = $('<p>');
+            p.append($('<span>'+h+'</span>')).append(clone);
+            replaceHosts.append(p);
+        }
+
+        //Submit action
+        submit.click(function(e){
+            //replace hosts
+            var tmp = {};
+            for(var h in hosts){
+                for(var p in conf.probes){
+                    var i = p.split('.');
+                    if(i[0] !== h) continue;
+                    i.shift();
+                    tmp[hosts[h].concat('.',i.join('.'))] = conf.probes[p];
+                }
+            }
+
+            //set new widget partData
+            var partData = {
+                'height': currentConf.height,
+                'width': currentConf.width,
+                'widget': currentConf.widget,
+                'title': 'Chart',
+                'conf': {
+                    'probes': tmp,
+                    'scales': conf.scales,
+                    'mode': conf.mode
+                }
+            };
+
+            //keep timing configuration for the new widget
+            if(currentConf.conf.fromdate) partData.conf.fromdate = currentConf.conf.fromdate;
+            if(currentConf.conf.untildate) partData.conf.untildate = currentConf.conf.untildate;
+
+            //Finally create it
+            Widget.getWidgetById(currentConf.widget, function(widget){
+                if(!widget) return;
+                DashboardManager.addWidget(partData, widget);
+            });
+        });
+
+        //Construct and apply DOM tree
+        container.append(title);
+        container.append(replaceHosts)
+        container.append(submit);
+        this.appendToPanel(container);
     }
 
     /**
