@@ -674,8 +674,8 @@
     background-color: transparent;
     background-image: -webkit-linear-gradient(top,#fff,#d0d0d0);
     background-image:    -moz-linear-gradient(top,#fff,#d0d0d0);
-    background-image:      -o-linear-gradient(top,#fff,#d0d0d0);
     background-image:     -ms-linear-gradient(top,#fff,#d0d0d0);
+    background-image:      -o-linear-gradient(top,#fff,#d0d0d0);
     background-image:         linear-gradient(top,#fff,#d0d0d0);
     cursor: pointer;
     margin: 0 0.5em;

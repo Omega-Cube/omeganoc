@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probes', 'onoc.createurl','./forms.js','./scales.js','onoc.units','./legend.js', './predict.js', 'onoc.calendar'], function(jQuery, d3, DashboardManager, Widget, DashboardProbes, createUrl, form, DashboardChartScale, Units, Legends, Predict, Calendar) {
+define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probes', 'onoc.createurl','./forms.js','./scales.js','onoc.units','./legend.js', './predict.js', 'onoc.calendar','onoc.tooltips'], function(jQuery, d3, DashboardManager, Widget, DashboardProbes, createUrl, form, DashboardChartScale, Units, Legends, Predict, Calendar, Tooltips) {
     /**
      * Basicchart widget class,handle multiple charts
      * @class
@@ -178,6 +178,63 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this._buildCommands();
         this.fetchUnits();
         this.buildPanel();
+
+        //WIP
+        this.tooltips = new Tooltips();
+        this.container.main.on('mousemove',function(e){
+            var target = e.target;
+            var title = target.getAttribute('data-title');
+            if(!title){
+                this.tooltips.toogle(false);
+            }else{
+                var split = title.split('.');
+                var host = split.shift();
+                var service = split.shift();
+                if(service === '__HOST__') service = "";
+                var probe = split.join('.');
+                var date = target.getAttribute('data-date');
+                var value = target.getAttribute('data-value');
+                var template = [{
+                    'tag': 'div',
+                    'attr': { 'class': 'probetooltip'},
+                    'childs': [
+                        {
+                            'tag': 'p',
+                            'childs': [
+                                {'tag': 'label', 'text': 'Host'},
+                                {'tag': 'span', 'text': host}
+                            ]
+                        },{
+                            'tag': 'p',
+                            'childs': [
+                                {'tag': 'label', 'text': 'Service'},
+                                {'tag': 'span', 'text': service}
+                            ]
+                        },{
+                            'tag': 'p',
+                            'childs': [
+                                {'tag': 'label', 'text': 'Probe'},
+                                {'tag': 'span', 'text': probe}
+                            ]
+                        },{
+                            'tag': 'p',
+                            'childs': [
+                                {'tag': 'label', 'text':'Date'},
+                                {'tag': 'span', 'text': date}
+                            ]
+                        },{
+                            'tag': 'p',
+                            'childs': [
+                                {'tag': 'label', 'text':'value'},
+                                {'tag': 'span', 'text': value}
+                            ]
+                        }
+                    ]
+                }];
+                this.tooltips.show(template,target);
+            }
+            return true;
+        }.bind(this));
 
         //Handle legend things ... and ... stuffs...
         this.legendManager = new Legends(this.container.legend,this.conf.width);
@@ -1834,13 +1891,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('r',3)
             .attr('fill',color)
             .attr('stroke','black')
-            .append('title').text(function(d){ return probe.concat(
-                ' : ',
-                d.x.toLocaleString(),
-                ' - ',
-                this.units.unitFormat(d.y,this.units.units[this.scales[this.probes[probe].scale].unit])
-            );}.bind(this));
-
+            .attr('data-title', probe)
+            .attr('data-date', function(d){ return d.x.toLocaleString()})
+            .attr('data-value',function(d){ return this.units.unitFormat(d.y,
+                                                                         this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                        )}.bind(this));
         this.content[probe] = {
             redraw: function(data){
                 if(data){
@@ -1850,17 +1905,14 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                         .attr('class','dots')
                         .attr('r',3)
                         .attr('fill',color)
-                        .attr('stroke','black')
-                        .append('title');
+                        .attr('stroke','black');
                     d.attr('cy',function(d){ return y(d.y0 + d.y);})
                         .attr('cx',function(d){ return x(d.x);})
-                        .select('title').text(function(d){ return probe.concat(
-                            ' : ',
-                            d.x.toLocaleString(),
-                            ' - ',
-                            this.units.unitFormat(d.y,this.units.units[this.scales[this.probes[probe].scale].unit])
-                        );}.bind(this));
-
+                        .attr('data-title', probe)
+                        .attr('data-date', function(d){ return d.x.toLocaleString()})
+                        .attr('data-value',function(d){ return this.units.unitFormat(d.y,
+                                                                                     this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                                    )}.bind(this));
                     var paths = this._getPathList(data);
                     var p = g.selectAll("path.main").data(paths);
                     p.enter().append("path")
@@ -1966,13 +2018,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('r',3)
             .attr('fill',color)
             .attr('stroke','black')
-            .append('title').text(function(d){ return probe.concat(
-                ' : ',
-                d.x.toLocaleString(),
-                ' - ',
-                this.units.unitFormat(d.y,this.units.units[this.scales[this.probes[probe].scale].unit])
-            );}.bind(this));
-
+            .attr('data-title', probe)
+            .attr('data-date', function(d){ return d.x.toLocaleString()})
+            .attr('data-value',function(d){ return this.units.unitFormat(d.y,
+                                                                         this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                        )}.bind(this));
         this.content[probe] = {
             redraw: function(data){
                 if(data){
@@ -1982,17 +2032,14 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                         .attr('class','dots')
                         .attr('r',3)
                         .attr('fill',color)
-                        .attr('stroke','black')
-                        .append('title');
+                        .attr('stroke','black');
                     d.attr('cy',function(d){ return y(d.y0 + d.y);})
                         .attr('cx',function(d){ return x(d.x);})
-                        .select('title').text(function(d){ return probe.concat(
-                            ' : ',
-                            d.x.toLocaleString(),
-                            ' - ',
-                            this.units.unitFormat(d.y,this.units.units[this.scales[this.probes[probe].scale].unit])
-                        );}.bind(this));
-
+                        .attr('data-title', probe)
+                        .attr('data-date', function(d){ return d.x.toLocaleString()})
+                        .attr('data-value',function(d){ return this.units.unitFormat(d.y,
+                                                                                     this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                                    )}.bind(this));
                     var paths = this._getPathList(data);
                     var p = g.selectAll("path.main").data(paths);
                     p.enter().append("path")
@@ -2131,16 +2178,14 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('fill',color)
             .attr('stroke','black')
             .attr('r',3)
-            .attr('z-index','1')
-            .append('title');
+            .attr('z-index','1');
         dots.attr('cx',function(d){ return x(d.x)})
             .attr('cy',function(d){ return y((d.y0 || 0) + d.y)})
-            .select('title').text(function(d){ return probe.concat(
-                ' : ',
-                new Date(d.x).toLocaleString(),
-                ' - ',
-                this.units.unitFormat(d.y,this.units.units[this.scales[this.probes[probe].scale].unit])
-            );}.bind(this));
+            .attr('data-title', probe)
+            .attr('data-date', function(d){ return d.x.toLocaleString()})
+            .attr('data-value',function(d){ return this.units.unitFormat(d.y,
+                                                                         this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                        )}.bind(this));
     }
 
     /**
@@ -2207,13 +2252,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('r',3)
             .attr('fill',color)
             .attr('stroke','black')
-            .append("title").text(function(d){ return probe.concat(
-                ' : ',
-                d.x.toLocaleString(),
-                ' - ',
-                this.units.unitFormat(d.y,this.units.units[this.scales[this.probes[probe].scale].unit])
-            );}.bind(this));
-
+            .attr('data-title', probe)
+            .attr('data-date', function(d){ return d.x.toLocaleString()})
+            .attr('data-value',function(d){ return this.units.unitFormat(d.y,
+                                                                         this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                        )}.bind(this));
 
         var bars = focusGroup.selectAll(".bar").data(data).enter();
         var bars2 = contextGroup.selectAll(".bar").data(data).enter();
@@ -2290,17 +2333,14 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                         .attr('class','dots')
                         .attr('r',3)
                         .attr('fill',color)
-                        .attr('stroke','black')
-                        .append('title');
+                        .attr('stroke','black');
                     d.attr("cx",function(d){ return x(d.x);})
                         .attr('cy',function(d){ return y(d.y0 + d.y);})
-                        .select('title').text(function(d){ return probe.concat(
-                            ' : ',
-                            d.x.toLocaleString(),
-                            ' - ',
-                            this.units.unitFormat(d.y,this.units.units[this.scales[this.probes[probe].scale].unit])
-                        );}.bind(this));
-
+                        .attr('data-title', probe)
+                        .attr('data-date', function(d){ return d.x.toLocaleString()})
+                        .attr('data-value',function(d){ return this.units.unitFormat(d.y,
+                                                                                     this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                                    )}.bind(this));
                     //redraw predicted charts if any
                     if(this.predictData[probe])
                         this.addPredict(this.predictData[probe],color,data,y,probe);

@@ -210,6 +210,7 @@ svg.basicchart .parts-cursor{
     cursor: pointer;
 }
 
+
 /* Duplicate panel */
 .dupPanel label{
     text-transform: uppercase;
@@ -263,4 +264,23 @@ svg.basicchart .parts-cursor{
     padding: 0.15em 0.5em;
     border: none;
     cursor: pointer;
+}
+
+/* tooltips */
+.probetooltip{
+    display: table;
+}
+
+.probetooltip p{
+    display: table-row;
+}
+
+.probetooltip label, .probetooltip span{
+    display: table-cell;
+    padding: 0.1em 0.25em;
+}
+
+.probetooltip label{
+    font-weight: bold;
+    margin-right: 0.5em;
 }
