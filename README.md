@@ -60,6 +60,15 @@ Restart shinken daemon
 
     service shinken restart
 
+USERS
+-----
+
+Omeganoc default user is :
+
+         username : admin
+         password : admin
+Don't forget to login and update this user with a more secured password.
+
 CONFIG
 ======
 
