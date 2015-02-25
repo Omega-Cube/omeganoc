@@ -19,6 +19,12 @@
 define(['onoc.createurl'], function(createUrl) {
     var Units = {
         units: {},
+        unknown: {
+            'name': 'unknown',
+            'symbol': '',
+            'factor': 1000,
+            'magnitudes': ['','k','M','G','T']
+        },
         /**
          * Format a value using unit's symbol and magnitude
          */
@@ -26,6 +32,7 @@ define(['onoc.createurl'], function(createUrl) {
             if(value === 'unknown') return value;
             var result = "";
             var factor = 0;
+            var unit = unit || this.unknown;
             if(unit.factor){
                 while(value > unit.factor){
                     factor++;
@@ -41,7 +48,7 @@ define(['onoc.createurl'], function(createUrl) {
                     value = value.toExponential(3);
             }
 
-            result = value;
+            result = value.toLocaleString();
             if(unit.magnitudes)
                 result += unit.magnitudes[factor];
             result += unit.symbol;
@@ -61,6 +68,20 @@ define(['onoc.createurl'], function(createUrl) {
                         this.units[unit].magnitudes = JSON.parse(this.units[unit].magnitudes);
                 }
             }.bind(this));
+        },
+
+        /**
+         * Return the requested unit or the unknown one if not found
+         */
+        get: function(name){
+            return (this.units[name]) ? this.units[name] : this.unknown;
+        },
+
+        /**
+         * Add new unit
+         */
+        add: function(name,unit){
+            this.units[name] = unit;
         }
     };
 

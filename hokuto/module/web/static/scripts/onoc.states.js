@@ -67,8 +67,8 @@ define(['jquery','onoc.createurl'],function(jQuery,createUrl){
 		//notify the update and refresh states every 30s
 		$(document).trigger('updated.states.onoc');
 		setTimeout(this.fetchCurrentStates.bind(this), 30000);
-	    }.bind(this)).error(function(e){
-		console.log(e);
+	    }.bind(this)).error(function(jqxhr,message){
+		console.error(message);
 	    });
 	},
 

@@ -1,0 +1,61 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{%extends "layout.html"%}
+
+{%block head%}
+<link href="{{ url_for('static', filename='css/units.css') }}" rel="stylesheet" type="text/css" />
+{%endblock%}
+
+{%block content%}
+
+{#
+{% for message in get_flashed_messages() %}
+<div class="flash"> {{ message }} </div>
+{% endfor %}
+#}
+
+<h3 class="title">Units list</h3>
+
+<article style="text-align:center">
+  <section class="unitlist">
+    <div class="title">
+      <span class="total">Units ({{ units|length }})</span>
+      <a class="button add-unit" href="{{url_for('create_unit')}}">New Unit</a>
+    </div>
+    <ol>
+      <li class="legend">
+        <span>Name</span>
+        <span>Symbol</span>
+        <span>Factor</span>
+      </li>
+      {% for unit in units %}
+      <li class="unit" data-id="{{unit.id}}">
+        <span>{{unit.name}}</span>
+        <span>{{unit.symbol}}</span>
+        <span>{{unit.factor}}</span>
+        <span>
+          <a href="{{ url_for('edit_unit', unitid=unit.id) }}"><button class="button edit">edit</button></a>
+          <button class="button delete">delete</button>
+        </span>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+</article>
+<script src="{{ url_for('static', filename='scripts/units.js') }}"></script>
+{%endblock%}

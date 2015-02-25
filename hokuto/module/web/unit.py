@@ -21,13 +21,20 @@
 
 import json
 
-from . import db
+from . import app, db, login_manager
+from flask import render_template, flash, redirect, request, jsonify, url_for
+from flask.ext.login import login_user, login_required, logout_user, UserMixin, current_user
+from wtforms import Form, TextField, IntegerField, SelectField, validators
+from wtforms.validators import DataRequired
+from utils import try_int
+
+from ajax import jsondump
 
 class Unit(db.Model):
     """ Units data model """
     id = db.Column('id', db.Integer, primary_key=True)
-    name = db.Column('name', db.String(128), nullable=False)
-    symbol = db.Column('symbol',db.String(32), nullable=True)
+    name = db.Column('name', db.String(32), nullable=False)
+    symbol = db.Column('symbol',db.String(16), nullable=True)
     factor = db.Column('factor',db.Integer,nullable=True)
     magnitudes = db.Column('magnitudes',db.String(256),nullable=True)
 
@@ -41,3 +48,142 @@ class Unit(db.Model):
         else:
             self.magnitudes = False
 
+    def __str__(self):
+        return self.name
+
+# FORMS
+class AddUnitForm(Form):
+    """ Unit add page model """
+    name= TextField('name',
+                    [validators.Length(min=1, max=32, message="Name should contain between 1 and 32 characters")])
+    symbol= TextField('symbol',
+                      [validators.Length(min=1, max=8, message="Symbol should contain between 1 and 8 characters")])
+    factor= SelectField("factor", choices=[('0','None'),('1000','1000'),('1024','1024')])
+
+# PAGES
+@app.route('/units')
+@login_required
+def manage_units():
+    """ Units management page """
+    units = Unit.query.order_by(Unit.name).all()
+    return render_template('unit.html', units=units)
+
+
+# SERVICES
+@app.route('/units/add', methods=['GET','POST'])
+@login_required
+def add_unit():
+    """ Save a new unit to the database """
+    form= AddUnitForm(request.form)
+
+    if request.method == 'POST':
+        if Unit.query.filter_by(name= form.name.data).first():
+            # we call form.validate to build up all errors from the form
+            form.validate()
+            if not 'name' in form.errors:
+                form.errors['name'] = []
+            form.errors['name'].append("Name "+form.name.data+" already taken")
+
+        elif form.validate():
+            name = request.form.get('name')
+            symbol = request.form.get('symbol')
+            factor = request.form.get('factor') if request.form.get('factor') else None
+            magnitudes = ['','k','M','G','T'] if request.form.get('factor') else None
+
+            un = Unit(name, symbol, factor, magnitudes)
+            db.session.add(un)
+            db.session.commit()
+            return jsonify({
+                'name': name,
+                'symbol': symbol,
+                'factor': factor,
+                'magnitudes': magnitudes
+            }),201
+
+        return jsonify(form.errors),400
+
+    return render_template('partials/unit_form.html', form=form)
+
+@app.route('/units/create', methods=['GET','POST'])
+@login_required
+def create_unit():
+    """ Save a new unit to the database """
+    form= AddUnitForm(request.form)
+
+    if request.method == 'POST':
+        if Unit.query.filter_by(name= form.name.data).first():
+            # we call form.validate to build up all errors from the form
+            form.validate()
+            if not 'name' in form.errors:
+                form.errors['name'] = []
+            form.errors['name'].append("Name "+form.name.data+" already taken")
+
+        elif form.validate():
+            name = request.form.get('name')
+            symbol = request.form.get('symbol')
+            factor = request.form.get('factor') if request.form.get('factor') else None
+            magnitudes = ['','k','M','G','T'] if request.form.get('factor') else None
+
+            un = Unit(name, symbol, factor, magnitudes)
+            db.session.add(un)
+            db.session.commit()
+            return redirect(url_for('manage_units'))
+
+    return render_template('create-unit.html', form=form)
+
+
+@app.route('/units/edit/<unitid>',methods=['GET','POST'])
+@login_required
+def edit_unit(unitid):
+    """ Edit an unit """
+    unit= Unit.query.get(unitid)
+    if not unit:
+        return "Unit doesn't exist",404
+    form= AddUnitForm(request.form,unit)
+    if request.method == 'POST' and form.validate():
+        name = request.form.get('name')
+        symbol = request.form.get('symbol')
+        factor = request.form.get('factor') if request.form.get('factor') else None
+        magnitudes = ['','k','M','G','T'] if request.form.get('factor') else None
+
+        if request.form.get('name'):
+            unit.name = request.form.get('name')
+        if request.form.get('symbol'):
+            unit.symbol = request.form.get('symbol')
+        if request.form.get('factor'):
+            unit.factor = int(request.form.get('factor'))
+            unit.magnitudes = str(['','k','M','G','T'])
+        else:
+            unit.magnitudes = None
+
+        db.session.commit()
+        return redirect(url_for('manage_units'))
+
+    elif request.method == 'POST': return "CACA!",500
+
+    return render_template('edit-unit.html', form=form, unit=unit, putain=request.method)
+
+
+@app.route('/units/all', methods=['GET'])
+@login_required
+def get_units():
+    """ Return units list """
+    return jsondump({ row.name : {
+                'symbol': row.symbol,
+                'factor': row.factor,
+                'magnitudes': row.magnitudes
+                } for row in Unit.query.all()})
+
+@app.route('/units/delete/<unitid>',methods=['DELETE'])
+@login_required
+def delete_unit(unitid):
+    """ Delete an unit """
+    unitid = try_int(unitid)
+    if not current_user.is_super_admin:
+        abort(403)
+    unit = Unit.query.get(unitid)
+    if not unit:
+        abort(404)
+    db.session.delete(unit)
+    db.session.commit()
+    return 'Ok',204

@@ -639,3 +639,49 @@ header > .alerts{
 .tooltip.enabled{
     display: inline-block;
 }
+
+/* popin */
+.popin{
+    position:absolute;
+    padding:0.5em 3em 1em 1em;
+    background:black;
+    border: 1px solid grey;
+}
+
+.popin h3{
+    text-transform: uppercase;
+}
+
+.popin .errors{
+    color: #F00;
+    margin: 0.25em 0 0.25em 2em;
+}
+
+.popin ul{
+    display: block;
+}
+
+.popin label{
+    display: inline-block;
+    padding:0.1em 0.25em;
+    width: 5em;
+}
+
+.popin small{
+    font-style: italic;
+    margin: 0.5em 0.25em 0.25em 2em;
+    display: inline-block;
+    font-size: 0.85em
+}
+
+.popin .required{
+    color: #F00;
+    font-size: 1.5em;
+    margin-left: 0.2em;
+    vertical-align: middle;
+}
+
+.popin .submit{
+    text-transform: uppercase;
+    font-weight: bold;
+}

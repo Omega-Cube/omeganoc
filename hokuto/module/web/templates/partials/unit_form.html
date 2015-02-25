@@ -1,0 +1,38 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+<form id="add_unit" action="#" method="post" name="addunit">
+  {% for message in get_flashed_messages() %}
+  <div class="flash"> {{ message }} </div>
+  {% endfor %}
+
+  <ul class="name errors"></ul>
+  <p><label>Name</label>{{ form.name }}<span class="required">*</span></p>
+
+  <ul class="symbol errors"></ul>
+  <p><label>Symbol</label>{{ form.symbol }}<span class="required">*</span></p>
+
+  <ul class="factor errors"></ul>
+  <p><label>Factor*</label>{{ form.factor }}</p>
+
+  {# Removed for the moment
+  <p><label>Magnitudes</label>{{ form.magnitudes }}</p>
+  #}
+  
+  <p><input class="submit" type="submit" value="Add"/></p>
+  <p><small>* If defined this unit will be displayed with aggregated numbers using the given factor,<br/>for exemple 2048 with factor 1024 will be displayed as 2k[symbol]</small></p>
+</form>

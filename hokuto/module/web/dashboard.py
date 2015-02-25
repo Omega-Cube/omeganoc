@@ -296,44 +296,6 @@ def rename_dashboard(oldname, newname):
     query = partsTable.update().where(partsTable.c.user_id == current_user.id).where(partsTable.c.dashboard == oldname)
     db.engine.execute(query, {'dashboard': newname})
 
-# UNITS
-#TODO: update and delete units methods
-
-@app.route('/units/add', methods=['POST'])
-@login_required
-def add_unit():
-    """ Save a new unit to the database """
-    name= None
-    symbol= None
-    factor= None
-    magnitudes= None
-
-    if 'name' not in request.form or not request.form['name']:
-        return False
-    else:
-        name = request.form.name
-    if 'symbol' in request.form and request.form['symbol']:
-        symbol = request.form['symbol']
-    if 'factor' in request.form and request.form['factor']:
-        factor = request.form['factor']
-    if 'magnitudes' in request.form and request.form['magnitudes']:
-        magnitudes = request.form['magnitudes']
-
-    un = Unit(name, symbol, factor, magnitudes)
-    db.sessions.add(un)
-    db.session.commit()
-    return true;
-
-@app.route('/units/all', methods=['GET'])
-@login_required
-def get_units():
-    """ Return units list """
-    return jsondump({ row.name : {
-                'symbol': row.symbol,
-                'factor': row.factor,
-                'magnitudes': row.magnitudes
-                } for row in Unit.query.all()})
-
 # DATABASES
 partsConfTable = Table('parts_conf',
                      db.metadata,

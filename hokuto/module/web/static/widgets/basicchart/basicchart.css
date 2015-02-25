@@ -141,7 +141,7 @@ svg.basicchart .parts-cursor{
      text-transform: uppercase;
      font-weight: bold;
      font-size: 1.15em;
-     margin: 0.25em;
+     margin: 0.25em 0;
      background-image: none;
      background-color: #777;
      color: #FFF;

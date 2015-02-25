@@ -1,0 +1,94 @@
+/* global */
+#unitform .button, .unitlist .button{
+    border-radius: 0.5em;
+    color: #FFF;
+    display: inline-block;
+    padding: 3px 10px;
+    background: none repeat scroll 0% 0% transparent;
+    border: medium none;
+    text-transform: capitalize;
+}
+/* header */
+h3.title{
+    background-color: #3A4348;
+    padding: 0px 40px;
+    box-shadow: 1px 0px 3px #111;
+    line-height: 80px;
+}
+
+/* action */
+#unitform .button.delete, .unitlist .button.delete{
+    background-color: #D9534F;
+}
+
+#unitform .button.edit, .unitlist .button.edit{
+    background-color: #EEE;
+    color: #111;
+    border: 1px solid #888;
+    text-shadow: none;
+}
+
+#unitform .button.add-unit, .unitlist .button.add-unit{
+    background-color: #019875;
+}
+
+/* list */
+.unitlist{
+    background-color: #444;
+    margin: 2em 5em;
+    border: 2px solid #555;
+    display: inline-block;
+}
+
+/* title */
+.unitlist .title{
+    background-color: #3A4348;
+    padding: 3px 10px;
+    line-height: 35px;
+}
+
+.unitlist .title .add-unit{
+    float: right;
+    margin: 3px 20px;
+}
+
+/* content */
+.unitlist ol{
+    display: table;
+    text-align:center;
+    margin: auto;
+    border-collapse: collapse;
+}
+
+.unitlist li{
+    display: table-row;
+    border-bottom: 1px solid #555;
+    border-top: 1px solid #555;
+}
+
+.unitlist .legend{
+    font-weight: bold;
+}
+
+.unitlist li>*{
+    display: table-cell;
+    padding: 0.5em 5em;
+}
+
+/* edit and create units */
+#unitform{
+    padding: 1em 4em;
+}
+
+#unitform label{
+    display: inline-block;
+    width: 8em;
+}
+
+#unitform p{
+    margin: 5px 0;
+}
+
+#unitform .button{
+    margin: 0 5px;
+}

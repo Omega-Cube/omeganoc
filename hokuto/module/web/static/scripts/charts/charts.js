@@ -495,6 +495,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             if(this.current['right']['opposate'] && this.scales[this.current['right']['opposate']])
                 this.container.focus.select('.y.axis.reversed.right').call(this.scales[this.current['right']['opposate']].getAxis());
 
+            //remove 0 entry to avoid overlap
+            if(this.current['left']['opposate'] && this.current['left']['top'])
+                this.container.focus.select('.y.axis.reversed').select('g').remove();
+            if(this.current['right']['opposate'] && this.current['right']['top'])
+                this.container.focus.select('.y.axis.reversed.right').select('g').remove();
         }
         this.drawGrid();
     }
@@ -1093,7 +1098,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             this.toogleSpinner(this.container.main);
             DashboardProbes.worker.postMessage([3,data,this.id]);
         }.bind(this));
-        
+
         //actions
         var actionsMenu = this.container.main.parent().find('.actions.dropmenu ul');
 
@@ -1139,7 +1144,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         actionsMenu.prepend(button);
 
         //edit
-        var button = $('<li class="edit">config</li>');
+        var button = $('<li class="edit">edit</li>');
         button.click(function(e){
             this.toogleEditPanel();
         }.bind(this));
@@ -1756,7 +1761,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 console.log(this.id,legend,this.probes,this.legends);
                 continue;
             }
-            var unit = this.units.units[this.scales[this.probes[legend].scale].unit];
+            var unit = this.units.get(this.scales[this.probes[legend].scale].unit);
             if(!event.values[legend] && typeof(event.values[legend]) === 'boolean') event.values[legend] = 'unknown';
             this.legends[legend].text(this.units.unitFormat(event.values[legend],unit));
         }
@@ -1895,8 +1900,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('data-title', probe)
             .attr('data-date', function(d){ return d.x.toLocaleString()})
             .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                         this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                         this.units.get(this.scales[this.probes[probe].scale].unit)
                                                                         )}.bind(this));
+
         this.content[probe] = {
             redraw: function(data){
                 if(data){
@@ -1912,8 +1918,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                         .attr('data-title', probe)
                         .attr('data-date', function(d){ return d.x.toLocaleString()})
                         .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                                     this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                                     this.units.get(this.scales[this.probes[probe].scale].unit)
                                                                                     )}.bind(this));
+
                     var paths = this._getPathList(data);
                     var p = g.selectAll("path.main").data(paths);
                     p.enter().append("path")
@@ -2022,8 +2029,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('data-title', probe)
             .attr('data-date', function(d){ return d.x.toLocaleString()})
             .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                         this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                         this.units.get(this.scales[this.probes[probe].scale].unit)
                                                                         )}.bind(this));
+
         this.content[probe] = {
             redraw: function(data){
                 if(data){
@@ -2039,8 +2047,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                         .attr('data-title', probe)
                         .attr('data-date', function(d){ return d.x.toLocaleString()})
                         .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                                     this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                                     this.units.get(this.scales[this.probes[probe].scale].unit)
                                                                                     )}.bind(this));
+
                     var paths = this._getPathList(data);
                     var p = g.selectAll("path.main").data(paths);
                     p.enter().append("path")
@@ -2185,7 +2194,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('data-title', probe)
             .attr('data-date', function(d){ return d.x.toLocaleString()})
             .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                         this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                         this.units.get(this.scales[this.probes[probe].scale].unit)
                                                                         )}.bind(this));
     }
 
@@ -2256,7 +2265,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('data-title', probe)
             .attr('data-date', function(d){ return d.x.toLocaleString()})
             .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                         this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                         this.units.get(this.scales[this.probes[probe].scale].unit)
                                                                         )}.bind(this));
 
         var bars = focusGroup.selectAll(".bar").data(data).enter();
@@ -2340,8 +2349,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                         .attr('data-title', probe)
                         .attr('data-date', function(d){ return d.x.toLocaleString()})
                         .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                                     this.units.units[this.scales[this.probes[probe].scale].unit]
+                                                                                     this.units.get(this.scales[this.probes[probe].scale].unit)
                                                                                     )}.bind(this));
+
                     //redraw predicted charts if any
                     if(this.predictData[probe])
                         this.addPredict(this.predictData[probe],color,data,y,probe);
@@ -2756,19 +2766,81 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         };
 
         var nextColor = getNextUnusedColor();
-        var addForm = $('<form name="add_chart_form_'+this.id+'" ></form>');
+
+        //containers
+        var id = this.id;
+        var addForm = $('<form name="add_chart_form_'+id+'" ></form>');
         addForm.append($('<h3>Add probe</h3>'));
         var probeSelection = $('<div class="column"></div>');
         var probePosition = $('<div class="column"></div>');
         var settings = $('<div class="column"></div>');
+
+        //probe
         probeSelection.append(this.buildMetricForm('server'));
 
+        //scale selection
         probePosition.append('<label>Scale position :</label>');
         probePosition.append(form.orientAddSelect());
         probePosition.append(form.directionAddSelect());
         probePosition.append('<label>Scale unit :</label>');
         probePosition.append(form.unitSelect(false, false, units));
 
+        //add unit
+        var add = $('<p><button class="add">Add unit</button></p>');
+        add.on('click',function(e){
+            e.preventDefault();
+            var target = e.target.getBoundingClientRect();
+            var units = this.units;
+
+            $.ajax("/units/add").success(function(e){
+                var form = $(e);
+                var popin = $('<div class="popin" style="top:'+(target.top - 200)+'px;left:'+target.left+'px;"></div>');
+                var close = $('<button class="close" title="close"></button>');
+                close.on('click',function(){ popin.remove(); });
+                var title = $('<h3>Add unit</h3>');
+                popin.append(close);
+                popin.append(title);
+
+                form.find('.submit').on('click',function(e){
+                    e.preventDefault();
+
+                    $.ajax('/units/add',{
+                        'type':'POST',
+                        'data': {
+                            'name': document.forms.add_unit.name.value,
+                            'symbol': document.forms.add_unit.symbol.value,
+                            'factor': document.forms.add_unit.factor.value
+                        }
+                    }).success(function(u){
+                        units.add(u.name, u);
+                        var option = document.createElement('option');
+                        option.setAttribute('value',u.name);
+                        option.setAttribute('selected','selected');
+                        option.appendChild(document.createTextNode(u.name));
+
+                        document.forms['add_chart_form_'+id].unit.appendChild(option);
+                        popin.remove();
+                    }.bind({"units": units})).error(function(e){
+                        var response = e.responseJSON;
+                        var li = false;
+                        popin.find('.errors').empty();
+                        for(var label in response){
+                            li = popin.find('.errors.'+label);
+                            for(var i = 0, len = response[label].length; i<len; i++)
+                                li.append('<li>'+response[label][i]+'</li>');
+                        };
+                    });
+
+                    return false;
+                });
+
+                popin.append(form);
+                $('body').append(popin);
+            });
+        }.bind(this));
+        probePosition.append(add);
+
+        //chart type and color
         settings.append('<label>Chart type : </label>')
         settings.append(form.typeAddSelect());
         settings.append('<label>Chart color : </label>')
@@ -3139,7 +3211,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         },this.id]);
     };
 
-    
+
     /**
      * Handle y-zoom (shift + wheel on focus)
      */
