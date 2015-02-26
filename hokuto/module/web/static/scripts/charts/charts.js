@@ -343,7 +343,6 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             }
         }.bind(this), this.id);
         DashboardProbes.worker.on('aggregate',function(data){
-            this.currentData = data;
             var stacked = {};
             for(var p in data){
                 var probe = this.probes[p];
@@ -361,12 +360,14 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 if(stackedData.length){
                     var i = 0;
                     for(var p in stacked[s]){
+                        data[p].values = stackedData[i];
                         if(this.content[p])
                             this.content[p].redraw(stackedData[i]);
                         i++;
                     }
                 }
             }
+            this.currentData = data;
         }.bind(this),this.id);
 
         //main timeline events
@@ -3103,7 +3104,6 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.autoScale = function(){
         var lastData = this.currentData;
-
         //get all max values
         var tmpMaxScales = {};
         for(var p in lastData){
@@ -3121,8 +3121,10 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         for(var s in this.scales){
             var y = this.scales[s].y;
             var max = tmpMaxScales[s];
-            y.domain([0,max]);
-            this.scales[s].y = y;
+            if(max){
+                y.domain([0,max]);
+                this.scales[s].y = y;
+            }
         }
 
         //redraw
