@@ -582,7 +582,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 if(options.orient && options.orient === 'right' && !this.current['right']['opposate']){
                     this.current['right']['opposate'] = name;
                     this._enableSwitchButton('right','opposate',name);
-                }else if(!this.current['left']['opposate']){
+                }else if(!this.current['left']['opposate'] && options.orient !== 'right'){
                     this.current['left']['opposate'] = name;
                     this._enableSwitchButton('left','opposate',name);
                 }
