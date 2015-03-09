@@ -48,7 +48,7 @@ define(['onoc.createurl'], function(createUrl) {
                     value = value.toExponential(3);
             }
 
-            result = value.toLocaleString();
+            result = value.toLocaleString() + ' ';
             if(unit.magnitudes)
                 result += unit.magnitudes[factor];
             result += unit.symbol;
