@@ -3175,26 +3175,34 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      * Auto-resize focus y scales.
      */
     DashboardChart.prototype.autoScale = function(){
+        var log = this.conf.log;
         var lastData = this.currentData;
         //get all max values
         var tmpMaxScales = {};
         for(var p in lastData){
             var s = this.probes[p].scale;
-            if(!tmpMaxScales[s]) tmpMaxScales[s] = 0;
+            if(!tmpMaxScales[s]) tmpMaxScales[s] = { 'min': false, 'max': 0};
             var max = 0;
+            var min = false;
             for(var v in lastData[p].values){
                 var val = lastData[p].values[v].y + lastData[p].values[v].y0;
                 max = (max < val) ? val : max;
+                if(typeof min === 'boolean') min = val;
+                else min = (min > val) ? val : min;
             }
-            if(max > tmpMaxScales[s]) tmpMaxScales[s] = max;
+            if(max > tmpMaxScales[s].max) tmpMaxScales[s].max = max;
+            if(typeof tmpMaxScales[s].min === 'boolean') tmpMaxScales[s].min = min;
+            else if(min < tmpMaxScales[s].min) tmpMaxScales[s].min = min;
 
         }
         //apply new domains
         for(var s in this.scales){
             var y = this.scales[s].y;
-            var max = tmpMaxScales[s];
+            var max = tmpMaxScales[s].max;
+            var min = (log) ? tmpMaxScales[s].min : 0;
+            if(log && !min) min = 0.0001;
             if(max){
-                y.domain([0,max]);
+                y.domain([min,max]);
                 this.scales[s].y = y;
             }
         }
