@@ -24,53 +24,51 @@ Dependencies:
 
      yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
 
-Shinken install
+STEP 0 : FETCH GIT SUBMODULES
+-----------------------------
 
-    useradd --user-group shinken
-    make shinken-install
-    shinken --init
+If you are installing or upgrading from the git repository you'll need to fetch external modules before running any commands.
 
-INSTALL
-------------
+   git submodules init
+   git submodules update
+
+STEP 1 : SHINKEN INSTALL
+------------------------
+
+Install and initialize shinken (requiere root privileges).
+
+     useradd --user-group shinken
+     cd <omeganoc>/<directory>
+     make shinken-install
+     shinken --init
+Just run `make shinken-install` if shinken have already ben installed.
+
+STEP 2 : INSTALL SHINKEN PLUGINS
+--------------------------------
 
 Run the install script with root privileges
 
     cd <omeganoc>/<directory>
     make install
-Add hokuto, graphite and livestatus to broker's modules
+Edit broker-master.cfg to add hokuto, graphite and livestatus modules
 
     #/etc/shinken/brokers/broker-master.cfg
     modules    graphite, livestatus, hokuto
-Also if you are working with a lot of log's data set use_aggressive_sql to 1 from logstore-sqlite
+Also if you have a lot of logs data set use_aggressive_sql to 1 from logstore-sqlite
 
      #/etc/shinken/modules/logstore_sqlite.cfg
      use_aggressive_sql      1   ; Set to 1 for large installations
-Launch or restart daemons
 
-    python /opt/graphite/bin/carbon-cache.py start
-    service shinken start|restart
+STEP 3 : IMPORTING PREVIOUS DATA
+--------------------------------
 
-UPGRADING
----------
-If you are upgrading an existing project you'll need to initialize the sla database from archived logs
+You can skip this step if it is your first install.
+You'll need to initialize the sla database with existing archived logs
 
     make import-sla
 
-Restart shinken daemon
-
-    service shinken restart
-
-USERS
------
-
-Omeganoc default user is :
-
-         username : admin
-         password : admin
-Don't forget to login and update this user with a more secured password.
-
-CONFIG
-======
+STEP 4 : CONFIG
+---------------
 
 To change settings update /etc/shinken/modules/hokuto.cfg :
 ```
@@ -86,7 +84,7 @@ define module {
     secretkey       Enter the secretest key here!; The server's secret key used for signing cookies
     logging         /var/log/shinken/hokuto.log;   Log file
     threaded        1  ;                           Set to 0 if you want to manage all requests on the same thread. Slower but may
-                        ;                          improve stability in some cases
+                       ;                           improve stability in some cases
 }
 ```
 Don't forget to restart the service after any change:
@@ -95,7 +93,36 @@ Don't forget to restart the service after any change:
 
 You can then access hokuto from http://<host>:<port>
 
-About how to add/edit hosts, services, contacts and monitoring data see [shinken settings and configuration](https://shinken.readthedocs.org/en/latest/05_thebasics/index.html).
+STEP 5 : START OR RESTART DAEMONS
+---------------------------------
+
+Graphite requiere carbon daemon.
+
+    python /opt/graphite/bin/carbon-cache.py start
+Note: It can be helpfull to add an init script into your boot loader, forgetting to start carbon is a common mistake.
+
+Shinken daemon also need to be (re)started.
+
+    service shinken start|restart
+
+
+STEP 6 : SET ADMIN USER PASSWORD
+--------------------------------
+
+At this stage you should be able to access omeganoc from http://<host>:<port> (see STEP 4).
+Omeganoc default admin user is :
+
+         username : admin
+         password : admin
+
+Don't forget to login and update this user with a more secured password.
+
+ADDING NEW HOSTS, CONTACTS AND SERVICES
+=======================================
+
+An admin interface to manage hosts/services/contacts and probes is currently under development.
+
+For now if you need to add or edit hosts, services, contacts and monitoring data see [shinken settings and configuration](https://shinken.readthedocs.org/en/latest/05_thebasics/index.html).
 
 TROUBLESHOOTING
 ===============
@@ -118,7 +145,7 @@ Shinken contact are imported from shinken, for more information see [Shinken con
 
 Another reason can be that carbon daemon is not running, carbon doesn't start on startup by default and need to be launch after each reboot.
 
-*SLA tools don't return data prior to hokuto installation*
+*SLA tools don't return data prior to my installation*
 
 Retrieve SLA informations from livestatus was very ressource consuming, so hokuto is using his own database to process such data.
 To import all data from archived livestatus logs run
@@ -128,4 +155,4 @@ From your installation directory.
 
 *Dashboard's widget are very slow to loadup and if I try to reload data from one of theme I get an infinite spinner
 
-Enable use_aggressive_sql from logstore-sqlite's configuration. Eitherway logstore will retrieve ALL data from logs and will apply filters from python's side instead of SQLite.
+Enable use_aggressive_sql from logstore-sqlite's configuration.
