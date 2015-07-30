@@ -1,0 +1,55 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{%extends "layout.html"%}
+
+{%block head%}
+<link href="{{ url_for('static', filename='css/units.css') }}" rel="stylesheet" type="text/css" />
+{%endblock%}
+
+{%block content%}
+
+<h3 class="title">Manage dashboards</h3>
+
+<article style="text-align:center">
+  <section class="unitlist">
+    <div class="title">
+      <span class="total">Dashboards ({{ dashboards_list|length }})</span>
+      {#<a class="button add-unit" href="{{url_for('create_unit')}}">New Unit</a>#}
+    </div>
+    <ol id="dashboards-list">
+      {#<li class="legend">
+        <span>Name</span>
+        <span>Symbol</span>
+        <span>Factor</span>
+      </li>#}
+      {% for d in dashboards_list %}
+      <li class="dashboard" data-db="{{ d }}">
+        <span>
+          <a class="name" data-db="{{ d }}" href="{{ url_for('dashboards') }}#{{ d }}">{{ d }}</a>
+        </span>
+        <span class="button edit">rename</span>
+        <span class="button delete">delete</span>
+      </li>
+      {% else %}
+      <li class="no-dashboard"><a href="{{ url_for('dashboards') }}">You have no dashboards yet</a></li>
+      {% endfor %}
+    </ol>
+  </section>
+</article>
+<script src="{{ url_for('static', filename='scripts/manage_dashboards.js') }}"></script>
+{%endblock%}
