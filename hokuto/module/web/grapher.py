@@ -415,6 +415,7 @@ class Graph(GraphBase):
         missing_positions = self.__read_position_data(unused_data)
         self.__add_link_from_user_data(unused_data)
         self.__read_metadata(unused_data)
+
         return (unused_data, missing_positions)
 
     def __read_position_data(self, data):
