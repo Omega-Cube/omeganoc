@@ -2093,6 +2093,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         if(!predict) predict = this.predictData[probe].concat();
         else this.predictData[probe] = predict.concat();
 
+        if(!predict[0].length) return;
+
         var x= this.axis.x;
         var g = this.container.focus.select('#chart_'+probe.split(".").join("_"));
         var gDots = this.container.focus.select('#dots_'+probe.split(".").join("_"));
@@ -2120,7 +2122,6 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         var blue = parseInt(color.substr(5,2), 16);
 
         //lower 80
-        predict[0].name = "lower 80";
         areas.push({
             'area': predict[0].concat(predict[1].concat().reverse()),
             'color': 'rgb('.concat(
@@ -2588,7 +2589,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.toogleLogsPanel = function(d){
         this.buildLogsPanel(d);
-        this.tooglePanel();
+        this.tooglePanel(true);
     }
 
     /**
@@ -2596,7 +2597,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.toogleDupPanel = function(){
         this.buildDupPanel();
-        this.tooglePanel();
+        this.tooglePanel(true);
     }
 
 
@@ -2605,7 +2606,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.toogleEditPanel = function(){
         this.buildEditPanel();
-        this.tooglePanel();
+        this.tooglePanel(true);
     }
 
     /**
@@ -2613,7 +2614,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.toogleAddPanel = function(){
         this.buildAddPanel();
-        this.tooglePanel();
+        this.tooglePanel(true);
     }
 
     /**
