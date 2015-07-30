@@ -156,3 +156,9 @@ From your installation directory.
 *Dashboard's widget are very slow to loadup and if I try to reload data from one of theme I get an infinite spinner
 
 Enable use_aggressive_sql from logstore-sqlite's configuration.
+
+*I just installed shinken but exemple config seems not working (showing file not exist warnings)
+
+Shinken is given with a prebuild config which monitor localhost (don't forget to give correct shinken contact to your user), anyway you'll need nagios-plugins to made theme work.
+Don't forget to check if carbon is currently running.
+Also hosts will not show up on host selection until they have some datas so you may need to wait few minutes.

@@ -235,10 +235,13 @@ Probe.prototype.setPredicted = function(data){
             });
         }
         formated.values = values;
-        formated.step = (values[1].date - values[0].date) * 1000;
-        formated.start = new Date(values[0].date * 1000);
-        formated.end = new Date(values[values.length - 1].date * 1000);
-        this._predicted = formated;
+        if(values[1])
+            formated.step = (values[1].date - values[0].date) * 1000;
+        if(values.length){
+            formated.start = new Date(values[0].date * 1000);
+            formated.end = new Date(values[values.length - 1].date * 1000);
+            this._predicted = formated;
+        }
     }
 };
 
@@ -916,7 +919,6 @@ var Data = {
         var query = { 'probes': probes};
         _request(url, query, function(data){
             postMessage([11,data,sig]);
-            
             for(var p in data)
                 this.probes[p].setPredicted(data[p]);
         }.bind(this));
