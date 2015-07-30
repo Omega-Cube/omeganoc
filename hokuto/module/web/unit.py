@@ -24,6 +24,7 @@ import json
 from . import app, db, login_manager
 from flask import render_template, flash, redirect, request, jsonify, url_for
 from flask.ext.login import login_user, login_required, logout_user, UserMixin, current_user
+from sqlalchemy.sql import text
 from wtforms import Form, TextField, IntegerField, SelectField, validators
 from wtforms.validators import DataRequired
 from utils import try_int
@@ -65,7 +66,7 @@ class AddUnitForm(Form):
 @login_required
 def manage_units():
     """ Units management page """
-    units = Unit.query.order_by(Unit.name).all()
+    units = Unit.query.filter(Unit.name != 'None').order_by(Unit.name).all()
     return render_template('unit.html', units=units)
 
 
@@ -159,9 +160,9 @@ def edit_unit(unitid):
         db.session.commit()
         return redirect(url_for('manage_units'))
 
-    elif request.method == 'POST': return "CACA!",500
+    elif request.method == 'POST': return "Form invalid!",500
 
-    return render_template('edit-unit.html', form=form, unit=unit, putain=request.method)
+    return render_template('edit-unit.html', form=form, unit=unit)
 
 
 @app.route('/units/all', methods=['GET'])
@@ -185,5 +186,6 @@ def delete_unit(unitid):
     if not unit:
         abort(404)
     db.session.delete(unit)
+    db.engine.execute(text("UPDATE parts_conf SET value = 'None' where key like '%|unit' and value = :unit;"),{'unit': unit.name});
     db.session.commit()
     return 'Ok',204

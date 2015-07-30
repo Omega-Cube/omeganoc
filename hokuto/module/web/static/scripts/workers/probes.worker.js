@@ -152,7 +152,8 @@ Probe.prototype.getCursor = function(date){
             result = data[offset] || 0;
         }else if(this._predicted && date >= this._predicted.start && date <= this._predicted.end){
             var time = date - this._predicted.start;
-            var offset = Math.round(time/this._predicted.step);
+            var offset = (this._predicted.step) ? Math.round(time/this._predicted.step) : 0;
+            if(!this._predicted.values[offset]) offset = this._predicted.values.length - 1;
             result = this._predicted.values[offset].value;
         }
         this._cache[date] = result;
@@ -235,10 +236,13 @@ Probe.prototype.setPredicted = function(data){
             });
         }
         formated.values = values;
-        formated.step = (values[1].date - values[0].date) * 1000;
-        formated.start = new Date(values[0].date * 1000);
-        formated.end = new Date(values[values.length - 1].date * 1000);
-        this._predicted = formated;
+        if(values[1])
+            formated.step = (values[1].date - values[0].date) * 1000;
+        if(values.length){
+            formated.start = new Date(values[0].date * 1000);
+            formated.end = new Date(values[values.length - 1].date * 1000);
+            this._predicted = formated;
+        }
     }
 };
 
@@ -375,7 +379,7 @@ Probe.prototype._aggregate = function(from,until,mode,interval){
     var interval = interval || this._getAggregateLevel(from,until);
     var start = (from < this._lastKnownFromDate) ? this._lastKnownFromDate : from;
 
-    var tmp = [], time = this._lastKnownFromDate, s = false;
+    var tmp = [], time = this._lastKnownFromDate, s = true;
     for(var i = 0, len = data.length;i<len;i+=interval,time+= interval * step){
         if(time<from)
             continue;
@@ -916,7 +920,6 @@ var Data = {
         var query = { 'probes': probes};
         _request(url, query, function(data){
             postMessage([11,data,sig]);
-            
             for(var p in data)
                 this.probes[p].setPredicted(data[p]);
         }.bind(this));
@@ -988,6 +991,7 @@ onmessage = function(m){
       8: check if new aggregation scale reached with given timeline.
       9: Get cursor data
       10: Get logs data
+      11: Delete part
     */
     switch(m.data[0]){
     case 1:

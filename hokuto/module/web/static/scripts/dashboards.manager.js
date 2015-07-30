@@ -53,21 +53,23 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             // Initialize global timeline element
             DashboardsManager.timeline = new DashboardTimeline($('#dashboard-global-timeline'));
-            //TODO: moveme, we should display the timeline only if there is an active dashboard.
-            DashboardsManager.timeline.show();
 
             // Initialize Gridster
+            var cols = Math.floor(($('#content').width()) / 70);
             DashboardsManager.gridster = target.gridster({
                 widget_margins: [10, 10],
-                widget_base_dimensions: [100, 100],
+                widget_base_dimensions: [50, 50],
+                min_cols : cols,
 		resize: {
-		    'enabled': true
-                    //'min_size': [4, 4]
-		}
-            }).data('gridster');
+		    'enabled': true,
+                    'min_size': [8, 6]
+		},
+            }).width('auto').data('gridster');
 
             $(window).resize(function () {
                 // Update gridster's grid to match the new window dimentions
+                var cols = Math.floor(($('#content').width()) / 70);
+                DashboardsManager.gridster.cols = cols;
                 DashboardsManager.gridster.recalculate_faux_grid();
             });
 
@@ -86,9 +88,11 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             // Listen for URL changes
             jQuery(window).hashchange(function () {
-                var hash = decodeURIComponent(location.hash.substring(1));
-
-                DashboardsManager.loadDashboard(hash);
+                //ok this is very very nasty but there is tons of glitch and issue with dashboards unload atm (workers and gridster don't flush their data correctly)
+                //so it's better to reload the header between each dashboard than bringing memory leaks, bad formating and other glitch that will force to reload anyway.
+                location.reload(true);
+                //var hash = decodeURIComponent(location.hash.substring(1));
+                //DashboardsManager.loadDashboard(hash);
             });
 
             // Load the initial dashboard
@@ -96,9 +100,11 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             if (firstDashboard) {
                 DashboardsManager.loadDashboard(firstDashboard);
+                DashboardsManager.timeline.show();
             }
             else {
-                DashboardsManager._setNoDashboardMessage('Please select a dashboard using the top menu');
+                //if no DB available display the create dashboard icon
+                jQuery('#create-dashboard-button').click();
             }
         },
 
@@ -128,6 +134,7 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             DashboardsManager._loadDashboardData(dashboardName, function (data) {
                 DashboardsManager._setNoDashboardMessage('');
+                DashboardsManager.timeline.show();
                 // Iterate over all the parts and create them
                 jQuery.each(data, function (index, value) {
                     Widget.getWidgetById(value.widget, function (widget) {
@@ -160,28 +167,32 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
          * @param {String} initialWidget - Intialize the new dashboard with this widget
          */
         createDashboard: function(name, initialWidget) {
-            DashboardsManager.unloadDashboard();
+            //DashboardsManager.unloadDashboard();
             DashboardsManager.currentDashboard = name;
-            DashboardsManager._setNoDashboardMessage('');
+            //DashboardsManager._setNoDashboardMessage('');
 
-            DashboardsManager.buildWidget(initialWidget);
+            //DashboardsManager._setDashboardTitle(name);
 
-            DashboardsManager._setDashboardTitle(name);
-            DashboardsManager._addTopMenuEntry(name);
-            DashboardsManager._showDashboardControls(true);
+            //while we force reload between DB...
+            //DashboardsManager._showDashboardControls(true);
+            //DashboardsManager.timeline.show();
+            DashboardsManager.buildWidget(initialWidget,function(){
+                document.location.hash = this.name;
+            }.bind({'name': name}));
         },
 
         /**
 	 * Build a new widget
          * @param {String} widgetName - The widget we need to create
          */
-	buildWidget: function(widgetName){
+	buildWidget: function(widgetName,callback){
             Widget.getWidgetById(widgetName, function (widget) {
                 if (!widget)
                     return;
 
                 // Create the part with its default values
                 widget.createDefaultData(this);
+                if(typeof callback === 'function') callback();
             }.bind(this));
 	},
 
@@ -218,7 +229,11 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             DashboardsManager.gridster.remove_widget(part, function () {
                 DashboardsManager._scanChangedPositions();
             });
-            delete DashboardsManager.currentParts[pid];
+
+            if(DashboardsManager.currentParts[pid] && !!DashboardsManager.currentParts[pid].controller)
+                DashboardsManager.currentParts[pid].controller.remove();
+            DashboardsManager.currentParts[pid] = null;
+
             // Save the removal
             jQuery.ajax(createUrl('/dashboards/part/' + pid), {
                 type: 'DELETE'
@@ -376,7 +391,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
                     });
                 }
             });
-
         },
 
         /**
@@ -448,9 +462,12 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
          */
         unloadDashboard: function () {
             DashboardsManager.currentParts = {};
+            var count = 0;
             var parts = DashboardsManager.element.find(' > li').each(function (i, e) {
                 DashboardsManager.gridster.remove_widget(e, true);
+                count++;
             });
+            if(!count) DashboardsManager._deleteTopMenuEntry(DashboardsManager.currentDashboard);
 
             DashboardsManager._showDashboardControls(false);
             //TODO: flush worker too
@@ -474,6 +491,7 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             link.attr('href', createUrl('/dashboards') + '#' + encodeURIComponent(name));
             var li = link.wrap('<li />').parent();
             entryContainer.append(li);
+            return link;
         },
 
         /**
@@ -493,6 +511,20 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
         },
 
         /**
+         * Delete an entry from the Dashboards dropdown menu
+         * @param {String} name
+         */
+        _deleteTopMenuEntry: function (name) {
+            var entries = jQuery('#menu-dashboards-list a');
+            entries.each(function (i, elm) {
+                var jqElm = jQuery(elm);
+                if (jqElm.text() == name) {
+                    jqElm.remove();
+                }
+            });
+        },
+        
+        /**
          * Sets the text of the big text displayed in the middle of the dashboards area.
          * Provide an empty string to hide it.
          * @param {String} text
@@ -508,9 +540,20 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
         _showDashboardControls: function (show) {
             var controls = jQuery('#dashboard-controls');
 
-            if (show)
+            if (show){
                 controls.fadeIn();
-            else
+                controls.find('.remove').click(function(){
+                    $.ajax({
+                        'url': '/dashboards/' + DashboardsManager.currentDashboard,
+                        'type': 'DELETE'
+                    }).success(function(){
+                        document.location = '/manage/dashboards';
+                    }).error(function(e){
+                        console.error(e);
+                    });
+                    return false;
+                });
+            }else
                 controls.fadeOut();
         }
     };

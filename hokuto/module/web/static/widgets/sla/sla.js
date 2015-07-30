@@ -878,12 +878,19 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
     };
 
     /**
+     * Called when this widget is deleted
+     */
+    Sla.prototype.remove = function(){
+
+    };
+
+    /**
      * Sla widgets default config
      */
     Sla.default = function(){
         return {
-            width: 5,
-            height: 3,
+            width: 8,
+            height: 5,
         };
     };
 

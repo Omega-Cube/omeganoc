@@ -51,6 +51,10 @@ from ajax import jsondump
 # value whenever possible
 _base_node_spacing = 60
 
+# Defines a prefix that should be used to store metadata
+# attached to a graph in the graph state database
+_metadata_storage_prefix = 'hokuto__meta:'
+
 class DependencyError(Exception):
     """ Exception raised by a method that cannot be called because it requires
         a dependency that is not installed.
@@ -137,7 +141,6 @@ class GraphBase(object):
             n.placed = False
             n.x = 0
             n.y = 0
-
             
     def extract_linked_nodes(self):
         """ Returns a graph object containing only the linked (non isolated) nodes of this graph """
@@ -269,6 +272,7 @@ class Graph(GraphBase):
     def __init__(self):
         super(Graph, self).__init__()
         self.groups = {}
+        self.metadata = {}
 
     def add_node_from_host(self, shinken_host):
         """ Adds a new node to this graph, filled with informations from the specified Shinken host """
@@ -389,6 +393,11 @@ class Graph(GraphBase):
             for key in g.keys():
                 if key.startswith('_'):
                     del g[key] # Remove stuff starting with a _ (no need to have them on the client side)
+        # Add metadata
+        m = self.metadata
+        if m is None:
+            m = {}
+        result['meta'] = m
         return result
 
     @staticmethod
@@ -397,11 +406,15 @@ class Graph(GraphBase):
 
     def read_state_data(self, state_data):
         """
-        TODO : Document this
+        Reads a list of key/values retrieved from the database,
+        and projects these these values on the current graph structures
+        The information that will be projected are node positions,
+        user defined edges, and metadata entries
         """
         unused_data = state_data.copy()
         missing_positions = self.__read_position_data(unused_data)
         self.__add_link_from_user_data(unused_data)
+        self.__read_metadata(unused_data)
 
         return (unused_data, missing_positions)
 
@@ -416,6 +429,22 @@ class Graph(GraphBase):
                 del data[id + ':y']
             else:
                 has_missing_nodes = True
+                
+    def __read_metadata(self, data):
+        """ 
+        Adds metadata entries found in the specified dictionary 
+        to this graph's metadata
+        """
+        global _metadata_storage_prefix
+        prelength = len(_metadata_storage_prefix)
+        foundkeys = []
+        for id, value in data.iteritems():
+            if id.startswith(_metadata_storage_prefix):
+                key = id[prelength:]
+                self.metadata[key] = value
+                foundkeys.append(id)
+        for key in foundkeys:
+            del data[id]
 
     def extract_groups_graph(self):
         result = Graph()
@@ -631,84 +660,10 @@ def _fit_unplaced_nodes(graph, non_linear = False):
     if len(isolated) == 0:
         return
     
-    top_bound = 0
     if non_linear:
-        # This algorithm will place the nodes on concentric circles
-        # Sort the nodes by size, desc
-        isolated.sort(None, lambda n: n.radius, True)
-        ring_size = 0
-        # Place the middle node
-        isolated[0].x = 0
-        isolated[0].y = 0
-        isolated[0].placed = True
-        i = 1
-        max_i = len(isolated)
-        max_angle = 2 * pi
-        while i < max_i:
-            # Compute the new ring's data
-            ring_size += (isolated[i - 1].radius * 2) + (isolated[i].radius * 2)
-            ring_positions = []
-            circumpherence = 2 * pi * ring_size
-            current_angle = 0
-            # Populate the ring with nodes
-            while i < max_i and current_angle < 2*pi:
-                ring_positions.append((current_angle, i))
-                current_angle += (2 * pi) * (isolated[i].radius * 2 / circumpherence)
-                i += 1
-                if i < max_i:
-                    current_angle += (2 * pi) * ((isolated[i].radius * 2) / circumpherence)
-            remainer_margin = ((2 * pi) - current_angle) / len(ring_positions)
-            margin_buffer = 0
-            for j in range(0, len(ring_positions)):
-                slot_angle, slot_index = ring_positions[j]
-                slot_angle += margin_buffer
-                isolated[slot_index].x = cos(slot_angle) * ring_size
-                isolated[slot_index].y = sin(slot_angle) * ring_size
-                isolated[slot_index].placed = True
-                if isolated[slot_index].y < top_bound:
-                    top_bound = isolated[slot_index].y
-                margin_buffer += remainer_margin
+        _fit_unplaced_nodes_circular(isolated)
     else:
-        # Place the nodes on lines that behave like lines of text,
-        # with automatic line height management so that nodes do not
-        # collide horizontally or vertically.
-        # The algorithm will try to fit the nodes in a square area
-        isolated.sort(None, lambda n: n.radius, True)
-        total_length = 0
-        positions = []
-        for n in isolated:
-            if total_length > 0:
-                total_length += n.radius
-            size = n.radius * 2
-            positions.append((n, total_length))
-            total_length += size
-        line_width = sqrt(total_length) * len(isolated)
-        current_line = 0
-        previous_lines_width = 0
-        max_line_height = 0
-        lines_heights = [0] # An array of vertical paddings between line n and n-1
-        for i in range(0, len(positions)):
-            n, x = positions[i]
-            x -= previous_lines_width
-            if x > line_width:
-                previous_lines_width += x
-                x = 0
-                if current_line > 0:
-                    lines_heights[current_line] += max_line_height * 1.5
-                lines_heights.append(lines_heights[current_line] + (max_line_height * 1.5))
-                max_line_height = 0
-                current_line += 1
-            positions[i] = (n, x, current_line)
-            if max_line_height < n.radius:
-                max_line_height = n.radius
-        if current_line > 0:
-            lines_heights[current_line] += max_line_height
-        for n, x, line in positions:
-            n.x = x
-            n.y = lines_heights[line]
-            n.placed = True
-            if n.y < top_bound:
-                top_bound = n.y
+        _fit_unplaced_nodes_linear(isolated)
 
     # Get the result under the already positionned nodes
     isolated_g = GraphBase()
@@ -716,7 +671,86 @@ def _fit_unplaced_nodes(graph, non_linear = False):
     g_left, g_top, g_right, g_bottom, g_filled = graph.get_bounds()
     isolated_g.normalize()
     isolated_g.move_by(0, g_bottom + _base_node_spacing)
+    
+def _fit_unplaced_nodes_circular(nodes):
+    # This algorithm will place the nodes on concentric circles
+    # Sort the nodes by size, desc
+    nodes.sort(None, lambda n: n.radius, True)
+    ring_size = 0
+    # Place the middle node
+    nodes[0].x = 0
+    nodes[0].y = 0
+    nodes[0].placed = True
+    i = 1
+    max_i = len(nodes)
+    max_angle = 2 * pi
+    while i < max_i:
+        # Compute the new ring's data
+        ring_size += (nodes[i - 1].radius * 2) + (nodes[i].radius * 2)
+        ring_positions = []
+        circumpherence = 2 * pi * ring_size
+        current_angle = 0
+        # Populate the ring with nodes
+        while i < max_i and current_angle < 2*pi:
+            ring_positions.append((current_angle, i))
+            current_angle += (2 * pi) * (nodes[i].radius * 2 / circumpherence)
+            i += 1
+            if i < max_i:
+                current_angle += (2 * pi) * ((nodes[i].radius * 2) / circumpherence)
+        remainer_margin = ((2 * pi) - current_angle) / len(ring_positions)
+        margin_buffer = 0
+        for j in range(0, len(ring_positions)):
+            slot_angle, slot_index = ring_positions[j]
+            slot_angle += margin_buffer
+            nodes[slot_index].x = cos(slot_angle) * ring_size
+            nodes[slot_index].y = sin(slot_angle) * ring_size
+            nodes[slot_index].placed = True
+            margin_buffer += remainer_margin
         
+def _fit_unplaced_nodes_linear(nodes):
+    # Place the nodes on lines that behave like lines of text,
+    # with automatic line height management so that nodes do not
+    # collide horizontally or vertically.
+    # The algorithm will try to fit the nodes in a square area*
+    x_margin = 30
+    y_margin = 50
+    nodes.sort(None, lambda n: n.radius, True)
+    total_length = 0
+    positions = []
+    for n in nodes:
+        if total_length > 0:
+            total_length += n.radius
+        size = n.radius * 2.5
+        positions.append((n, total_length))
+        total_length += size
+    line_width = sqrt(total_length) * len(nodes)
+    current_line = 0
+    previous_lines_width = 0
+    max_line_height = 0
+    lines_heights = [0] # An array of vertical paddings between line n and n-1
+    for i in range(0, len(positions)):
+        n, x = positions[i]
+        x -= previous_lines_width
+        if x > line_width:
+            # New line
+            previous_lines_width += x
+            x = 0
+            if current_line > 0:
+                lines_heights[current_line] += max_line_height * 1.5 + y_margin
+            lines_heights.append(lines_heights[current_line] + (max_line_height * 1.5))
+            max_line_height = 0
+            current_line += 1
+        positions[i] = (n, x, current_line)
+        if max_line_height < n.radius:
+            max_line_height = n.radius
+    if current_line > 0:
+        lines_heights[current_line] += max_line_height * 1.5 + y_margin
+        
+    #app.logger.error('Line heights: ' + str(lines_heights))
+    for n, x, line in positions:
+        n.x = x
+        n.y = lines_heights[line]
+        n.placed = True
     
 # END Layout execution
         
@@ -952,7 +986,6 @@ def get_result(graphname, uid):
                    .where(graphTokenTable.c.user_id == uid)\
                    .where(graphTokenTable.c.graph_id == graphname)
     rows = db.engine.execute(q)
-
     return { r[graphTokenTable.c.key] : r[graphTokenTable.c.value] for r in rows }
     
 def get_list_saves(graphtype):
@@ -985,6 +1018,8 @@ def savestate(graphname, data, clear = False):
                  .where(graphTokenTable.c.user_id == uid)\
                  .where(graphTokenTable.c.graph_id == graphname))
 
+    app.logger.debug('Saving data in graph "{0}": {1}'.format(graphname, data))
+                 
     inserts = []
     update = graphTokenTable.update()\
                             .where(graphTokenTable.c.user_id == uid)\

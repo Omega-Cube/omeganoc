@@ -61,7 +61,7 @@ graphite-dependencies:
 	@command -v pip 2>&1 || { echo >&2 "Missing pip."; exit 1;}
 
 graphite: graphite-prebuild graphite-dependencies sudoer
-	pip install graphite-query
+	pip install 'graphite-query==0.11.3'
 
 #shinken
 shinken-dependencies:
@@ -70,7 +70,7 @@ shinken-dependencies:
 
 shinken-install-dependencies: sudoer
 	@echo -n "\033]0;Installing shinken plugins dependencies\007"
-	pip install pycurl flask flask-login flask-sqlalchemy flask-babel python-igraph wtforms flask-assets whisper carbon 'Twisted<12.0' networkx graphviz pygraphviz graphite-query python-mk-livestatus
+	pip install 'pycurl==7.19.0' 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' carbon 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'graphite-query==0.11.3' 'python-mk-livestatus==0.4'
 
 shinken-install-plugins: sudoer vendors
 	-useradd --user-group graphite

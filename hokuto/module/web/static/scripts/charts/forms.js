@@ -52,16 +52,16 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     query.conf = JSON.stringify(query.conf);
                     DashboardManager.savePartData(query);
 
-                    this.buildScale();
                     this.setDomain(this.data);
-                    this.buildAxis();
-                    this.redraw();
 
                     if(!this.scales[scale.name].boundedProbe){
                         DashboardProbes.remove(this.id,false,scale.name);
                         delete this.scales[scale.name];
                     }
                     this.cleanScales();
+                    this.buildAxis();
+                    this.redraw();
+                    
                     this.flushPanel();
                     this.buildEditPanel();
                     var context = this.axis.x2.domain();
@@ -72,7 +72,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                         'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
                         'mode': this.conf.mode
                     },this.id]);
-
                 }.bind(this));
 
             return container;
@@ -382,7 +381,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return stack checkbox container
          */
         stackCheckbox : function(current,probe){
-            var container = $('<span style="display:table-cell;"><input type="checkbox" name="stacked" '+((current) ? 'checked="checked"':'')+'/></span>');
+            var container = $('<span style="display:table-cell;"><input type="checkbox" data-tooltip="Stack/Unstack this probe with other stacked probes" name="stacked" '+((current) ? 'checked="checked"':'')+'/></span>');
 
             if(probe)
                 container[0].getElementsByTagName('input')[0].addEventListener('change',function(event){
@@ -411,7 +410,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                         'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
                         'mode': this.conf.mode
                     },this.id]);
-
                 }.bind(this));
 
             return container;
@@ -465,6 +463,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 query.conf = JSON.stringify(query.conf);
                 DashboardManager.savePartData(query);
                 this.redraw();
+                this.legendManager.setColor(probe,newVal);
             }.bind(this));
 
             return container;
@@ -511,9 +510,10 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
             var container = $('<button class="formButton remove">X</button>');
             container[0].addEventListener('click',function(){
                 this.removeProbe(probe);
-                this.buildScale();
                 this.setDomain(this.data);
                 this.cleanScales();
+                this.buildAxis();
+                this.redraw();
                 this.flushPanel();
                 this.buildEditPanel();
             }.bind(this));

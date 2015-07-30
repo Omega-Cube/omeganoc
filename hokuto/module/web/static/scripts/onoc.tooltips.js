@@ -21,16 +21,56 @@ define([], function() {
     /**
      * Manage tooltips
      * [WIP] WORK IN PROGRESS
+     * TODO: differenciate public from private methods with _
+     * TODO: Add bind method to listen on mousemove and match data-tooltips
      */
     var OnocTooltips = function(){
         this.containers = {
-            'main': false
+            'main': false,
+            'context': false
+        };
+
+        this.contentBox = {
+            'left': false,
+            'top': false,
+            'width': false,
+            'height': false
         };
         this.visible = false;
         this.namespace = false;
         this.defaultRoot = "div";
+
+        //set context to body by default
+        //TODO: add a setContext method
+        this.containers.context = document.body;
+        var box = document.body.getBoundingClientRect();
+        this.contentBox.left = box.left;
+        this.contentBox.top = box.top;
+        this.contentBox.width = box.width;
+        this.contentBox.height = box.height;
+        
     };
 
+    /**
+     * Listen on mousemove to the given container and will react if target got an data-tooltip attribute
+     */
+    OnocTooltips.prototype.bind = function(container){
+        container.on('mousemove',function(e){
+            var target = e.target;
+            var content = target.getAttribute('data-tooltip');
+            if(!content){
+                this.toogle(false);
+                return;
+            }
+            var template = [{
+                'tag': 'div',
+                'childs': [{'tag': 'p', 'text': content}]
+            }];
+            this.show(template,target);
+        }.bind(this));
+    };
+
+    
     /**
      * Create and/or return the tooltip container
      */
@@ -86,18 +126,31 @@ define([], function() {
             this.toogle(false);
         }
         var content = this.build(template);
-        //TODO: get cursor or element position
-        //target.getBoundingClientRect()[0] + window.scrollX + window.scrollY
         var clientRect = target.getBoundingClientRect();
-        var x = clientRect.left + clientRect.width + window.scrollX + 5;
-        var y = clientRect.top + (clientRect.height / 2) + window.scrollY + 5;
+        //default : bottom left
+        var x = clientRect.left + window.scrollX + 5;
+        var y = clientRect.top + clientRect.height + window.scrollY + 5;
+
+        //check top position
+        if((y + 30) > this.contentBox.height - window.scrollY)
+            y -= clientRect.height + 30;
+
+        //check right position
+        if((x + 100) > this.contentBox.width - window.scrollX){
+            if(clientRect.width > 100)
+                x -= clientRext.width / 2;
+            else
+                x -= 100;
+        }
+        
+
         this.get().appendChild(content);
         this.get().setAttribute('style','left:'+x+'px;top:'+y+'px;');
         this.toogle();
     };
 
     /**
-     *
+     * TODO: removeme?
      */
     OnocTooltips.prototype.setNamespace = function(namespace){
         if(typeof namespace !== "string"){

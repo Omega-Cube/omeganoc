@@ -185,7 +185,7 @@
     display: inline-block;
     width: 30px;
     height: 30px;
-    background: transparent url('../images/date-icon.png') left center no-repeat;
+    background: transparent url('../images/date-icon.png') center center no-repeat;
     cursor: pointer;
     vertical-align: middle;
 }
@@ -207,12 +207,11 @@
 #dashboard {
     position: relative;
     overflow-y: auto;
-    overflow-x: hidden;
-    height: -moz-calc(100% - 120px);
-    height: -webkit-calc(100% - 120px);
-    height: -ms-calc(100% - 120px);
-    height: -o-calc(100% - 120px);
-    height: calc(100% - 120px);
+    height: -moz-calc(100% - 130px);
+    height: -webkit-calc(100% - 130px);
+    height: -ms-calc(100% - 130px);
+    height: -o-calc(100% - 130px);
+    height: calc(100% - 130px);
 }
 
 #dashboard > ul >li {
@@ -282,6 +281,10 @@
     height: 40px;
     line-height: 40px;
     background-color: #55646b;
+}
+
+.widget-header > div:hover{
+    background-color: rgba(0,0,0,0.2);
 }
 
 .widget-header h2 {
@@ -422,6 +425,7 @@
 /* Log panel */
 .panel .logPanel{
     padding: 0.5em;
+    margin-top: 2.2em;
     height: -webkit-calc(100% - 2em);
     height: -moz-calc(100% - 2em);
     height: -o-calc(100% - 2em);
