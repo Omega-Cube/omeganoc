@@ -1374,9 +1374,9 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             // If the right arrow is pressed
             if (keycode == 39) this.pan(panCoef, 0);
                 // If the left arrow is pressed
-            else if (keycode == 37) this.pan(0, -panCoef);
+            else if (keycode == 37) this.pan(-panCoef, 0);
                 // If the up arrow is pressed
-            else if (keycode == 38) this.pan(-panCoef, 0);
+            else if (keycode == 38) this.pan(0, -panCoef);
                 // If the down arrow is pressed
             else if (keycode == 40) this.pan(0, panCoef);
         },
