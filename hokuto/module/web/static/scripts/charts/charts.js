@@ -333,6 +333,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             }
 
             this.redraw(data);
+            this.buildAxis();
             if(this.conf.brushstart && this.conf.brushend){
                 var context = this.axis.x2.domain();
                 setTimeout(function(){
@@ -3090,11 +3091,28 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
                     query.conf = JSON.stringify(query.conf);
                     DashboardManager.savePartData(query);
+<<<<<<< 08293d36f43b888933c8fa173eff6845bdf748a8
                     this.redraw();
                     this.flushPanel();
                     this.buildEditPanel();
                 }.bind(this));
 
+=======
+                    this.buildScale();
+                    this.setDomain(this.data);
+                    this.redraw();
+
+                    var context = this.axis.x2.domain();
+                    var focus = this.axis.x.domain();
+                    DashboardProbes.worker.postMessage([8,{
+                        'probes': this.probes,
+                        'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                        'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                        'mode': this.conf.mode
+                    },this.id]);
+                }.bind(this));
+
+>>>>>>> [0.93] Hannibal barka
                 groupContainer.append(stackButton);
             }
             container.append(groupContainer);

@@ -410,7 +410,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                         'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
                         'mode': this.conf.mode
                     },this.id]);
-
                 }.bind(this));
 
             return container;

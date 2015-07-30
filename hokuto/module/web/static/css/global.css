@@ -229,7 +229,7 @@ header > ul > li{
     -ms-transition: background 0.5s, color 0.5s;
 }
 
-header > ul > li a{
+header > ul > li a, header > ul > li > span{
     display:inline-block;
     font-size:13.5pt;
     text-decoration:none;

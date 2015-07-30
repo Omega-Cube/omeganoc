@@ -103,9 +103,8 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
                 DashboardsManager.timeline.show();
             }
             else {
-                DashboardsManager._setDashboardsList();
                 //if no DB available display the create dashboard icon
-                //jQuery('#create-dashboard-button').click();
+                jQuery('#create-dashboard-button').click();
             }
         },
 
@@ -604,7 +603,7 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
                         'url': '/dashboards/' + DashboardsManager.currentDashboard,
                         'type': 'DELETE'
                     }).success(function(){
-                        document.location = '/dashboards';
+                        document.location = '/manage/dashboards';
                     }).error(function(e){
                         console.error(e);
                     });
