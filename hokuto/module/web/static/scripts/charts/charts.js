@@ -181,6 +181,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //WIP
         this.tooltips = new Tooltips();
+
         this.container.main.on('mousemove',function(e){
             var target = e.target;
             var title = target.getAttribute('data-title');
@@ -1048,10 +1049,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('width','80')
             .attr('height','20')
             .attr('fill','#000')
+            .attr('data-tooltip','Unit displayed on this scale, click to switch to the next one.')
             .attr('stroke','#57b4dc');
         if(!current) button.attr('style','display: none;');
         var unit = (current) ? this.scales[current].unit : false;
-        var text = button.append('text').text(unit).attr('fill','#57b4dc').attr('text-anchor','middle').attr('x',41).attr('y',12);
+        var text = button.append('text').text(unit).attr('fill','#57b4dc').attr('text-anchor','middle').attr('x',41).attr('y',12).attr('pointer-events','none');
 
         button.on('click',function(e){
             this.switchScale(orient,direction);
@@ -1159,13 +1161,13 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //commands
         //rescale
-        var button = $('<span class="rescale" title="Fit scales verticaly"></span>');
+        var button = $('<span class="rescale" title="Fit scales verticaly" data-tooltip="Fit scales verticaly"></span>');
         button.click(this.autoScale.bind(this));
         container.append(button);
 
         //log
         var style = (this.conf.log) ? 'enabled':'disabled';
-        var button = $('<button class="log '+style+'">log</button>')
+        var button = $('<button class="log '+style+'" data-tooltip="Set to logarithm mode">log</button>')
 
         button.click(function(e){
             this.conf.log = !this.conf.log;
@@ -1194,7 +1196,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //mode
         var modes = ['max','min','avg'];
-        var button = $('<button class="mode"></button>');
+        var button = $('<button class="mode" data-tooltip="Set aggregation rules"></button>');
         button.text(this.conf.mode);
 
         button.on('click',function(e){
@@ -2850,7 +2852,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         settings.append(form.typeAddSelect());
         settings.append('<label>Chart color : </label>')
         settings.append(form.colorAddBox(nextColor));
-        var submit = $('<button id="add_chart_submit">Add</button>');
+        var submit = $('<button id="add_chart_submit" data-tooltip="Add a new chart to the widget">Add</button>');
 
         addForm.append(probeSelection);
         addForm.append(probePosition);
