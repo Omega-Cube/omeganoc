@@ -86,14 +86,14 @@ define(['jquery', 'onoc.createurl', 'onoc.loadcss', 'onoc.cachedloader','dataser
             this._header = jQuery('<div class="widget-header '+this.id+'"></div>');
             var titleText = initialData.title || this.name;
             this._title = jQuery('<h2>' + titleText + '</h2>');
-            var editTitle = jQuery('<div class="widget-command-rename"></div>');
+            var editTitle = jQuery('<div class="widget-command-rename" data-tooltip="Rename this widget"></div>');
             editTitle.click(this._renameClickHandler);
             var datepicker = jQuery('<div class="dropmenu datepicker"><ul class="datemenu"><li class="passive date">'
                                     .concat('<p><span>From</span><span>To</span></p>',
                                             '<p><span><input type="text" class="datePicker from" name="from" value="start" /></span>',
                                             '<span><input type="text" class="datePicker until" name="until" value="end" /></span></p>',
                                             '</li></ul></div>'));
-            var refresh = jQuery('<div class="refresh" title="Refresh"></div>');
+            var refresh = jQuery('<div class="refresh" title="Refresh" data-tooltip="Reload data"></div>');
 
             var actions = jQuery('<div class="dropmenu actions"></div>');
             var menu = jQuery('<ul class="contentmenu"></ul>');

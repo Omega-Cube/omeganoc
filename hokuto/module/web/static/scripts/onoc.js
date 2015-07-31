@@ -38,7 +38,7 @@ requirejs.config({
     }
 });
 
-requirejs(['jquery'], function($) {
+requirejs(['jquery','onoc.tooltips'], function($,Tooltips) {
     var onoc_start = function(module) {
         if(typeof(module) === 'string') {
             module = [module];
@@ -49,6 +49,8 @@ requirejs(['jquery'], function($) {
 
 
     $(document).ready(function() {
+        var help = new Tooltips();
+        help.bind($('#content'));
         if(onoc_main_modules && onoc_main_modules.length > 0) {
             onoc_start(onoc_main_modules);
         }
