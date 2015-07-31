@@ -2452,7 +2452,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
     DashboardChart.prototype.appendMetricSelect = function(metrics, container, name){
         if(container.find('.spinner'))
             container.find('.spinner').remove();
-        var select = $('<select name="'+name+'" class="formButton select" ><option value="*">ALL (*)</option></select>');
+        var select = $('<select name="'+name+'" class="formButton select" ></select>');
+        if(Object.keys(metrics).length)
+            select.append($('<option value="*">ALL (*)</option>'));
+        else
+            select.append('<option value="">None available</option>');
 
         for(var m in metrics){
             var option = $('<option value="'+m+'">'+m+'</option>');
@@ -2883,6 +2887,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 }
             }
 
+            //TODO: add some tooltips or an enabled/disabled state
+            if(!query) return;
+            
             var probeList = DashboardProbes.getProbeList(query);
             var addCount = 0;
             for(var i in probeList){
