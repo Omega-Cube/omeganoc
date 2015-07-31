@@ -2965,35 +2965,37 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         for(var g in groups){
             var groupContainer = $('<p class="editGroup"></p>');
             groupContainer.append('<label style="vertical-align:middle;font-weight:bold;text-shadow: -2px 2px black;color:#57b4dc;">'+g+'</label>');
-            var mode = probes[groups[g][0]].stacked;
-            var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
-            stackButton.click(function(e){
-                e.preventDefault();
-                var gr = e.target.getAttribute('data-group');
-                var group = groups[gr];
-                var stacked = !this.probes[group[0]].stacked;
-                var query = {
-                    'id': this.id,
-                    'conf': {
-                        'probes': {}
+            if(groups[g].length > 1){
+                var mode = probes[groups[g][0]].stacked;
+                var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
+                stackButton.click(function(e){
+                    e.preventDefault();
+                    var gr = e.target.getAttribute('data-group');
+                    var group = groups[gr];
+                    var stacked = !this.probes[group[0]].stacked;
+                    var query = {
+                        'id': this.id,
+                        'conf': {
+                            'probes': {}
+                        }
+                    };
+                    for(var i = 0, len = group.length;i<len;i++){
+                        var probe = group[i];
+                        if(this.probes[probe].stacked !== stacked){
+                            this.probes[probe].stacked = stacked;
+                            query.conf.probes[probe] = {'stacked': stacked};
+                        }
                     }
-                };
-                for(var i = 0, len = group.length;i<len;i++){
-                    var probe = group[i];
-                    if(this.probes[probe].stacked !== stacked){
-                        this.probes[probe].stacked = stacked;
-                        query.conf.probes[probe] = {'stacked': stacked};
-                    }
-                }
 
-                query.conf = JSON.stringify(query.conf);
-                DashboardManager.savePartData(query);
-                this.redraw();
-                this.flushPanel();
-                this.buildEditPanel();
-            }.bind(this));
+                    query.conf = JSON.stringify(query.conf);
+                    DashboardManager.savePartData(query);
+                    this.redraw();
+                    this.flushPanel();
+                    this.buildEditPanel();
+                }.bind(this));
 
-            groupContainer.append(stackButton);
+                groupContainer.append(stackButton);
+            }
             container.append(groupContainer);
 
             for(var p = 0, len = groups[g].length;p<len;p++){
@@ -3008,7 +3010,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 probeContainer.append(form.directionSelect.call(this,scale.reversed, groups[g][p]));
                 probeContainer.append(form.unitSelect.call(this,unit, groups[g][p], units));
                 probeContainer.append(form.typeSelect.call(this,probe.type,probe.stacked, groups[g][p]));
-                probeContainer.append(form.stackCheckbox.call(this,probe.stacked, groups[g][p]));
+                if(len > 1)
+                    probeContainer.append(form.stackCheckbox.call(this,probe.stacked, groups[g][p]));
                 probeContainer.append(form.removeButton.call(this,groups[g][p]));
 
                 container.append(probeContainer);
