@@ -185,7 +185,7 @@
     display: inline-block;
     width: 30px;
     height: 30px;
-    background: transparent url('../images/date-icon.png') left center no-repeat;
+    background: transparent url('../images/date-icon.png') center center no-repeat;
     cursor: pointer;
     vertical-align: middle;
 }
@@ -282,6 +282,10 @@
     height: 40px;
     line-height: 40px;
     background-color: #55646b;
+}
+
+.widget-header > div:hover{
+    background-color: rgba(0,0,0,0.2);
 }
 
 .widget-header h2 {
