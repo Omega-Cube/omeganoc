@@ -23,7 +23,9 @@ g.node > ellipse {
 }
 
 g.node.selected > ellipse {
-    fill: #B0B1B1;
+    fill: #159999;
+    stroke-width: 2px;
+    stroke: black;
 }
 
 g.node.state-warning > ellipse {
