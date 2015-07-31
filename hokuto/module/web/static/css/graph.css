@@ -25,6 +25,30 @@
     cursor: move;
 }
 
+/* Overview toggle button */
+#g-ot {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 20px;
+    height: 20px;
+    border-bottom-left-radius: 5px;
+    background-color: white;
+    cursor: pointer;
+}
+
+#g-ot > img {
+    transition: transform 0.4s;
+    position: absolute;
+    right: 5px;
+    top: 0;
+    transform: rotate(-45deg);
+}
+
+#g-ot.toggle-collapsed > img {
+    transform: rotate(135deg);
+}
+
 /* The physical toolbar div */
 div #toolbar-physical {
     position: absolute;
