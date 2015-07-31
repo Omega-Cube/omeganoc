@@ -90,6 +90,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         this.overviewContainer.style.height = this.overviewHeight + 'px';
         this.overviewContainer.style.zIndex = 800;
         element.appendChild(this.overviewContainer);
+        var $overviewContainer = jQuery(this.overviewContainer);
 
         // Overview graph
         this.miniSvg = SVG(this.overviewContainer)
@@ -105,6 +106,19 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         this._updateOverviewSize();
         var $overviewSelector = jQuery(this.overviewSelector);
 
+        // The collapse/show overview button
+        this.overviewToggle = document.createElement('div');
+        this.overviewToggle.id = 'g-ot';
+        this.overviewToggle.title = 'Toggle overview visibility';
+        this.overviewToggle.className = 'toggle-visible';
+        this.overviewToggle.style.zIndex = 801;
+        element.appendChild(this.overviewToggle);
+        var toggleImg = document.createElement('img');
+        toggleImg.src = createUrl('static/images/arrow_right.png');
+        toggleImg.alt = '';
+        this.overviewToggle.appendChild(toggleImg);
+        var $overviewToggle = jQuery(this.overviewToggle);        
+        
         // The selection rectangle
         this.selectionRectangle = this.svg.rect(0, 0).attr({ 'class': 'select-rect' }).hide();
 
@@ -505,6 +519,12 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             selfRef.pan(e.deltaX * e.deltaFactor, -e.deltaY * e.deltaFactor, e);
 
+        });
+        
+        $overviewToggle.click(function() {
+            var $this = $(this);
+            $overviewToggle.toggleClass('toggle-collapsed');
+            $overviewContainer.slideToggle();
         });
 
         // Load the CSS file
