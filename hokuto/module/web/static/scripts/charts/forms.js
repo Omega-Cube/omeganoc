@@ -464,6 +464,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 query.conf = JSON.stringify(query.conf);
                 DashboardManager.savePartData(query);
                 this.redraw();
+                this.legendManager.setColor(probe,newVal);
             }.bind(this));
 
             return container;
