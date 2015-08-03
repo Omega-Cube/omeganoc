@@ -2976,7 +2976,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             groupContainer.append('<label style="vertical-align:middle;font-weight:bold;text-shadow: -2px 2px black;color:#57b4dc;">'+g+'</label>');
             if(groups[g].length > 1){
                 var mode = probes[groups[g][0]].stacked;
-                var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
+                var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton" data-tooltip="Stack/Unstack all probes from this scale.">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
                 stackButton.click(function(e){
                     e.preventDefault();
                     var gr = e.target.getAttribute('data-group');
