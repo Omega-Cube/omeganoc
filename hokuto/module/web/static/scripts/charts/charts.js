@@ -749,6 +749,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this.container.logs.select('rect').attr('y', this.conf.chartHeight - 23).attr('width',this.conf.width - 2);
         this.container.logs.selectAll('circle').attr('cy', this.conf.chartHeight - 12);
         this.container.logs.selectAll('text').attr('y', this.conf.chartHeight - 7);
+        this.container.logs.selectAll('.logs-bar').attr('height',this.conf.chartHeight - 23);
 
         //switchButtons
         this.container.scales.left.opposate.attr('transform','translate(-88,'+( this.conf.chartHeight + 8  )+')');
@@ -1685,7 +1686,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr("x",9)
             .attr("y",0)
             .attr("width",0)
-            .attr('height',height);
+            .attr('height',height)
+            .attr('class','logs-bar');
 
         newBox.append('circle')
             .attr("cx", 10)
