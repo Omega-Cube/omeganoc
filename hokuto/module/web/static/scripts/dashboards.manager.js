@@ -53,7 +53,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             // Initialize global timeline element
             DashboardsManager.timeline = new DashboardTimeline($('#dashboard-global-timeline'));
-            DashboardsManager.timeline.show();
 
             // Initialize Gridster
             DashboardsManager.gridster = target.gridster({
@@ -95,9 +94,10 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             if (firstDashboard) {
                 DashboardsManager.loadDashboard(firstDashboard);
+                DashboardsManager.timeline.show();
             }
             else {
-                DashboardsManager._setNoDashboardMessage('Please select a dashboard using the top menu');
+                DashboardsManager._setNoDashboardMessage('Please select a dashboard using the top menu or create one');
                 //if no DB available display the create dashboard icon
                 jQuery('#create-dashboard-button').click();
             }
@@ -170,6 +170,7 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             DashboardsManager._setDashboardTitle(name);
             DashboardsManager._addTopMenuEntry(name);
             DashboardsManager._showDashboardControls(true);
+            DashboardsManager.timeline.show();
         },
 
         /**

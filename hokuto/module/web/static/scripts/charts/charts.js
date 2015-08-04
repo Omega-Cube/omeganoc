@@ -176,10 +176,13 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this.buildScale();
         this.buildContainers(container);
         this._buildCommands();
-        this.fetchUnits();
+        this.fetchUnits(function(data){
+            if(!Object.keys(this.probes).length)
+                this.toogleAddPanel();
+        }.bind(this));
         this.buildPanel();
 
-        //WIP
+        //WIP: setup tooltips
         this.tooltips = new Tooltips();
 
         this.container.main.on('mousemove',function(e){
@@ -245,33 +248,34 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         this.probes = options.conf.probes;
         //toogle the spinner if probes
-        if(this.probes)
+        if(Object.keys(this.probes).length){
             this.toogleSpinner(this.container.main);
 
-        for(var s in options.conf.scales)
-            this.addScale(s,options.conf.scales[s]);
+            for(var s in options.conf.scales)
+                this.addScale(s,options.conf.scales[s]);
 
-        var order = 0;
-        for(var p in this.probes){
-            order++;
-            //GRUICKKKKKK
-            this.probes[p].stacked = Boolean(eval(this.probes[p].stacked));
+            var order = 0;
+            for(var p in this.probes){
+                order++;
+                //GRUICKKKKKK
+                this.probes[p].stacked = Boolean(eval(this.probes[p].stacked));
 
-            if(!this.probes[p]['order']) this.probes[p]['order'] = order;
-            if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
+                if(!this.probes[p]['order']) this.probes[p]['order'] = order;
+                if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
 
-            DashboardProbes.addProbe(p);
-            this.legends[p] = this.legendManager.addLegend({
-                'name': p,
-                'color': this.probes[p].color
-            });
+                DashboardProbes.addProbe(p);
+                this.legends[p] = this.legendManager.addLegend({
+                    'name': p,
+                    'color': this.probes[p].color
+                });
 
-            this.legendManager.getProbeContainer(p).on('click',function(){
-                this.context.moveOrderToTop(this.probe);
-            }.bind({"context": this, "probe": p}));
+                this.legendManager.getProbeContainer(p).on('click',function(){
+                    this.context.moveOrderToTop(this.probe);
+                }.bind({"context": this, "probe": p}));
+            }
+            this.counter = order;
         }
-        this.counter = order;
-
+        
         //draw the legend and resize the box
         var setLegend = function(){
             var check = this.legendManager.redraw();
@@ -447,8 +451,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
     /**
      * Get available units from the server
      */
-    DashboardChart.prototype.fetchUnits = function(){
-        this.units.fetchUnits();
+    DashboardChart.prototype.fetchUnits = function(callback){
+        this.units.fetchUnits(callback);
     };
 
     /**
@@ -739,7 +743,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //panel
         this.panelUp = true;
-        this.tooglePanel();
+        //this.tooglePanel();
 
         //commands
         this.container.commands.attr('transform','translate('+(this.conf.containerWidth - this.conf.chartMargin.left - 85)+',0)');
@@ -1324,7 +1328,6 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.redraw = function(data){
         if(!data && !this.data){
-            //console.warning("Can't draw from nothing!");
             return;
         }
         if(!data)
