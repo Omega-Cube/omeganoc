@@ -2857,7 +2857,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         settings.append(form.typeAddSelect());
         settings.append('<label>Chart color : </label>')
         settings.append(form.colorAddBox(nextColor));
-        var submit = $('<button id="add_chart_submit" data-tooltip="Add a new chart to the widget">Add</button>');
+        var submit = $('<button id="add_chart_submit" data-tooltip="Add a new chart to this widget">Add</button>');
 
         addForm.append(probeSelection);
         addForm.append(probePosition);
@@ -2939,7 +2939,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
             DashboardManager.savePartData(data,function(){
                 DashboardProbes.worker.postMessage([3,{
-                    'probes': probeList
+                    'probes': probeList,
+                    'start' : (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
                 },this.id]);
                 form.color.value = getNextUnusedColor();
                 settings.find('.color').find('.selected').attr('class','');
