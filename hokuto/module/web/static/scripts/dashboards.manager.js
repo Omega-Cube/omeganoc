@@ -53,7 +53,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             // Initialize global timeline element
             DashboardsManager.timeline = new DashboardTimeline($('#dashboard-global-timeline'));
-            //TODO: moveme, we should display the timeline only if there is an active dashboard.
             DashboardsManager.timeline.show();
 
             // Initialize Gridster
@@ -99,6 +98,8 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             }
             else {
                 DashboardsManager._setNoDashboardMessage('Please select a dashboard using the top menu');
+                //if no DB available display the create dashboard icon
+                jQuery('#create-dashboard-button').click();
             }
         },
 
