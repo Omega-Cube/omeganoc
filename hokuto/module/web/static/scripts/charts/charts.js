@@ -2857,12 +2857,16 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         settings.append(form.typeAddSelect());
         settings.append('<label>Chart color : </label>')
         settings.append(form.colorAddBox(nextColor));
-        var submit = $('<button id="add_chart_submit" data-tooltip="Add a new chart to this widget">Add</button>');
-
+        var subcontainer = $('<div class="submit-container"></div>')
+        var subandclose = $('<button class="submit" data-tooltip="Add probes and close this panel">Add and close</button>');
+        var submit = $('<button class="submit" id="add_chart_submit" data-tooltip="Add a new chart to this widget">Add</button>');
+        subcontainer.append(subandclose);
+        subcontainer.append(submit);
+        
         addForm.append(probeSelection);
         addForm.append(probePosition);
         addForm.append(settings);
-        addForm.append(submit);
+        addForm.append(subcontainer);
 
         submit.click(function(e){
             e.preventDefault();
@@ -2944,7 +2948,13 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 },this.id]);
                 form.color.value = getNextUnusedColor();
                 settings.find('.color').find('.selected').attr('class','');
+                settings.find('.color').find('[data-value="'+form.color.value+'"]').attr('class','selected');
             }.bind(this));
+        }.bind(this));
+
+        subandclose.click(function(){
+            submit.click();
+            this.tooglePanel();
         }.bind(this));
 
         container.append(addForm);
