@@ -450,9 +450,12 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
          */
         unloadDashboard: function () {
             DashboardsManager.currentParts = {};
+            var count = 0;
             var parts = DashboardsManager.element.find(' > li').each(function (i, e) {
                 DashboardsManager.gridster.remove_widget(e, true);
+                count++;
             });
+            if(!count) DashboardsManager._deleteTopMenuEntry(DashboardsManager.currentDashboard);
 
             DashboardsManager._showDashboardControls(false);
             //TODO: flush worker too
@@ -494,6 +497,20 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             });
         },
 
+        /**
+         * Delete an entry from the Dashboards dropdown menu
+         * @param {String} name
+         */
+        _deleteTopMenuEntry: function (name) {
+            var entries = jQuery('#menu-dashboards-list a');
+            entries.each(function (i, elm) {
+                var jqElm = jQuery(elm);
+                if (jqElm.text() == name) {
+                    jqElm.remove();
+                }
+            });
+        },
+        
         /**
          * Sets the text of the big text displayed in the middle of the dashboards area.
          * Provide an empty string to hide it.
