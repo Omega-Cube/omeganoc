@@ -181,6 +181,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //WIP
         this.tooltips = new Tooltips();
+
         this.container.main.on('mousemove',function(e){
             var target = e.target;
             var title = target.getAttribute('data-title');
@@ -1048,10 +1049,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr('width','80')
             .attr('height','20')
             .attr('fill','#000')
+            .attr('data-tooltip','Unit displayed on this scale, click to switch to the next one.')
             .attr('stroke','#57b4dc');
         if(!current) button.attr('style','display: none;');
         var unit = (current) ? this.scales[current].unit : false;
-        var text = button.append('text').text(unit).attr('fill','#57b4dc').attr('text-anchor','middle').attr('x',41).attr('y',12);
+        var text = button.append('text').text(unit).attr('fill','#57b4dc').attr('text-anchor','middle').attr('x',41).attr('y',12).attr('pointer-events','none');
 
         button.on('click',function(e){
             this.switchScale(orient,direction);
@@ -1159,13 +1161,13 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //commands
         //rescale
-        var button = $('<span class="rescale" title="Fit scales verticaly"></span>');
+        var button = $('<span class="rescale" title="Fit scales verticaly" data-tooltip="Fit scales verticaly"></span>');
         button.click(this.autoScale.bind(this));
         container.append(button);
 
         //log
         var style = (this.conf.log) ? 'enabled':'disabled';
-        var button = $('<button class="log '+style+'">log</button>')
+        var button = $('<button class="log '+style+'" data-tooltip="Set to logarithm mode">log</button>')
 
         button.click(function(e){
             this.conf.log = !this.conf.log;
@@ -1194,7 +1196,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //mode
         var modes = ['max','min','avg'];
-        var button = $('<button class="mode"></button>');
+        var button = $('<button class="mode" data-tooltip="Set aggregation rules"></button>');
         button.text(this.conf.mode);
 
         button.on('click',function(e){
@@ -2452,7 +2454,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
     DashboardChart.prototype.appendMetricSelect = function(metrics, container, name){
         if(container.find('.spinner'))
             container.find('.spinner').remove();
-        var select = $('<select name="'+name+'" class="formButton select" ><option value="*">ALL (*)</option></select>');
+        var select = $('<select name="'+name+'" class="formButton select" ></select>');
+        if(Object.keys(metrics).length)
+            select.append($('<option value="*">ALL (*)</option>'));
+        else
+            select.append('<option value="">None available</option>');
 
         for(var m in metrics){
             var option = $('<option value="'+m+'">'+m+'</option>');
@@ -2846,7 +2852,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         settings.append(form.typeAddSelect());
         settings.append('<label>Chart color : </label>')
         settings.append(form.colorAddBox(nextColor));
-        var submit = $('<button id="add_chart_submit">Add</button>');
+        var submit = $('<button id="add_chart_submit" data-tooltip="Add a new chart to the widget">Add</button>');
 
         addForm.append(probeSelection);
         addForm.append(probePosition);
@@ -2883,6 +2889,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 }
             }
 
+            //TODO: add some tooltips or an enabled/disabled state
+            if(!query) return;
+            
             var probeList = DashboardProbes.getProbeList(query);
             var addCount = 0;
             for(var i in probeList){
@@ -2965,35 +2974,37 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         for(var g in groups){
             var groupContainer = $('<p class="editGroup"></p>');
             groupContainer.append('<label style="vertical-align:middle;font-weight:bold;text-shadow: -2px 2px black;color:#57b4dc;">'+g+'</label>');
-            var mode = probes[groups[g][0]].stacked;
-            var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
-            stackButton.click(function(e){
-                e.preventDefault();
-                var gr = e.target.getAttribute('data-group');
-                var group = groups[gr];
-                var stacked = !this.probes[group[0]].stacked;
-                var query = {
-                    'id': this.id,
-                    'conf': {
-                        'probes': {}
+            if(groups[g].length > 1){
+                var mode = probes[groups[g][0]].stacked;
+                var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
+                stackButton.click(function(e){
+                    e.preventDefault();
+                    var gr = e.target.getAttribute('data-group');
+                    var group = groups[gr];
+                    var stacked = !this.probes[group[0]].stacked;
+                    var query = {
+                        'id': this.id,
+                        'conf': {
+                            'probes': {}
+                        }
+                    };
+                    for(var i = 0, len = group.length;i<len;i++){
+                        var probe = group[i];
+                        if(this.probes[probe].stacked !== stacked){
+                            this.probes[probe].stacked = stacked;
+                            query.conf.probes[probe] = {'stacked': stacked};
+                        }
                     }
-                };
-                for(var i = 0, len = group.length;i<len;i++){
-                    var probe = group[i];
-                    if(this.probes[probe].stacked !== stacked){
-                        this.probes[probe].stacked = stacked;
-                        query.conf.probes[probe] = {'stacked': stacked};
-                    }
-                }
 
-                query.conf = JSON.stringify(query.conf);
-                DashboardManager.savePartData(query);
-                this.redraw();
-                this.flushPanel();
-                this.buildEditPanel();
-            }.bind(this));
+                    query.conf = JSON.stringify(query.conf);
+                    DashboardManager.savePartData(query);
+                    this.redraw();
+                    this.flushPanel();
+                    this.buildEditPanel();
+                }.bind(this));
 
-            groupContainer.append(stackButton);
+                groupContainer.append(stackButton);
+            }
             container.append(groupContainer);
 
             for(var p = 0, len = groups[g].length;p<len;p++){
@@ -3008,7 +3019,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 probeContainer.append(form.directionSelect.call(this,scale.reversed, groups[g][p]));
                 probeContainer.append(form.unitSelect.call(this,unit, groups[g][p], units));
                 probeContainer.append(form.typeSelect.call(this,probe.type,probe.stacked, groups[g][p]));
-                probeContainer.append(form.stackCheckbox.call(this,probe.stacked, groups[g][p]));
+                if(len > 1)
+                    probeContainer.append(form.stackCheckbox.call(this,probe.stacked, groups[g][p]));
                 probeContainer.append(form.removeButton.call(this,groups[g][p]));
 
                 container.append(probeContainer);
