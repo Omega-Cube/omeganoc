@@ -137,7 +137,7 @@ define([], function() {
 
         //check right position
         if((x + 100) > this.contentBox.width - window.scrollX){
-            if(clientRext.width > 100)
+            if(clientRect.width > 100)
                 x -= clientRext.width / 2;
             else
                 x -= 100;

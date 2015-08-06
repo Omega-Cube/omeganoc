@@ -176,10 +176,13 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this.buildScale();
         this.buildContainers(container);
         this._buildCommands();
-        this.fetchUnits();
+        this.fetchUnits(function(data){
+            if(!Object.keys(this.probes).length)
+                this.toogleAddPanel();
+        }.bind(this));
         this.buildPanel();
 
-        //WIP
+        //WIP: setup tooltips
         this.tooltips = new Tooltips();
 
         this.container.main.on('mousemove',function(e){
@@ -245,33 +248,34 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         this.probes = options.conf.probes;
         //toogle the spinner if probes
-        if(this.probes)
+        if(Object.keys(this.probes).length){
             this.toogleSpinner(this.container.main);
 
-        for(var s in options.conf.scales)
-            this.addScale(s,options.conf.scales[s]);
+            for(var s in options.conf.scales)
+                this.addScale(s,options.conf.scales[s]);
 
-        var order = 0;
-        for(var p in this.probes){
-            order++;
-            //GRUICKKKKKK
-            this.probes[p].stacked = Boolean(eval(this.probes[p].stacked));
+            var order = 0;
+            for(var p in this.probes){
+                order++;
+                //GRUICKKKKKK
+                this.probes[p].stacked = Boolean(eval(this.probes[p].stacked));
 
-            if(!this.probes[p]['order']) this.probes[p]['order'] = order;
-            if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
+                if(!this.probes[p]['order']) this.probes[p]['order'] = order;
+                if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
 
-            DashboardProbes.addProbe(p);
-            this.legends[p] = this.legendManager.addLegend({
-                'name': p,
-                'color': this.probes[p].color
-            });
+                DashboardProbes.addProbe(p);
+                this.legends[p] = this.legendManager.addLegend({
+                    'name': p,
+                    'color': this.probes[p].color
+                });
 
-            this.legendManager.getProbeContainer(p).on('click',function(){
-                this.context.moveOrderToTop(this.probe);
-            }.bind({"context": this, "probe": p}));
+                this.legendManager.getProbeContainer(p).on('click',function(){
+                    this.context.moveOrderToTop(this.probe);
+                }.bind({"context": this, "probe": p}));
+            }
+            this.counter = order;
         }
-        this.counter = order;
-
+        
         //draw the legend and resize the box
         var setLegend = function(){
             var check = this.legendManager.redraw();
@@ -447,8 +451,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
     /**
      * Get available units from the server
      */
-    DashboardChart.prototype.fetchUnits = function(){
-        this.units.fetchUnits();
+    DashboardChart.prototype.fetchUnits = function(callback){
+        this.units.fetchUnits(callback);
     };
 
     /**
@@ -739,7 +743,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //panel
         this.panelUp = true;
-        this.tooglePanel();
+        //this.tooglePanel();
 
         //commands
         this.container.commands.attr('transform','translate('+(this.conf.containerWidth - this.conf.chartMargin.left - 85)+',0)');
@@ -749,6 +753,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this.container.logs.select('rect').attr('y', this.conf.chartHeight - 23).attr('width',this.conf.width - 2);
         this.container.logs.selectAll('circle').attr('cy', this.conf.chartHeight - 12);
         this.container.logs.selectAll('text').attr('y', this.conf.chartHeight - 7);
+        this.container.logs.selectAll('.logs-bar').attr('height',this.conf.chartHeight - 23);
 
         //switchButtons
         this.container.scales.left.opposate.attr('transform','translate(-88,'+( this.conf.chartHeight + 8  )+')');
@@ -1323,7 +1328,6 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.redraw = function(data){
         if(!data && !this.data){
-            //console.warning("Can't draw from nothing!");
             return;
         }
         if(!data)
@@ -1685,7 +1689,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             .attr("x",9)
             .attr("y",0)
             .attr("width",0)
-            .attr('height',height);
+            .attr('height',height)
+            .attr('class','logs-bar');
 
         newBox.append('circle')
             .attr("cx", 10)
@@ -2852,12 +2857,16 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         settings.append(form.typeAddSelect());
         settings.append('<label>Chart color : </label>')
         settings.append(form.colorAddBox(nextColor));
-        var submit = $('<button id="add_chart_submit" data-tooltip="Add a new chart to the widget">Add</button>');
-
+        var subcontainer = $('<div class="submit-container"></div>')
+        var subandclose = $('<button class="submit" data-tooltip="Add probes and close this panel">Add and close</button>');
+        var submit = $('<button class="submit" id="add_chart_submit" data-tooltip="Add a new chart to this widget">Add</button>');
+        subcontainer.append(subandclose);
+        subcontainer.append(submit);
+        
         addForm.append(probeSelection);
         addForm.append(probePosition);
         addForm.append(settings);
-        addForm.append(submit);
+        addForm.append(subcontainer);
 
         submit.click(function(e){
             e.preventDefault();
@@ -2934,11 +2943,18 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
             DashboardManager.savePartData(data,function(){
                 DashboardProbes.worker.postMessage([3,{
-                    'probes': probeList
+                    'probes': probeList,
+                    'start' : (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
                 },this.id]);
                 form.color.value = getNextUnusedColor();
                 settings.find('.color').find('.selected').attr('class','');
+                settings.find('.color').find('[data-value="'+form.color.value+'"]').attr('class','selected');
             }.bind(this));
+        }.bind(this));
+
+        subandclose.click(function(){
+            submit.click();
+            this.tooglePanel();
         }.bind(this));
 
         container.append(addForm);
@@ -2976,7 +2992,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             groupContainer.append('<label style="vertical-align:middle;font-weight:bold;text-shadow: -2px 2px black;color:#57b4dc;">'+g+'</label>');
             if(groups[g].length > 1){
                 var mode = probes[groups[g][0]].stacked;
-                var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
+                var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton" data-tooltip="Stack/Unstack all probes from this scale.">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
                 stackButton.click(function(e){
                     e.preventDefault();
                     var gr = e.target.getAttribute('data-group');

@@ -426,6 +426,7 @@
 /* Log panel */
 .panel .logPanel{
     padding: 0.5em;
+    margin-top: 2.2em;
     height: -webkit-calc(100% - 2em);
     height: -moz-calc(100% - 2em);
     height: -o-calc(100% - 2em);

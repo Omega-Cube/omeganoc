@@ -53,8 +53,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             // Initialize global timeline element
             DashboardsManager.timeline = new DashboardTimeline($('#dashboard-global-timeline'));
-            //TODO: moveme, we should display the timeline only if there is an active dashboard.
-            DashboardsManager.timeline.show();
 
             // Initialize Gridster
             DashboardsManager.gridster = target.gridster({
@@ -96,9 +94,12 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             if (firstDashboard) {
                 DashboardsManager.loadDashboard(firstDashboard);
+                DashboardsManager.timeline.show();
             }
             else {
-                DashboardsManager._setNoDashboardMessage('Please select a dashboard using the top menu');
+                DashboardsManager._setNoDashboardMessage('Please select a dashboard using the top menu or create one');
+                //if no DB available display the create dashboard icon
+                jQuery('#create-dashboard-button').click();
             }
         },
 
@@ -169,6 +170,7 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             DashboardsManager._setDashboardTitle(name);
             DashboardsManager._addTopMenuEntry(name);
             DashboardsManager._showDashboardControls(true);
+            DashboardsManager.timeline.show();
         },
 
         /**
@@ -448,9 +450,12 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
          */
         unloadDashboard: function () {
             DashboardsManager.currentParts = {};
+            var count = 0;
             var parts = DashboardsManager.element.find(' > li').each(function (i, e) {
                 DashboardsManager.gridster.remove_widget(e, true);
+                count++;
             });
+            if(!count) DashboardsManager._deleteTopMenuEntry(DashboardsManager.currentDashboard);
 
             DashboardsManager._showDashboardControls(false);
             //TODO: flush worker too
@@ -492,6 +497,20 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             });
         },
 
+        /**
+         * Delete an entry from the Dashboards dropdown menu
+         * @param {String} name
+         */
+        _deleteTopMenuEntry: function (name) {
+            var entries = jQuery('#menu-dashboards-list a');
+            entries.each(function (i, elm) {
+                var jqElm = jQuery(elm);
+                if (jqElm.text() == name) {
+                    jqElm.remove();
+                }
+            });
+        },
+        
         /**
          * Sets the text of the big text displayed in the middle of the dashboards area.
          * Provide an empty string to hide it.

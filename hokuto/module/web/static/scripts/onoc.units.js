@@ -58,14 +58,18 @@ define(['onoc.createurl'], function(createUrl) {
 
         /**
          * Fetch units
+         * @param [callback] function - callback on success
          */
-        fetchUnits: function(){
+        fetchUnits: function(callback){
             var url = createUrl('/units/all');
             jQuery.get(url,function(response){
                 this.units = JSON.parse(response);
                 for(var unit in this.units){
                     if(this.units[unit].magnitudes)
                         this.units[unit].magnitudes = JSON.parse(this.units[unit].magnitudes);
+                }
+                if(callback){
+                    callback(this.units);
                 }
             }.bind(this));
         },

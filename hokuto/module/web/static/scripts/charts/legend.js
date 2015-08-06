@@ -122,6 +122,16 @@ define(['d3'],function(d3){
     };
 
     /**
+     * Update legend's color
+     * @param {String} probe - Probe's fullname (host+service)
+     * @param {String} color - Color HTML code
+     */
+    Legends.prototype.setColor = function(probe,color){
+        var container = this.elements[this._probes[probe]];
+        container.select('.legend-label').attr('fill',color);
+    };
+
+    /**
      * Return current container height
      */
     Legends.prototype.getCurrentHeight = function(){

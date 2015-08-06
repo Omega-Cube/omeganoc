@@ -111,10 +111,10 @@
                     <ul id="menu-dashboards-list">
                         {% for d in dashboards_list: %}
                             <li>
-                                <a href="{{ url_for('dashboards') }}#{{ d }}">{{ d }}</a>
+                                <a data-dashboard="{{ d }}" href="{{ url_for('dashboards') }}#{{ d }}">{{ d }}</a>
                             </li>
                         {% else %}
-                            <li class="no-dashboard">You have no dashboards yet</li>
+                            <li class="no-dashboard"><a href="{{ url_for('dashboards') }}">You have no dashboards yet</a></li>
                         {% endfor %}
                     </ul>
                 </li>
