@@ -220,7 +220,11 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             DashboardsManager.gridster.remove_widget(part, function () {
                 DashboardsManager._scanChangedPositions();
             });
-            delete DashboardsManager.currentParts[pid];
+
+            if(DashboardsManager.currentParts[pid] && !!DashboardsManager.currentParts[pid].controller)
+                DashboardsManager.currentParts[pid].controller.remove();
+            DashboardsManager.currentParts[pid] = null;
+
             // Save the removal
             jQuery.ajax(createUrl('/dashboards/part/' + pid), {
                 type: 'DELETE'
@@ -378,7 +382,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
                     });
                 }
             });
-
         },
 
         /**

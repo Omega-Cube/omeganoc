@@ -630,7 +630,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             this.scales[i].boundedProbe = 0;
         }
 
-        var x = { 'min': Date.now(), 'max': 0};
+        //TODO: nasty but eitherway if no data shit happens...
+        var x = { 'min': Date.now() - (3600000 * 24 * 7), 'max': 0};
 
         for(var d in data){
             //Todo find and a cleaner way
@@ -657,8 +658,10 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         //update global timeline if needed
         DashboardManager.timeline.update(x.min, x.max);
 
-        if(this.container.brush.empty())
+        if(this.container.brush.empty()){
+            console.log('check',x.min,x.max);
             this.axis.x.domain([x.min, x.max]);
+        }
         else
             this.brushed();
 
@@ -743,7 +746,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //panel
         this.panelUp = true;
-        //this.tooglePanel();
+        this.tooglePanel();
 
         //commands
         this.container.commands.attr('transform','translate('+(this.conf.containerWidth - this.conf.chartMargin.left - 85)+',0)');

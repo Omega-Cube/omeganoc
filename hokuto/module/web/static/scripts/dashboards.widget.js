@@ -100,7 +100,9 @@ define(['jquery', 'onoc.createurl', 'onoc.loadcss', 'onoc.cachedloader','dataser
             var closeBtn = jQuery('<li class="remove">Delete</li>');
             closeBtn.click(function () {
                 var that = jQuery(this);
+                var id = that.data('part-id');
                 DashboardsManager.closePart(part);
+                that.remove();
             });
             menu.append(closeBtn);
             actions.append(menu);
