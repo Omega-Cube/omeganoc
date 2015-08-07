@@ -658,10 +658,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         //update global timeline if needed
         DashboardManager.timeline.update(x.min, x.max);
 
-        if(this.container.brush.empty()){
-            console.log('check',x.min,x.max);
+        if(this.container.brush.empty())
             this.axis.x.domain([x.min, x.max]);
-        }
         else
             this.brushed();
 
@@ -744,9 +742,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             this.scales[s].trackHeight = trackHeight;
         }
 
-        //panel
-        this.panelUp = true;
-        this.tooglePanel();
+        //panel, force close event to reinitialize panel size
+        if(!this.panelUp){
+            this.panelUp = true;
+            this.tooglePanel();
+        }
 
         //commands
         this.container.commands.attr('transform','translate('+(this.conf.containerWidth - this.conf.chartMargin.left - 85)+',0)');
@@ -2464,7 +2464,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             container.find('.spinner').remove();
         var select = $('<select name="'+name+'" class="formButton select" ></select>');
         if(Object.keys(metrics).length)
-            select.append($('<option value="*">ALL (*)</option>'));
+            select.append($('<option value="*">All(*)</option>'));
         else
             select.append('<option value="">None available</option>');
 
@@ -2902,7 +2902,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             }
 
             //TODO: add some tooltips or an enabled/disabled state
-            if(!query) return;
+            if(!query) return false;
             
             var probeList = DashboardProbes.getProbeList(query);
             var addCount = 0;
@@ -2912,6 +2912,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
                 if(this.probes[name]) continue;
                 addCount++;
+                if(i)
+                    color = getNextUnusedColor();
+
                 data.conf.probes[name] = {
                     'color': color,
                     'type': type,
@@ -2938,7 +2941,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 }
                 setLegend.call(this);
             }
-            if(!addCount) return;
+            if(!addCount) return false;
             data.conf = JSON.stringify(data.conf);
 
             //show the spinner if needed
@@ -2953,6 +2956,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 settings.find('.color').find('.selected').attr('class','');
                 settings.find('.color').find('[data-value="'+form.color.value+'"]').attr('class','selected');
             }.bind(this));
+
+            return true;
         }.bind(this));
 
         subandclose.click(function(){
