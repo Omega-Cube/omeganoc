@@ -51,6 +51,10 @@ from ajax import jsondump
 # value whenever possible
 _base_node_spacing = 60
 
+# Defines a prefix that should be used to store metadata
+# attached to a graph in the graph state database
+_metadata_storage_prefix = 'hokuto__meta:'
+
 class DependencyError(Exception):
     """ Exception raised by a method that cannot be called because it requires
         a dependency that is not installed.
@@ -268,6 +272,7 @@ class Graph(GraphBase):
     def __init__(self):
         super(Graph, self).__init__()
         self.groups = {}
+        self.metadata = {}
 
     def add_node_from_host(self, shinken_host):
         """ Adds a new node to this graph, filled with informations from the specified Shinken host """
@@ -388,6 +393,11 @@ class Graph(GraphBase):
             for key in g.keys():
                 if key.startswith('_'):
                     del g[key] # Remove stuff starting with a _ (no need to have them on the client side)
+        # Add metadata
+        m = self.metadata
+        if m is None:
+            m = {}
+        result['meta'] = m
         return result
 
     @staticmethod
@@ -396,11 +406,15 @@ class Graph(GraphBase):
 
     def read_state_data(self, state_data):
         """
-        TODO : Document this
+        Reads a list of key/values retrieved from the database,
+        and projects these these values on the current graph structures
+        The information that will be projected are node positions,
+        user defined edges, and metadata entries
         """
         unused_data = state_data.copy()
         missing_positions = self.__read_position_data(unused_data)
         self.__add_link_from_user_data(unused_data)
+        self.__read_metadata(unused_data)
 
         return (unused_data, missing_positions)
 
@@ -415,6 +429,22 @@ class Graph(GraphBase):
                 del data[id + ':y']
             else:
                 has_missing_nodes = True
+                
+    def __read_metadata(self, data):
+        """ 
+        Adds metadata entries found in the specified dictionary 
+        to this graph's metadata
+        """
+        global _metadata_storage_prefix
+        prelength = len(_metadata_storage_prefix)
+        foundkeys = []
+        for id, value in data.iteritems():
+            if id.startswith(_metadata_storage_prefix):
+                key = id[prelength:]
+                self.metadata[key] = value
+                foundkeys.append(id)
+        for key in foundkeys:
+            del data[id]
 
     def extract_groups_graph(self):
         result = Graph()
@@ -956,7 +986,6 @@ def get_result(graphname, uid):
                    .where(graphTokenTable.c.user_id == uid)\
                    .where(graphTokenTable.c.graph_id == graphname)
     rows = db.engine.execute(q)
-
     return { r[graphTokenTable.c.key] : r[graphTokenTable.c.value] for r in rows }
     
 def get_list_saves(graphtype):
@@ -989,6 +1018,8 @@ def savestate(graphname, data, clear = False):
                  .where(graphTokenTable.c.user_id == uid)\
                  .where(graphTokenTable.c.graph_id == graphname))
 
+    app.logger.debug('Saving data in graph "{0}": {1}'.format(graphname, data))
+                 
     inserts = []
     update = graphTokenTable.update()\
                             .where(graphTokenTable.c.user_id == uid)\

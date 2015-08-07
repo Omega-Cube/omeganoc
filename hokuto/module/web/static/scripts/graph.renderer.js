@@ -117,7 +117,6 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         toggleImg.src = createUrl('static/images/arrow_right.png');
         toggleImg.alt = '';
         this.overviewToggle.appendChild(toggleImg);
-        var $overviewToggle = jQuery(this.overviewToggle);        
         
         // The selection rectangle
         this.selectionRectangle = this.svg.rect(0, 0).attr({ 'class': 'select-rect' }).hide();
@@ -133,6 +132,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
         // Flag which will tell us whether or not the overview is dirty
         this.overviewIsDirty = false;
+        // Determines if the overview area is visible
+        this.overviewIsVisible = true;
 
         // List of currently selected nodes and edges
         this.selectedNodes = [];
@@ -521,10 +522,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
         });
         
-        $overviewToggle.click(function() {
-            var $this = $(this);
-            $overviewToggle.toggleClass('toggle-collapsed');
-            $overviewContainer.slideToggle();
+        jQuery(this.overviewToggle).click(function() {
+            selfRef.setOverviewVisibility(!selfRef.overviewIsVisible, true);
         });
 
         // Load the CSS file
@@ -544,6 +543,38 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
     };
 
     Bubbles.prototype = {
+        getOverviewVisibility: function() {
+            // Returns a boolean indicating whether the overview is currently visible or not
+            return this.overviewIsVisible;
+        },
+        
+        setOverviewVisibility: function(show, animated) {
+            // Opens or collapses the overview
+            show = !!show;
+            
+            if(show === this.overviewIsVisible)
+                return;
+            var $overviewToggle = jQuery(this.overviewToggle);
+            var $overviewContainer = jQuery(this.overviewContainer);
+            
+            if(show) {
+                $overviewToggle.removeClass('toggle-collapsed');
+                if(animated)
+                    $overviewContainer.slideDown();
+                else
+                    $overviewContainer.show();
+            }
+            else {
+                $overviewToggle.addClass('toggle-collapsed');
+                if(animated)
+                    $overviewContainer.slideUp();
+                else
+                    $overviewContainer.hide();
+            }
+            this.overviewIsVisible = show;
+            $overviewContainer.trigger('overview_toggle.onoc')
+        },
+        
         _draw: function () {
             var i, c;
             for (i in this.graph.groups) {
@@ -1618,7 +1649,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         },
 
         show: function () {
-            this.overviewContainer.style.display = "block";
+            if(this.overviewIsVisible)
+                this.overviewContainer.style.display = "block";
             this.container.style.display = "block";
         },
 
