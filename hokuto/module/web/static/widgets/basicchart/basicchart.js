@@ -34,6 +34,13 @@ define(['jquery', 'd3', 'dashboards.manager', 'dashboards.probes', '/static/scri
         this.chart.init(container, options);
     };
 
+    /**
+     * Called when this widget is deleted
+     */
+    Basicchart.prototype.remove = function(){
+        DashboardProbes.removeSignature(this.id);
+    };
+
     Basicchart.default = function () {
         return {
             width: 5,

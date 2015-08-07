@@ -990,6 +990,7 @@ onmessage = function(m){
       8: check if new aggregation scale reached with given timeline.
       9: Get cursor data
       10: Get logs data
+      11: Delete part
     */
     switch(m.data[0]){
     case 1:
