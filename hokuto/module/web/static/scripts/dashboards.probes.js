@@ -157,6 +157,19 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
         },
 
         /**
+         * Remove a signature reference from listeners
+         * @param { Integer } sig - Signature (part's ID) value
+         */
+        removeSignature : function(sig){
+            for(var i in this.worker._listeners){
+                for(var j in this.worker._listeners[i]){
+                    if(this.worker._listeners[i][j][0] == sig)
+                        this.worker._listeners[i].splice(j,1);
+                }
+            }
+        },
+
+        /**
          * Fetch all available metrics from the server
          * @param {Function} callback
          */
@@ -185,7 +198,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
                 dataType: 'json',
                 data: request
             });
-        },
+        }
     };
 
     //worker responses
