@@ -19,6 +19,7 @@
  */
 define(['jquery', 'graph.structure', 'graph.renderer', 'graph.infopanel', 'graph.state', 'console', 'onoc.structuretree', 'onoc.states', 'onoc.createurl', 'onoc.popupbutton', 'jquery.hashchange', 'onoc.message'],
        function(jQuery, structure, Bubbles, initInfoPanel, GraphState, Console, StructureTree, States, createurl, popupButton) {
+    var OVERVIEW_KEY = 'overview_visibility';
     var Grapher = {
         // Holds the currently displayed graph type identifier
         _currentType: "",
@@ -74,6 +75,12 @@ define(['jquery', 'graph.structure', 'graph.renderer', 'graph.infopanel', 'graph
             Grapher.flashGlobalMessage('Save deleted !');
         },
 
+        saveMetadata: function(key, value) {
+            var data = {};
+            data['hokuto__meta:' + key] = value;
+            GraphState.save(Grapher._currentType, data);
+        },
+        
         _loadGraph: function(graphTypeName, successCallback) {
             Console.log('loading state ' + graphTypeName);
             GraphState.load(graphTypeName, function (result) {
@@ -109,10 +116,12 @@ define(['jquery', 'graph.structure', 'graph.renderer', 'graph.infopanel', 'graph
                         graph = structure(graph);
                         var graphTypeInstance = new typeObject(graph, graphName);
                         Grapher.showGlobalMessage('');
+                        var firstDisplay = true;
                         if (Grapher._renderer) {
                             Grapher._renderer.show();
                             Grapher._renderer.setGraphData(graph, graphTypeInstance);
                             Grapher.updateStatus();
+                            firstDisplay = false;
                         }
                         else {
                             var container = document.getElementById('onoc-graph');
@@ -133,6 +142,17 @@ define(['jquery', 'graph.structure', 'graph.renderer', 'graph.infopanel', 'graph
                                     nodes.push(node.link_out[i].target);
                                 Grapher._renderer.selectNodes(nodes);
                             });
+                            
+                            // When the overview visibility changes, save it to have the same later
+                            jQuery(container).on('overview_toggle.onoc', function() {
+                                // Save the new overview state
+                                Grapher.saveMetadata('overview_visibility', Grapher._renderer.getOverviewVisibility() ? 'visible' : 'collapsed');
+                            });
+                            
+                        }
+
+                        if(OVERVIEW_KEY in graph.meta) {
+                            Grapher._renderer.setOverviewVisibility(graph.meta[OVERVIEW_KEY] == 'collapsed' ? false : true, !firstDisplay);
                         }
                         
                         _updateMenu(graphName);
