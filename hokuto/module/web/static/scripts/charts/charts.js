@@ -1764,8 +1764,12 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.showCursor = function(event){
         var cursor = this.getCursor();
-        cursor.attr('transform','translate('+this.axis.x(new Date(event.date))+',0)');
-        cursor.select('text').text(new Date(event.date).toLocaleString());
+        if(event.date >= this.axis.x.domain()[0] && event.date <= this.axis.x.domain()[1]){
+            cursor.attr('transform','translate('+this.axis.x(new Date(event.date))+',0)').attr('display','inherit');
+            cursor.select('text').text(new Date(event.date).toLocaleString());
+        }else{
+            cursor.attr('display','none');
+        }
         for(var legend in this.legends){
             if(!this.probes[legend]){
                 console.log(this.id,legend,this.probes,this.legends);
