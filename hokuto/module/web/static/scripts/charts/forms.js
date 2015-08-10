@@ -511,9 +511,10 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
             var container = $('<button class="formButton remove">X</button>');
             container[0].addEventListener('click',function(){
                 this.removeProbe(probe);
-                this.buildScale();
                 this.setDomain(this.data);
                 this.cleanScales();
+                this.buildAxis();
+                this.redraw();
                 this.flushPanel();
                 this.buildEditPanel();
             }.bind(this));
