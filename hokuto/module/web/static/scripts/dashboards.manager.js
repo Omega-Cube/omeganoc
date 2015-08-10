@@ -134,6 +134,7 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             DashboardsManager._loadDashboardData(dashboardName, function (data) {
                 DashboardsManager._setNoDashboardMessage('');
+                DashboardsManager.timeline.show();
                 // Iterate over all the parts and create them
                 jQuery.each(data, function (index, value) {
                     Widget.getWidgetById(value.widget, function (widget) {
