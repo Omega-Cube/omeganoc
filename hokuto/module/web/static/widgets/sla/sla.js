@@ -889,8 +889,8 @@ define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], fu
      */
     Sla.default = function(){
         return {
-            width: 5,
-            height: 3,
+            width: 8,
+            height: 5,
         };
     };
 

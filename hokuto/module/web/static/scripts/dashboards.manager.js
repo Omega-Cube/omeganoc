@@ -55,18 +55,23 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             DashboardsManager.timeline = new DashboardTimeline($('#dashboard-global-timeline'));
 
             // Initialize Gridster
+            var cols = Math.floor(($('#content').width()) / 70);
             DashboardsManager.gridster = target.gridster({
                 widget_margins: [10, 10],
-                widget_base_dimensions: [100, 100],
+                widget_base_dimensions: [50, 50],
+                min_cols : cols,
 		resize: {
-		    'enabled': true
-                    //'min_size': [4, 4]
-		}
-            }).data('gridster');
+		    'enabled': true,
+                    'min_size': [8, 6]
+		},
+            }).width('auto').data('gridster');
 
             $(window).resize(function () {
                 // Update gridster's grid to match the new window dimentions
+                var cols = Math.floor(($('#content').width()) / 70);
+                DashboardsManager.gridster.cols = cols;
                 DashboardsManager.gridster.recalculate_faux_grid();
+                
             });
 
             var eParent = target.parent();
