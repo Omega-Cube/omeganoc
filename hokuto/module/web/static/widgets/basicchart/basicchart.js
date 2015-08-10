@@ -43,8 +43,8 @@ define(['jquery', 'd3', 'dashboards.manager', 'dashboards.probes', '/static/scri
 
     Basicchart.default = function () {
         return {
-            width: 5,
-            height: 4,
+            width: 9,
+            height: 7,
             conf: {
                 'frequency': 1000,
                 'probes':{}

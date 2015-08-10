@@ -132,9 +132,9 @@ svg.basicchart .parts-cursor{
 .panel .addprobe label{
      text-transform: uppercase;
      font-weight: bold;
-     font-size: 1.25em;
+     font-size: 1.05em;
      display: block;
-     margin: 0.5em 0;
+     margin: 0.25em 0;
 }
 
 .panel .addprobe .formButton{
