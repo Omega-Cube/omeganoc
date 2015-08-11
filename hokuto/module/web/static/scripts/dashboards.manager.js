@@ -132,33 +132,36 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             DashboardsManager.unloadDashboard();
             DashboardsManager._setNoDashboardMessage('Loading...');
 
-            DashboardsManager._loadDashboardData(dashboardName, function (data) {
-                DashboardsManager._setNoDashboardMessage('');
-                DashboardsManager.timeline.show();
-                // Iterate over all the parts and create them
-                jQuery.each(data, function (index, value) {
-                    Widget.getWidgetById(value.widget, function (widget) {
-                        if (!widget)
-                            return;
+            // creepy, but we need to wait a bit eitherway some browser will not draw charts (firefox...)
+            setTimeout(function(){
+                DashboardsManager._loadDashboardData(dashboardName, function (data) {
+                    DashboardsManager._setNoDashboardMessage('');
+                    DashboardsManager.timeline.show();
+                    // Iterate over all the parts and create them
+                    jQuery.each(data, function (index, value) {
+                        Widget.getWidgetById(value.widget, function (widget) {
+                            if (!widget)
+                                return;
 
-                        DashboardsManager._createPart(value, widget, false);
+                            DashboardsManager._createPart(value, widget, false);
+                        });
                     });
+
+                    // Update the dashboard title
+                    DashboardsManager._setDashboardTitle(dashboardName);
+                    DashboardsManager._showDashboardControls(true);
+                }, function (errorCode, errorText) {
+                    if (errorCode == 404) {
+                        DashboardsManager._setNoDashboardMessage('The specified dashboard could not be found on the server');
+                    }
+                    else {
+                        DashboardsManager._setNoDashboardMessage('An error occured while retrieving the dashboard.');
+                        Console.error('Dashboard loading error : ' + errorCode + ' / ' + errorText);
+                    }
                 });
 
-                // Update the dashboard title
-                DashboardsManager._setDashboardTitle(dashboardName);
-                DashboardsManager._showDashboardControls(true);
-            }, function (errorCode, errorText) {
-                if (errorCode == 404) {
-                    DashboardsManager._setNoDashboardMessage('The specified dashboard could not be found on the server');
-                }
-                else {
-                    DashboardsManager._setNoDashboardMessage('An error occured while retrieving the dashboard.');
-                    Console.error('Dashboard loading error : ' + errorCode + ' / ' + errorText);
-                }
-            });
-
-            DashboardsManager.currentDashboard = dashboardName;
+                DashboardsManager.currentDashboard = dashboardName;
+            }, 500);
         },
 
         /**
