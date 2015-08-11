@@ -474,15 +474,15 @@ def get_disponibility():
     firststate = int(request.args.get('firststate'))
     host = request.args.get('host')
     if not host:
-        return False,404
+        abort(404)
 
     allowed =  utils.get_contact_permissions(current_user.shinken_contact)
     if host not in allowed['hosts']:
-        return False,403
+        abort(403)
 
     service = request.args.get('service') or ''
     if service and service not in allowed['services']:
-        return False,403
+        abort(403)
 
     logs = Sla.query\
               .filter(Sla.host_name==host, Sla.service_description==service, Sla.time>=start, Sla.time<=end)\
