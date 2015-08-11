@@ -77,6 +77,8 @@ def get_hosts():
     data = query.call()
 
     data = [d for d in data if d['name'] in permissions['hosts']]
+    for d in data:
+        d['services'] = [s for s in d['services'] if s in permissions['services']]
 
     return jsonify({'results': data})
 
