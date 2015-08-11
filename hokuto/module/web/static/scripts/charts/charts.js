@@ -805,7 +805,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this.container.context.select('.brush').select('.background').attr('width',this.conf.width);
         this.container.brush.extent(values);
 
-        //redraw
+        //redraw ??? there should be another way...
         this.redraw();
         if(this.currentData){
             //TODO: copy-pasta from the aggregate event method, we should rewrite all this part.
@@ -3237,6 +3237,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
     DashboardChart.prototype.autoScale = function(){
         var log = this.conf.log;
         var lastData = this.currentData;
+        var domain = this.axis.x.domain();
+        var predict = this.predict.getAll(Date.now());
+
         //get all max values
         var tmpMaxScales = {};
         for(var p in lastData){
@@ -3250,6 +3253,18 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 if(typeof min === 'boolean') min = val;
                 else min = (min > val) ? val : min;
             }
+
+            //parse predicted data if any
+            if(predict && predict[p]){
+                for(var d in predict[p]){
+                    for(var v in predict[p][d]){
+                        if(predict[p][d][v].x > domain[1].getTime() || predict[p][d][v].x < domain[0].getTime()) continue;
+                        var val = predict[p][d][v].y;
+                        max = (max < val) ? val : max;
+                    }
+                }
+            }
+            
             if(max > tmpMaxScales[s].max) tmpMaxScales[s].max = max;
             if(typeof tmpMaxScales[s].min === 'boolean') tmpMaxScales[s].min = min;
             else if(min < tmpMaxScales[s].min) tmpMaxScales[s].min = min;

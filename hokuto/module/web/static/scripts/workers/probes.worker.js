@@ -152,7 +152,8 @@ Probe.prototype.getCursor = function(date){
             result = data[offset] || 0;
         }else if(this._predicted && date >= this._predicted.start && date <= this._predicted.end){
             var time = date - this._predicted.start;
-            var offset = Math.round(time/this._predicted.step);
+            var offset = (this._predicted.step) ? Math.round(time/this._predicted.step) : 0;
+            if(!this._predicted.values[offset]) offset = this._predicted.values.length - 1;
             result = this._predicted.values[offset].value;
         }
         this._cache[date] = result;
