@@ -646,9 +646,28 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             scale.updateDomain(data[d]);
         }
 
-        var predict = this.predict.getLastPredictedDate();
-        if(predict > x.max) x.max = new Date(predict);
+        //predict
+        var predict = this.predict.getAll(x.max);
+        for(var d in data){
+            if(predict[d]){
+                var scale = this.scales[this.probes[d].scale];
+                var min = false;
+                var max = false;
+                for(var p in predict[d]){
+                    for(var i in predict[d][p]){
+                        var v = predict[d][p][i].y;
+                        min = (typeof(min) === 'boolean' || v < min) ? v : min;
+                        max = (typeof(max) === 'boolean' || v > max) ? v : max;
+                    }
+                }
+                var range = [min,max];
+                scale.updateDomain({'range': range});
+            }
+        }
 
+        predict = this.predict.getLastPredictedDate();
+        if(predict > x.max) x.max = new Date(predict);
+        
         if(this.conf.fromDate)
             x.min = this.conf.fromDate;
         if(this.conf.untilDate)
