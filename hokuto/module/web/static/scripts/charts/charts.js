@@ -437,7 +437,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             'probes': Object.keys(this.probes),
             'start': (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
         },this.id]);
-    }
+    };
 
     /**
      * Showup the spinner
@@ -1770,6 +1770,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         for(var c in this.content)
             this.content[c].redraw();
+
         this.drawLogs();
         //performance hit here, maybe find an other way to update the xAxis
         this.container.focus.select(".x.axis").call(this.axis.xAxis);
@@ -1979,6 +1980,10 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                     g.selectAll('path.predict').attr("d", d3.svg.line()
                                                      .x(function(d){ return x(d.x)})
                                                      .y(function(d){ return y((d.y0 || 0) + d.y)}));
+                    g.selectAll('path.mean').attr("d", d3.svg.line()
+                                                  .x(function(d){ return x(d.x)})
+                                                  .y(function(d){ return y((d.y0 || 0) + d.y)}));
+
                 }
             }.bind(this)
         };
@@ -2108,6 +2113,10 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                     g.selectAll('path.predict').attr("d", d3.svg.line()
                                                      .x(function(d){ return x(d.x)})
                                                      .y(function(d){ return y((d.y0 || 0) + d.y)}));
+                    g.selectAll('path.mean').attr("d", d3.svg.line()
+                                                           .x(function(d){ return x(d.x)})
+                                                           .y(function(d){ return y((d.y0 || 0) + d.y)}));
+
                 }
             }.bind(this)
         };
@@ -2390,6 +2399,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                     if(this.predictData[probe])
                         this.addPredict(this.predictData[probe],color,data,y,probe);
                 }else{
+                    console.log('check2');
                     colwidth = this.axis.x(interval) - this.axis.x(0);
                     focusGroup.selectAll("rect")
                         .attr("x", function(d){ return this.axis.x(d.x) - colwidth / 2;}.bind(this))
@@ -2400,6 +2410,10 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                     focusGroup.selectAll('path.predict').attr("d", d3.svg.line()
                                                               .x(function(d){ return x(d.x)})
                                                               .y(function(d){ return y((d.y0 || 0) + d.y)}));
+                    focusGroup.selectAll('path.mean').attr("d", d3.svg.line()
+                                                              .x(function(d){ return x(d.x)})
+                                                              .y(function(d){ return y((d.y0 || 0) + d.y)}));
+
                     dots.selectAll('.predictDot')
                         .attr("cx",function(d){ return x(d.x);});
                  }
