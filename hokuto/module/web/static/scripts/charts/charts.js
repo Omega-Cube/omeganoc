@@ -2235,7 +2235,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         dots.attr('cx',function(d){ return x(d.x)})
             .attr('cy',function(d){ return y((d.y0 || 0) + d.y)})
             .attr('data-title', probe)
-            .attr('data-date', function(d){ return d.x.toLocaleString()})
+            .attr('data-date', function(d){ return new Date(d.x).toLocaleString()})
             .attr('data-value',function(d){ return this.units.unitFormat(d.y,
                                                                          this.units.get(this.scales[this.probes[probe].scale].unit)
                                                                         )}.bind(this));
