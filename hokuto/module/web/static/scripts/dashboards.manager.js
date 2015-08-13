@@ -71,7 +71,6 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
                 var cols = Math.floor(($('#content').width()) / 70);
                 DashboardsManager.gridster.cols = cols;
                 DashboardsManager.gridster.recalculate_faux_grid();
-                
             });
 
             var eParent = target.parent();

@@ -2399,7 +2399,6 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                     if(this.predictData[probe])
                         this.addPredict(this.predictData[probe],color,data,y,probe);
                 }else{
-                    console.log('check2');
                     colwidth = this.axis.x(interval) - this.axis.x(0);
                     focusGroup.selectAll("rect")
                         .attr("x", function(d){ return this.axis.x(d.x) - colwidth / 2;}.bind(this))
@@ -3275,6 +3274,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                         if(predict[p][d][v].x > domain[1].getTime() || predict[p][d][v].x < domain[0].getTime()) continue;
                         var val = predict[p][d][v].y;
                         max = (max < val) ? val : max;
+                        min = (min > val) ? val : min;
                     }
                 }
             }
@@ -3282,13 +3282,13 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             if(max > tmpMaxScales[s].max) tmpMaxScales[s].max = max;
             if(typeof tmpMaxScales[s].min === 'boolean') tmpMaxScales[s].min = min;
             else if(min < tmpMaxScales[s].min) tmpMaxScales[s].min = min;
-
         }
         //apply new domains
         for(var s in this.scales){
             var y = this.scales[s].y;
             var max = tmpMaxScales[s].max;
             var min = (log) ? tmpMaxScales[s].min : 0;
+            if(!log && min > tmpMaxScales[s].min) min = tmpMaxScales[s].min;
             if(log && !min) min = 0.0001;
             if(max){
                 y.domain([min,max]);
