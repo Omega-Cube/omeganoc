@@ -88,9 +88,11 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
 
             // Listen for URL changes
             jQuery(window).hashchange(function () {
-                var hash = decodeURIComponent(location.hash.substring(1));
-
-                DashboardsManager.loadDashboard(hash);
+                //ok this is very very nasty but there is tons of glitch and issue with dashboards unload atm (workers and gridster don't flush their data correctly)
+                //so it's better to reload the header between each dashboard than bringing memory leaks, bad formating and other glitch that will force to reload anyway.
+                location.reload(true);
+                //var hash = decodeURIComponent(location.hash.substring(1));
+                //DashboardsManager.loadDashboard(hash);
             });
 
             // Load the initial dashboard
