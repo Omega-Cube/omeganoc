@@ -178,9 +178,12 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             DashboardsManager.buildWidget(initialWidget);
 
             DashboardsManager._setDashboardTitle(name);
-            DashboardsManager._addTopMenuEntry(name);
-            DashboardsManager._showDashboardControls(true);
-            DashboardsManager.timeline.show();
+
+            //while we force reload between DB...
+            var link = DashboardsManager._addTopMenuEntry(name);
+            setTimeout(function(){link[0].click();},250);
+            //DashboardsManager._showDashboardControls(true);
+            //DashboardsManager.timeline.show();
         },
 
         /**
@@ -492,6 +495,7 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             link.attr('href', createUrl('/dashboards') + '#' + encodeURIComponent(name));
             var li = link.wrap('<li />').parent();
             entryContainer.append(li);
+            return link;
         },
 
         /**
