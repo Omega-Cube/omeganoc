@@ -1380,7 +1380,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.draw = function(data){
         var probes= this.probes;
-        var predicted = this.predict.getAll((this.conf.untilDate) ? this.conf.untilDate.getTime() : 0);
+        var predicted = this.predict.getAll(Date.now());
 
         if(!Object.keys(probes).length)
             return;
