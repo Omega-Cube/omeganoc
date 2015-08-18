@@ -171,32 +171,32 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
          * @param {String} initialWidget - Intialize the new dashboard with this widget
          */
         createDashboard: function(name, initialWidget) {
-            DashboardsManager.unloadDashboard();
+            //DashboardsManager.unloadDashboard();
             DashboardsManager.currentDashboard = name;
-            DashboardsManager._setNoDashboardMessage('');
+            //DashboardsManager._setNoDashboardMessage('');
 
-            DashboardsManager.buildWidget(initialWidget);
-
-            DashboardsManager._setDashboardTitle(name);
+            //DashboardsManager._setDashboardTitle(name);
 
             //while we force reload between DB...
-            var link = DashboardsManager._addTopMenuEntry(name);
-            setTimeout(function(){link[0].click();},250);
             //DashboardsManager._showDashboardControls(true);
             //DashboardsManager.timeline.show();
+            DashboardsManager.buildWidget(initialWidget,function(){
+                document.location.hash = this.name;
+            }.bind({'name': name}));
         },
 
         /**
 	 * Build a new widget
          * @param {String} widgetName - The widget we need to create
          */
-	buildWidget: function(widgetName){
+	buildWidget: function(widgetName,callback){
             Widget.getWidgetById(widgetName, function (widget) {
                 if (!widget)
                     return;
 
                 // Create the part with its default values
                 widget.createDefaultData(this);
+                if(typeof callback === 'function') callback();
             }.bind(this));
 	},
 

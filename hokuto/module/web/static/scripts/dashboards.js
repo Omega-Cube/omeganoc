@@ -27,7 +27,7 @@ require(['jquery', 'dashboards.manager', 'onoc.createurl', 'dashboards.widget', 
 
             showDashboardNamePopup(function (result) {
                 showAddWidgetPopup(function (widget) {
-                    DashboardsManager.createDashboard(result, widget);
+                    DashboardsManager.createDashboard(result,widget);
                 });
             }, 'Create a dashboard');
         });
