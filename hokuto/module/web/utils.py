@@ -60,25 +60,30 @@ def generate_salt(len):
 def get_contact_permissions(shinken_contact):
     """ Return the list of hosts and services the current user is allowed to see. """
 
+    services_permissions = livestatus.livestatus.services._query
+    services_permissions = services_permissions.filter("contacts >= %s"%shinken_contact)
+    services_permissions = services_permissions.columns('description')
+    services_permissions = list(set([n['description'] for n in services_permissions.call()]))
+
     hosts_permissions = livestatus.livestatus.hosts._query
     hosts_permissions = hosts_permissions.filter("contacts >= %s"%shinken_contact)
     hosts_permissions = hosts_permissions.columns('name')
     hosts_permissions = [n['name'] for n in hosts_permissions.call()]
 
+    hosts_with_services = livestatus.livestatus.hosts._query
+    hosts_with_services = hosts_with_services.columns(*('services','name','contacts'))
+    hosts_with_services = [h['name'] for h in hosts_with_services.call() if len([s for s in h['services'] if s in services_permissions]) and shinken_contact not in h['contacts']]
+
+    hosts_permissions = hosts_permissions + hosts_with_services
+    
     hostgroups_permissions = livestatus.livestatus.hostgroups._query
     hostgroups_permissions = hostgroups_permissions.columns(*('name','members'))
     hostgroups_permissions = [n['name'] for n in hostgroups_permissions.call() if len([m for m in n['members'] if m in hosts_permissions])]
-
-    services_permissions = livestatus.livestatus.services._query
-    services_permissions = services_permissions.filter("contacts >= %s"%shinken_contact)
-    services_permissions = services_permissions.columns('description')
-    services_permissions = list(set([n['description'] for n in services_permissions.call()]))
-    services_permissions.append('__HOST__')
 
     servicegroups_permissions = livestatus.livestatus.servicegroups._query
     servicegroups_permissions = servicegroups_permissions.columns(*('name','members'))
     servicegroups_permissions = [n['name'] for n in servicegroups_permissions.call() if len([m for m in n['members'] if m in services_permissions])]
 
-    results = {'hosts': hosts_permissions , 'services': services_permissions, 'hostgroups': hostgroups_permissions, 'servicegroups': servicegroups_permissions}
+    results = {'hosts': hosts_permissions , 'services': services_permissions, 'hostgroups': hostgroups_permissions, 'servicegroups': servicegroups_permissions, 'hosts_with_services': hosts_with_services}
 
     return results

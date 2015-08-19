@@ -30,7 +30,7 @@ from flask.ext.login import login_required, current_user
 from . import app, utils
 
 def _get_hosts(group = None):
-    """ Get hosts """
+    """ Get available hosts for current user"""
 
     shinken_contact = current_user.shinken_contact
     permissions = utils.get_contact_permissions(shinken_contact)
