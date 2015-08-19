@@ -2456,6 +2456,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.removeProbe = function(probe){
         if(this.probes[probe]){
+            this.legendManager.removeLegend(probe);
             var scaleName = this.probes[probe].scale;
             var scale = this.scales[scaleName];
             var direction = (scale.reversed) ? 'opposate': 'top';
@@ -2487,9 +2488,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 while(axis.firstChild) axis.removeChild(axis.firstChild);
 
             }
-
             DashboardProbes.remove(this.id,probe,scale);
-            this.legendManager.removeLegend(probe);
             this.redraw();
         }
     };

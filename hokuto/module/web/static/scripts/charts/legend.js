@@ -155,8 +155,9 @@ define(['d3'],function(d3){
         var container = this.elements[this._probes[probe]];
         var host = probe.split('.')[0];
         var group = this.getHostGroup(host);
-        container.remove();
-        this.elements.splice(this._probes[probe],1);
+        if(container)
+            container.remove();
+        this.elements[this._probes[probe]] = null;
         delete this._probes[probe];
         group.count--;
         this.redraw();
@@ -226,6 +227,7 @@ define(['d3'],function(d3){
 
         if(check){
             for(var i =0, len = this.elements.length;i<len;i++){
+                if(!this.elements[i]) continue;
                 var host = this.elements[i].attr('data-host');
                 this.elements[i].select('g').attr('transform','translate('+this.groups[host].width+',1)');
             }
