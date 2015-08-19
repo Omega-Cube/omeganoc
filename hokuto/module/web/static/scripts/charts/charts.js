@@ -3288,6 +3288,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         }
         //apply new domains
         for(var s in this.scales){
+            if(!tmpMaxScales[s]) continue;
             var y = this.scales[s].y;
             var max = tmpMaxScales[s].max;
             var min = (log) ? tmpMaxScales[s].min : 0;
