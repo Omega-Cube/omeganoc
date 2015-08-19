@@ -66,7 +66,7 @@ class AddUnitForm(Form):
 @login_required
 def manage_units():
     """ Units management page """
-    units = Unit.query.order_by(Unit.name).all()
+    units = Unit.query.filter(Unit.name != 'None').order_by(Unit.name).all()
     return render_template('unit.html', units=units)
 
 
@@ -162,7 +162,7 @@ def edit_unit(unitid):
 
     elif request.method == 'POST': return "Form invalid!",500
 
-    return render_template('edit-unit.html', form=form, unit=unit, putain=request.method)
+    return render_template('edit-unit.html', form=form, unit=unit)
 
 
 @app.route('/units/all', methods=['GET'])
