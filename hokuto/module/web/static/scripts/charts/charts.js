@@ -2499,9 +2499,12 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         if(container.find('.spinner'))
             container.find('.spinner').remove();
         var select = $('<select name="'+name+'" class="formButton select" ></select>');
-        if(Object.keys(metrics).length)
-            select.append($('<option value="*">All(*)</option>'));
-        else
+        if(Object.keys(metrics).length){
+            if(container.children().length === 1)
+                select.append($('<option value="">Select host</option>'));
+            else
+                select.append($('<option value="*">All(*)</option>'));
+        }else
             select.append('<option value="">None available</option>');
 
         for(var m in metrics){
