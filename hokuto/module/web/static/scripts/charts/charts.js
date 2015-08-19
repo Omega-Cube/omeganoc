@@ -34,8 +34,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      * @property {Object} probes            - Store probes local config (aka color and order)
      * @property {Number} counter           - Current probes length
      * @property {Object} _stackedLogsCache - Cache and store logs stacks
-     * @property {Obkect} data              - Full timeline aggregated data
-     * @property {Obkect} currentData       - Currently focused aggregated data
+     * @property {Object} data              - Full timeline aggregated data
+     * @property {Object} currentData       - Currently focused aggregated data
+     * @property {Boolean} needAutoScale    - if true will autoscale on the next aggregate event
      * @property {Object} axis              - Contain x axis d3 scales and axis object.
      * @property {Object} conf
      *                    conf.width:           {Number} available width
@@ -71,6 +72,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this._stackedLogsCache = {};
         this.data = false;
         this.currentData = false;
+        this.needAutoScale = false;
 
         this.axis = {
             xAxis: false,
@@ -352,11 +354,9 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             for(var p in data){
                 var probe = this.probes[p];
                 var scale = this.scales[probe.scale];
-                if(!probe.stacked && typeof this.content[p] !== 'undefined')
-                    this.content[p].redraw(data[p].values);
-                else{
-                    stacked[probe.scale]= stacked[probe.scale] || {};
-                    stacked[probe.scale][p]= data[p];
+                if(probe.stacked){
+                    stacked[probe.scale] = stacked[probe.scale] || {};
+                    stacked[probe.scale][p] = data[p];
                 }
             }
             //TODO: Add a method to generate stacked arrays to prevent DRY.
@@ -366,13 +366,23 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                     var i = 0;
                     for(var p in stacked[s]){
                         data[p].values = stackedData[i];
-                        if(this.content[p])
-                            this.content[p].redraw(stackedData[i]);
+                        //if(this.content[p])
+                        //    this.content[p].redraw(stackedData[i]);
                         i++;
                     }
                 }
             }
+            //prevent any glitch if the worker havn't returned all probes for any reason
+            for(var p in this.currentData){
+                if(!data[p]){
+                    data[p] = this.currentData[p];
+                }
+            }
             this.currentData = data;
+            if(this.needAutoScale) this.autoScale();
+            else{
+                this.soft_redraw();
+            }
         }.bind(this),this.id);
 
         //main timeline events
@@ -971,7 +981,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         brush.on("brushend",function(e){
             var context = this.axis.x2.domain();
             var focus = this.axis.x.domain();
-            this.autoScale();
+            this.needAutoScale = true;
 
             //... Dunno why in some case the pointer-event is stuck to "none".
             this.container.context.select('.x.brush').attr("style","pointer-events:all;");
@@ -985,6 +995,14 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 'id': this.id,
                 'conf': JSON.stringify(data)
             });
+
+            DashboardProbes.worker.postMessage([8,{
+                'probes': this.probes,
+                'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                'mode': this.conf.mode
+            },this.id]);
+
 
         }.bind(this));
 
@@ -1344,6 +1362,18 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this.buildAxis();
     };
 
+    /**
+     * Only redraw from existing data.
+     */
+    DashboardChart.prototype.soft_redraw = function(){
+        var data = this.currentData;
+        for(var p in data){
+            if(typeof this.content[p] !== 'undefined'){
+                this.content[p].redraw(data[p].values);
+            }
+        }
+    };
+    
     /**
      * Flush containers and redraw the content.
      * @param {Object} data - Probe's data.
@@ -2426,6 +2456,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
      */
     DashboardChart.prototype.removeProbe = function(probe){
         if(this.probes[probe]){
+            this.legendManager.removeLegend(probe);
             var scaleName = this.probes[probe].scale;
             var scale = this.scales[scaleName];
             var direction = (scale.reversed) ? 'opposate': 'top';
@@ -2457,9 +2488,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 while(axis.firstChild) axis.removeChild(axis.firstChild);
 
             }
-
             DashboardProbes.remove(this.id,probe,scale);
-            this.legendManager.removeLegend(probe);
             this.redraw();
         }
     };
@@ -3302,14 +3331,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //redraw
         this.buildAxis();
-        var context = this.axis.x2.domain();
-        var focus = this.axis.x.domain();
-        DashboardProbes.worker.postMessage([8,{
-            'probes': this.probes,
-            'contextTimeline': [context[0].getTime(),context[1].getTime()],
-            'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-            'mode': this.conf.mode
-        },this.id]);
+        this.soft_redraw();
+        this.needAutoScale = false;
     };
 
 
@@ -3363,15 +3386,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             this.scales[s].y = y;
         }
         this.buildAxis();
-        //this.redraw();
-        var context = this.axis.x2.domain();
-        var focus = this.axis.x.domain();
-        DashboardProbes.worker.postMessage([8,{
-            'probes': this.probes,
-            'contextTimeline': [context[0].getTime(),context[1].getTime()],
-            'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-            'mode': this.conf.mode
-        },this.id]);
+        this.soft_redraw();
     };
 
     /**
