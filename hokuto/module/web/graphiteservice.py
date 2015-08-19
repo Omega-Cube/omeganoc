@@ -71,7 +71,10 @@ def get_metrics_list():
         if metric:
             if isinstance(metrics[m],dict):
                 for s in metrics[m]:
-                    service = next((i for i in permissions['services'] if reg.sub('_',i) == s), False)
+                    if('__HOST__' == s and metric not in permissions['hosts_with_services']):
+                        service = '__HOST__'
+                    else:
+                        service = next((i for i in permissions['services'] if reg.sub('_',i) == s), False)
                     if service:
                         if metric not in tmp:
                             tmp[metric] = {}
@@ -102,6 +105,9 @@ def data_get():
         tmp= probe.split('.')
         checkHost= next((i for i in permissions['hosts'] if reg.sub('_',i) == tmp[0]), False)
         checkService= next((i for i in permissions['services'] if reg.sub('_',i) == tmp[1]), False)
+        if('__HOST__' == tmp[1]):
+            if tmp[0] not in permissions['hosts_with_services']:
+                checkService = '__HOST__'
         if not checkHost or not checkService:
             data[probe] = {
                 'error': 'Shinken contact %s is not allowed to retreive data from %s.%s'%(shinken_contact,tmp[0],tmp[1]),
