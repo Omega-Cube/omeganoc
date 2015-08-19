@@ -388,6 +388,13 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             else
                 selfRef.moveSelectedNodesWithArrows(keycode, 10);
         });
+        
+        jQuery(document).keyup(function (e) {
+            if (selfRef.selectedNodes.length > 0 && e.which >= 37 && e.which <= 40) {
+                for (var i = 0, c = selfRef.selectedNodes.length; i < c; i++)
+                    selfRef.computeAndSaveNewLayoutCoordinates(selfRef.selectedNodes[i]);
+            }
+        });
 
         document.onmouseup = function () {
             if (selfRef.currentMouseOperation === Bubbles.MOUSE_OPERATION_DRAGGING) {
@@ -795,6 +802,20 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             var deltaX = this.mousex - curMouse[0];
             var deltaY = this.mousey - curMouse[1];
 
+            var moved = this._moveSelectedNodesBy(deltaX, deltaY, curMouse);
+
+            if(moved[0])
+                this.mousex = curMouse[0];
+            if(moved[1])
+                this.mousey = curMouse[1]; 
+        },
+        
+        // Moves all the currently selected nodes by the specified amount of pixels
+        // It will also update containing groups (if any), prevent nodes from moving out of bounds,
+        // save the new positions, and move the viewport if the provided focal point gets out of view.
+        // The focal point can either be empty, or an array of [x, y] coordinates
+        // Returns an array of two booleans, respectively indicating if thenew X position and Y position has been accepted
+        _moveSelectedNodesBy: function(deltaX, deltaY, focalPoint) {
             // Move nodes
             var coordX, coordY;
             var node = null;
@@ -821,8 +842,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                     }
                     else {
                         groups[node.group.id] = node.group.length - 1;    // We store the amount of children in the group
-                                                                                // and decrement for each children found so that
-                                                                                // groups with a count of 0 are not updated
+                                                                          // and decrement for each children found so that
+                                                                          // groups with a count of 0 are not updated
                     }
 
                 }
@@ -881,37 +902,33 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                     this.graph.groups[groupid].updateBbox();
                     this._updateGroupPosition(this.graph.groups[groupid]);
                 }
-
             }
 
-            // If the mouse get too close to the viewport limits, try to pan around
-            var width = this.getElement().offsetWidth;
-            var height = this.getElement().offsetHeight;
-            this.panSpeed.x = 0;
-            this.panSpeed.y = 0;
-            if (curMouse[0] < this.panX + this.dragScrollThreshold) {
-                this.panSpeed.x -= -(curMouse[0] - this.panX - this.dragScrollThreshold) / this.dragScrollThreshold;
-            }
-            else if (curMouse[0] > this.panX + width - this.dragScrollThreshold) {
-                this.panSpeed.x += (curMouse[0] - this.panX - width + this.dragScrollThreshold) / this.dragScrollThreshold;
-            }
-            if (curMouse[1] < this.panY + this.dragScrollThreshold) {
-                this.panSpeed.y -= -(curMouse[1] - this.panY - this.dragScrollThreshold) / this.dragScrollThreshold;
-            }
-            else if (curMouse[1] > this.panY + height - this.dragScrollThreshold) {
-                this.panSpeed.y += (curMouse[1] - this.panY - height + this.dragScrollThreshold) / this.dragScrollThreshold;
-            }
+            if(focalPoint) {
+                // If the focal point gets too close to the viewport limits, try to pan around
+                var width = this.getElement().offsetWidth;
+                var height = this.getElement().offsetHeight;
+                this.panSpeed.x = 0;
+                this.panSpeed.y = 0;
+                if (focalPoint[0] < this.panX + this.dragScrollThreshold) {
+                    this.panSpeed.x -= -(focalPoint[0] - this.panX - this.dragScrollThreshold) / this.dragScrollThreshold;
+                }
+                else if (focalPoint[0] > this.panX + width - this.dragScrollThreshold) {
+                    this.panSpeed.x += (focalPoint[0] - this.panX - width + this.dragScrollThreshold) / this.dragScrollThreshold;
+                }
+                if (focalPoint[1] < this.panY + this.dragScrollThreshold) {
+                    this.panSpeed.y -= -(focalPoint[1] - this.panY - this.dragScrollThreshold) / this.dragScrollThreshold;
+                }
+                else if (focalPoint[1] > this.panY + height - this.dragScrollThreshold) {
+                    this.panSpeed.y += (focalPoint[1] - this.panY - height + this.dragScrollThreshold) / this.dragScrollThreshold;
+                }
 
-            this.panSpeed.x = this.panSpeed.x * this.dragScrollSpeed;
-            this.panSpeed.y = this.panSpeed.y * this.dragScrollSpeed;
-
+                this.panSpeed.x = this.panSpeed.x * this.dragScrollSpeed;
+                this.panSpeed.y = this.panSpeed.y * this.dragScrollSpeed;
+            }
             this._updateConnections();
-
-            if(!cancelX)
-                this.mousex = curMouse[0];
-            if(!cancelY)
-                this.mousey = curMouse[1];
-
+            
+            return [!cancelX, !cancelY];
         },
 
         _updateConnections: function () {
@@ -1433,42 +1450,24 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         },
 
         moveSelectedNodesWithArrows: function (keycode, moveCoef) {
-            var coordX, coordY, node;
-            // If the right arrow is pressed
-            if (keycode == 39) {
-                for (var i = 0, c = this.selectedNodes.length; i < c; i++) {
-                    node = this.selectedNodes[i];
-                    coordX = node.renderX + moveCoef;
-                    coordY = node.renderY;
-
-                    this._moveNodeTo(node, coordX, coordY);
-                }
+            var deltaX = 0;
+            var deltaY = 0;
+            switch(keycode) {
+                case 39: // Right
+                    deltaX = -moveCoef;
+                    break;
+                case 37: // Left
+                    deltaX = moveCoef;
+                    break;
+                case 38: // Up
+                    deltaY = moveCoef;
+                    break;
+                case 40:
+                    deltaY = -moveCoef;
+                    break;
             }
-                // If the left arrow is pressed
-            else if (keycode == 37)
-                for (var i = 0, c = this.selectedNodes.length; i < c; i++)
-                    this._moveNodeTo(this.selectedNodes[i], this.selectedNodes[i].renderX - moveCoef, this.selectedNodes[i].renderY);
-                // If the up arrow is pressed
-            else if (keycode == 38)
-                for (var i = 0, c = this.selectedNodes.length; i < c; i++)
-                    this._moveNodeTo(this.selectedNodes[i], this.selectedNodes[i].renderX, this.selectedNodes[i].renderY - moveCoef);
-                // If the down arrow is pressed
-            else if (keycode == 40) {
-                for (var i = 0, c = this.selectedNodes.length; i < c; i++) {
-                    coordX = this.selectedNodes[i].renderX;
-                    coordY = this.selectedNodes[i].renderY + moveCoef;
-
-                    this._moveNodeTo(this.selectedNodes[i], coordX, coordY);
-                }
-            }
-            // Update connections
-            this._updateConnections();
-
-            // Compute and save the new layout coordinates
-            for (var i = 0, c = this.selectedNodes.length; i < c; i++)
-                this.computeAndSaveNewLayoutCoordinates(this.selectedNodes[i]);
-
-            this._secureGraphPosition();
+            
+            this._moveSelectedNodesBy(deltaX, deltaY);
         },
 
         // Recomputes the size of the overview and applies it
