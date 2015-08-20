@@ -3288,6 +3288,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         //get all max values
         var tmpMaxScales = {};
         for(var p in lastData){
+            if(!this.probes[p]) continue;
             var s = this.probes[p].scale;
             if(!tmpMaxScales[s]) tmpMaxScales[s] = { 'min': false, 'max': 0};
             var max = 0;
