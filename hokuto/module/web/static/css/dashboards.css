@@ -207,12 +207,11 @@
 #dashboard {
     position: relative;
     overflow-y: auto;
-    overflow-x: hidden;
-    height: -moz-calc(100% - 120px);
-    height: -webkit-calc(100% - 120px);
-    height: -ms-calc(100% - 120px);
-    height: -o-calc(100% - 120px);
-    height: calc(100% - 120px);
+    height: -moz-calc(100% - 130px);
+    height: -webkit-calc(100% - 130px);
+    height: -ms-calc(100% - 130px);
+    height: -o-calc(100% - 130px);
+    height: calc(100% - 130px);
 }
 
 #dashboard > ul >li {
