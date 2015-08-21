@@ -379,7 +379,7 @@ Probe.prototype._aggregate = function(from,until,mode,interval){
     var interval = interval || this._getAggregateLevel(from,until);
     var start = (from < this._lastKnownFromDate) ? this._lastKnownFromDate : from;
 
-    var tmp = [], time = this._lastKnownFromDate, s = false;
+    var tmp = [], time = this._lastKnownFromDate, s = true;
     for(var i = 0, len = data.length;i<len;i+=interval,time+= interval * step){
         if(time<from)
             continue;

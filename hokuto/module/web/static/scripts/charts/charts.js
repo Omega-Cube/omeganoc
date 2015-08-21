@@ -2297,11 +2297,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             clippath = (reverse) ? 'url(#clip_bottom_'+this.id+')':'url(#clip_top_'+this.id+')';
 
         var getInterval = function(data){
-            var interval = 60000;
+            var interval = false;
             for(var i = 0, len = data.length;i<len - 1;i++){
-                if((!i ||data[i].start === false) && data[i+1].start === false){
-                    interval = data[i+1].x - data[i].x;
-                    break;
+                if((!i || data[i].start === false) && data[i+1].start === false){
+                    if(typeof interval === 'boolean' || data[i+1].x - data[i].x < interval)
+                        interval = data[i+1].x - data[i].x;
                 }
             }
             return interval;
@@ -3288,7 +3288,10 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         //get all max values
         var tmpMaxScales = {};
         for(var p in lastData){
-            if(!this.probes[p]) continue;
+            if(!this.probes[p]){
+                console.log(p,this.probes);
+                continue;
+            }
             var s = this.probes[p].scale;
             if(!tmpMaxScales[s]) tmpMaxScales[s] = { 'min': false, 'max': 0};
             var max = 0;
