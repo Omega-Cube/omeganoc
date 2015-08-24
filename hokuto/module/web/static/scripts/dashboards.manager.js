@@ -103,9 +103,9 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
                 DashboardsManager.timeline.show();
             }
             else {
-                DashboardsManager._setNoDashboardMessage('Please select a dashboard using the top menu or create one');
+                DashboardsManager._setDashboardsList();
                 //if no DB available display the create dashboard icon
-                jQuery('#create-dashboard-button').click();
+                //jQuery('#create-dashboard-button').click();
             }
         },
 
@@ -133,36 +133,33 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
             DashboardsManager.unloadDashboard();
             DashboardsManager._setNoDashboardMessage('Loading...');
 
-            // creepy, but we need to wait a bit eitherway some browser will not draw charts (firefox...)
-            setTimeout(function(){
-                DashboardsManager._loadDashboardData(dashboardName, function (data) {
-                    DashboardsManager._setNoDashboardMessage('');
-                    DashboardsManager.timeline.show();
-                    // Iterate over all the parts and create them
-                    jQuery.each(data, function (index, value) {
-                        Widget.getWidgetById(value.widget, function (widget) {
-                            if (!widget)
-                                return;
+            DashboardsManager._loadDashboardData(dashboardName, function (data) {
+                DashboardsManager._setNoDashboardMessage('');
+                DashboardsManager.timeline.show();
+                // Iterate over all the parts and create them
+                jQuery.each(data, function (index, value) {
+                    Widget.getWidgetById(value.widget, function (widget) {
+                        if (!widget)
+                            return;
 
-                            DashboardsManager._createPart(value, widget, false);
-                        });
+                        DashboardsManager._createPart(value, widget, false);
                     });
-
-                    // Update the dashboard title
-                    DashboardsManager._setDashboardTitle(dashboardName);
-                    DashboardsManager._showDashboardControls(true);
-                }, function (errorCode, errorText) {
-                    if (errorCode == 404) {
-                        DashboardsManager._setNoDashboardMessage('The specified dashboard could not be found on the server');
-                    }
-                    else {
-                        DashboardsManager._setNoDashboardMessage('An error occured while retrieving the dashboard.');
-                        Console.error('Dashboard loading error : ' + errorCode + ' / ' + errorText);
-                    }
                 });
 
-                DashboardsManager.currentDashboard = dashboardName;
-            }, 500);
+                // Update the dashboard title
+                DashboardsManager._setDashboardTitle(dashboardName);
+                DashboardsManager._showDashboardControls(true);
+            }, function (errorCode, errorText) {
+                if (errorCode == 404) {
+                    DashboardsManager._setNoDashboardMessage('The specified dashboard could not be found on the server');
+                }
+                else {
+                    DashboardsManager._setNoDashboardMessage('An error occured while retrieving the dashboard.');
+                    Console.error('Dashboard loading error : ' + errorCode + ' / ' + errorText);
+                }
+            });
+
+            DashboardsManager.currentDashboard = dashboardName;
         },
 
         /**
@@ -538,15 +535,49 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
         },
 
         /**
+         * Display dashboards list (dashboards landing page)
+         */
+        _setDashboardsList: function(){
+            DashboardsManager._setDashboardTitle("DASHBOARDS");
+            var dblist = jQuery('#dashboards-list');
+            dblist.css('display','block');
+            jQuery('#dashboard').css('display','none');
+            dblist.find('.delete').each(function(index,element){
+                $(element).click(function(event){
+                    var target = $(event.target);
+                    $.ajax({
+                        'url': '/dashboards/' + event.target.dataset['db'],
+                        'type': 'DELETE'
+                    }).success(function(){
+                        target.parent().remove();
+                    }).error(function(e){
+                        console.error(e);
+                    });
+                });
+            });
+        },
+
+        /**
          * Display or hide dashboard controls (Rename and addWidget buttons)
          * @param {Boolean} show
          */
         _showDashboardControls: function (show) {
             var controls = jQuery('#dashboard-controls');
 
-            if (show)
+            if (show){
                 controls.fadeIn();
-            else
+                controls.find('.remove').click(function(){
+                    $.ajax({
+                        'url': '/dashboards/' + DashboardsManager.currentDashboard,
+                        'type': 'DELETE'
+                    }).success(function(){
+                        document.location = '/dashboards';
+                    }).error(function(e){
+                        console.error(e);
+                    });
+                    return false;
+                });
+            }else
                 controls.fadeOut();
         }
     };
