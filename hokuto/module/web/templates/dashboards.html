@@ -45,7 +45,8 @@
   <ul>
     {% for d in dashboards_list: %}
     <li>
-      <a data-dashboard="{{ d }}" href="{{ url_for('dashboards') }}#{{ d }}">{{ d }}</a>
+      <a class="name" data-dashboard="{{ d }}" href="{{ url_for('dashboards') }}#{{ d }}">{{ d }}</a>
+      <span class="button edit" data-db="{{ d }}">rename</span>
       <span class="button delete" data-db="{{ d }}">delete</span>
     </li>
     {% else %}
