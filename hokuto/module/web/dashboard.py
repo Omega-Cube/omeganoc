@@ -129,9 +129,19 @@ def dashboard_part_keys_delete(pid):
 
 @app.route('/dashboards/part/<int:pid>', methods=['DELETE'])
 @login_required
-def dashboard_delete(pid):
+def dashboard_delete_part(pid):
     delete_part(pid)
     return "",200
+
+
+@app.route('/dashboards/<dashboard>', methods=['DELETE'])
+@login_required
+def dashboard_delete(dashboard):
+    query = select([partsTable.c.id]).where(partsTable.c.user_id == current_user.id).where(partsTable.c.dashboard == dashboard).distinct()
+    for row in db.engine.execute(query).fetchall():
+        delete_part(row[0])
+    return "",200
+
 
 # CONTEXT PROCESSOR
 @app.context_processor

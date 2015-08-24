@@ -204,6 +204,58 @@
 }
 
 /* Dashboard core and Parts */
+
+/* Dashboards list */
+#dashboards-list{
+    display: none;
+    clear: both;
+    margin-left: 5em;
+    position: relative;
+    top: 2em;
+    overflow: auto;
+}
+
+#dashboards-list ul{
+    display: inline-block;
+    border: 1px solid #555;
+    color: #eee;
+    text-align:center;
+    border-collapse: collapse;
+}
+
+#dashboards-list .button.delete{
+    background: none;
+    background-color: #D9534F;
+    padding: 3px 10px;
+    color: #FFF;
+    text-shadow: none;
+    text-transform: capitalize;
+}
+
+#dashboards-list li{
+    display: table-row;
+    border-bottom: 1px solid #555;
+    border-top: 1px solid #555;
+    background-color: #222;
+}
+
+#dashboards-list li > a:link, #dashboards-list li > a:visited{
+    text-transform: uppercase;
+    text-decoration: none;
+    font-size: 1.3em;
+}
+
+#dashboards-list li > a:hover, #dashboards-list li > a:active{
+    text-decoration: underline;
+}
+
+#dashboards-list li > *{
+    display: table-cell;
+    padding: 0.5em 5em;
+}
+
+/* dashboard */
+
 #dashboard {
     position: relative;
     overflow-y: auto;

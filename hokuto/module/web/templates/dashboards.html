@@ -34,11 +34,25 @@
   <h1 id="dashboard-title">Nothing to show</h1>
   <a id="create-dashboard-button" class="button add" href="#">Create new dashboard</a>
   <div id="dashboard-controls" class="hidden">
+    <a href="#" class="button remove" title="Delete this dashboard">delete dashboard</a>
     <a href="#" class="button add" title="Add a new widget to your dashboard" id="add-widget-button">Add a widget</a>
     <a href="#" class="button edit" title="Rename this dashboard" id="rename-dashboard-button">Rename</a>
   </div>
   <div id="dashboard-global-timeline"></div>
 </section>
+
+<div id="dashboards-list">
+  <ul>
+    {% for d in dashboards_list: %}
+    <li>
+      <a data-dashboard="{{ d }}" href="{{ url_for('dashboards') }}#{{ d }}">{{ d }}</a>
+      <span class="button delete" data-db="{{ d }}">delete</span>
+    </li>
+    {% else %}
+    <li class="no-dashboard"><a href="{{ url_for('dashboards') }}">You have no dashboards yet</a></li>
+    {% endfor %}
+  </ul>
+</div>
 
 <div id="dashboard">
   <div id="dashboard-big-msg">Loading...</div>
