@@ -207,9 +207,12 @@ define(['jquery', 'onoc.createurl', 'onoc.loadcss', 'onoc.cachedloader','dataser
                     }
                 });
 
-                part.prepend(close);
-                part.prepend(validate);
-                part.prepend(txtBox);
+                txtBox.insertBefore(title);
+                validate.insertBefore(title);
+                close.insertBefore(title);
+                //part.prepend(close);
+                //part.prepend(validate);
+                //part.prepend(txtBox);
                 txtBox.fadeIn().select();
 
             });

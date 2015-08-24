@@ -223,13 +223,20 @@
     border-collapse: collapse;
 }
 
-#dashboards-list .button.delete{
-    background: none;
-    background-color: #D9534F;
-    padding: 3px 10px;
+#dashboards-list .button{
     color: #FFF;
-    text-shadow: none;
     text-transform: capitalize;
+    padding: 3px 10px;
+}
+
+#dashboards-list .delete{
+    background: none;
+    text-shadow: none;
+    background-color: #D9534F;
+}
+
+#dashboards-list .edit{
+    padding-left: 24px;
 }
 
 #dashboards-list li{
@@ -237,6 +244,11 @@
     border-bottom: 1px solid #555;
     border-top: 1px solid #555;
     background-color: #222;
+}
+
+#dashboards-list li input{
+    line-height: 1em;
+    padding: 0.15em;
 }
 
 #dashboards-list li > a:link, #dashboards-list li > a:visited{
