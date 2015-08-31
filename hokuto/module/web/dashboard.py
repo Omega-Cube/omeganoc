@@ -38,6 +38,12 @@ def dashboards(dashname = None):
     """ Dashboards landing page """
     return render_template("dashboards.html")
 
+@app.route('/manage/dashboards')
+@login_required
+def manage_dashboards():
+    """ Display dashboards list and allow to edit/delete/create theme """
+    return render_template("manage_dashboards.html")
+
 @app.route('/dashboards/list')
 @login_required
 def dashboards_list():
