@@ -415,7 +415,6 @@ class Graph(GraphBase):
         missing_positions = self.__read_position_data(unused_data)
         self.__add_link_from_user_data(unused_data)
         self.__read_metadata(unused_data)
-
         return (unused_data, missing_positions)
 
     def __read_position_data(self, data):
@@ -429,6 +428,7 @@ class Graph(GraphBase):
                 del data[id + ':y']
             else:
                 has_missing_nodes = True
+        return has_missing_nodes
                 
     def __read_metadata(self, data):
         """ 
@@ -875,14 +875,11 @@ def _parse_graph_name(full_graph_name):
     # Where P is a path to the target component. It could be required depending on the value of T
     # Where L is an optionnal layout name that was saved previously
     
-    print 'Tesing name ' + full_graph_name
-    
     result = {}
-    
     match = _graph_name_parser_expression.match(full_graph_name)
     
     if match is None:
-        print 'No match !'
+        app.logger.warning('Received an unknown graph ID: {0}'.format(full_graph_name))
         raise GraphTypeError(full_graph_name)
     
     result['graph'] = match.group('type')
