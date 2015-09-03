@@ -2529,13 +2529,6 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         if(container.find('.spinner'))
             container.find('.spinner').remove();
         var select = $('<select name="'+name+'" class="formButton select" ></select>');
-        if(Object.keys(metrics).length){
-            if(container.children().length === 1)
-                select.append($('<option value="">Select host</option>'));
-            else
-                select.append($('<option value="*">All(*)</option>'));
-        }else
-            select.append('<option value="">None available</option>');
 
         for(var m in metrics){
             var option = $('<option value="'+m+'">'+m+'</option>');
@@ -2550,6 +2543,20 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         }.bind(this));
 
         container.append(select);
+        if(Object.keys(metrics).length){
+            var target = metrics[Object.keys(metrics)[0]];
+            if(typeof(target) === 'object')
+                this.appendMetricSelect(target,container,name);
+
+            /*
+              Removed until we handle host.*.RAM requests type
+              if(container.children().length === 1)
+                select.append($('<option value="">Select host</option>'));
+              else
+                select.append($('<option value="*">All(*)</option>'));
+            */
+        }else
+            select.append('<option value="">None available</option>');
     }
 
     /**
