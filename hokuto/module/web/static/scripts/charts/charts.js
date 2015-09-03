@@ -2974,13 +2974,30 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             if(!query) return false;
             
             var probeList = DashboardProbes.getProbeList(query);
+
             var addCount = 0;
+            for(var i in probeList){
+                if(this.probes[name]) continue;
+                addCount++;
+            }
+
+            if(addCount > 10){
+                var warned = subcontainer.data('warned');
+                if(!warned){
+                    subcontainer.data('warned',1);
+                    subcontainer.prepend($('<div class="submit-warning">You are going to add '+addCount+' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser!</p></div>'));
+                    return false;
+                }else{
+                    subcontainer.data('warned',false);
+                    subcontainer.children()[0].remove();
+                }
+            }
+            
             for(var i in probeList){
                 var name = probeList[i];
                 var order = ++this.counter;
 
                 if(this.probes[name]) continue;
-                addCount++;
                 if(i)
                     color = getNextUnusedColor();
 
@@ -3030,6 +3047,33 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         }.bind(this));
 
         subandclose.click(function(){
+            var form = document['add_chart_form_'.concat(this.id)];
+            var query = '';
+            if(form[1].value === form.color.value)
+                query = form.server.value;
+            else{
+                for(var i=0, len = form['server'].length; i<len; i++){
+                    if(i) query = query.concat('.');
+                    query = query.concat(form[i].value);
+                }
+            }
+            if(!query) return false;
+
+            var probeList = DashboardProbes.getProbeList(query);
+            var addCount = 0;
+            for(var i in probeList){
+                if(this.probes[name]) continue;
+                addCount++;
+            }
+
+            if(addCount > 10){
+                var warned = subcontainer.data('warned');
+                if(!warned){
+                    subcontainer.data('warned',1);
+                    subcontainer.prepend($('<div class="submit-warning">You are going to add '+addCount+' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser.</p></div>'));
+                    return false;
+                }
+            }
             submit.click();
             this.tooglePanel();
         }.bind(this));

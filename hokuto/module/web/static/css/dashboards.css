@@ -556,6 +556,15 @@
 
 .panel .color .selected, .panel .color span:hover{ border: 1px solid #57b4dc; opacity: 1; }
 
+.panel .submit-warning{
+    color: #E63C3E;
+    float: left;
+    font-weight: bold;
+}
+.panel .submit-warning p{
+    font-weight: normal;
+}
+
 /* Edit Panel */
 .panel .editPanel{
     height: 80%;
