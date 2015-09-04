@@ -534,6 +534,62 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
         },
 
         /**
+         * Display dashboards list (dashboards landing page)
+         */
+        _setDashboardsList: function(){
+            DashboardsManager._setDashboardTitle("DASHBOARDS");
+            var dblist = jQuery('#dashboards-list');
+            dblist.css('display','block');
+            jQuery('#dashboard').css('display','none');
+
+            //setup delete buttons
+            dblist.find('.delete').each(function(index,element){
+                $(element).click(function(event){
+                    var target = $(event.target);
+                    var name = event.target.dataset['db'];
+                    $.ajax({
+                        'url': createUrl('/dashboards/' + name),
+                        'type': 'DELETE'
+                    }).success(function(){
+                        target.parent().remove();
+                        DashboardsManager._deleteTopMenuEntry(name);
+                    }).error(function(e){
+                        console.error(e);
+                    });
+                });
+            });
+
+            //setup rename buttons
+            dblist.find('.edit').each(function(index,element){
+                $(element).click(function(event){
+                    var target = $(event.target);
+                    var dbname = target.parent().find('.name');
+                    var name = event.target.dataset['db'];
+                    var form = $('<form action="#" name="renamedb"><input type="text" name="dbname" class="name" value="'+name+'"/><input class="submit" type="submit" value="ok"/></form>');
+                    form.submit(function(e,f){
+                        e.preventDefault();
+                        var newname = form[0].dbname.value;
+                        if(newname !== name){
+                            dbname.text(newname);
+                            $.ajax({
+                                'url': createUrl('/dashboards'),
+                                'type': 'POST',
+                                'data': {
+                                    'oldname': name,
+                                    'newname': newname
+                                }
+                            });
+                        }
+                        form.replaceWith(dbname);
+                        return false;
+                    });
+                    dbname.replaceWith(form);
+                });
+
+            });
+        },
+
+        /**
          * Display or hide dashboard controls (Rename and addWidget buttons)
          * @param {Boolean} show
          */

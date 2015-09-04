@@ -121,8 +121,6 @@
           </ul>
         </li>
 
-        {% endif %}
-
         <li class="tab-menu">
           <a href="{{ url_for('list_users') }}">{{ gettext('Manage OmegaNoc') }}</a>
           <ul id="menu-admin-list">
@@ -140,6 +138,7 @@
           </ul>
         </li>
       </ul>
+      {% endif %}
       {% endblock %}
     </header>
 
