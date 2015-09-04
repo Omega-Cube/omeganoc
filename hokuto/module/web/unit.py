@@ -27,7 +27,7 @@ from flask.ext.login import login_user, login_required, logout_user, UserMixin, 
 from sqlalchemy.sql import text
 from wtforms import Form, TextField, IntegerField, SelectField, validators
 from wtforms.validators import DataRequired
-from utils import try_int
+from utils import try_int, is_in_demo, create_demo_response, create_demo_redirect
 
 from ajax import jsondump
 
@@ -78,6 +78,9 @@ def add_unit():
     form= AddUnitForm(request.form)
 
     if request.method == 'POST':
+        #No adding in demo mode!
+        if is_in_demo():
+            return create_demo_response()
         if Unit.query.filter_by(name= form.name.data).first():
             # we call form.validate to build up all errors from the form
             form.validate()
@@ -112,6 +115,9 @@ def create_unit():
     form= AddUnitForm(request.form)
 
     if request.method == 'POST':
+        #No adding in demo mode!
+        if is_in_demo():
+            return create_demo_redirect()
         if Unit.query.filter_by(name= form.name.data).first():
             # we call form.validate to build up all errors from the form
             form.validate()
@@ -142,6 +148,9 @@ def edit_unit(unitid):
         return "Unit doesn't exist",404
     form= AddUnitForm(request.form,unit)
     if request.method == 'POST' and form.validate():
+        #No editing in demo mode!
+        if is_in_demo():
+            return create_demo_redirect()
         name = request.form.get('name')
         symbol = request.form.get('symbol')
         factor = request.form.get('factor') if request.form.get('factor') else None
@@ -185,6 +194,9 @@ def delete_unit(unitid):
     unit = Unit.query.get(unitid)
     if not unit:
         abort(404)
+     # No removing in demo mode!
+    if is_in_demo():
+        return create_demo_response()
     db.session.delete(unit)
     db.engine.execute(text("UPDATE parts_conf SET value = 'None' where key like '%|unit' and value = :unit;"),{'unit': unit.name});
     db.session.commit()

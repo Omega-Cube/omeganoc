@@ -26,7 +26,9 @@ require(['jquery','onoc.createurl'], function (jQuery, createurl) {
                 'type': 'PUT'
             }).success(function(){
                 document.location.reload();
-            }).error(function(e){ console.error(e);});
+            }).error(function(e){ 
+                console.error(e);
+            });
         });
         $('#mainContent').find('.delete').on('click',function(e){
             $.ajax(createurl('/delete-user/'+e.target.parentNode.parentNode.dataset['id']),{
@@ -71,5 +73,6 @@ require(['jquery','onoc.createurl'], function (jQuery, createurl) {
                 });
             });
         }
+        
     });
 });

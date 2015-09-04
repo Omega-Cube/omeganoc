@@ -39,7 +39,7 @@ from on_reader.livestatus import livestatus
 
 from . import app, db, login_manager
 from ajax import redirect_or_json, template_or_json
-from utils import try_int, generate_salt
+from utils import try_int, generate_salt, is_in_demo, create_demo_response, create_demo_redirect
 
 @login_manager.user_loader
 def load_user(userid):
@@ -209,6 +209,9 @@ def edit_user(userid=None):
     if not userid:
         form.password.validators.append(validators.Required(message=_('Password is required')))
     if request.method == 'POST' and form.validate():
+        # Actual saving not available in demo mode
+        if is_in_demo():
+            return create_demo_redirect()
         if userid:
             # Update existing
             user = User.query.get(userid)
@@ -249,7 +252,9 @@ def edit_user(userid=None):
 @app.route('/block-user/<userid>', methods=['GET', 'POST','PUT'])
 @login_required
 def disable_user(userid=None):
-    """ Disable an user """
+    """ Disable a user """
+    if is_in_demo():
+        return create_demo_response()
     userid = try_int(userid)
     if not current_user.is_super_admin or userid == current_user.id:
         abort(403)
@@ -261,7 +266,9 @@ def disable_user(userid=None):
 @app.route('/delete-user/<userid>',methods=['DELETE'])
 @login_required
 def destroy_user(userid=None):
-    """ Remove an user entry """
+    """ Remove a user entry """
+    if is_in_demo():
+        return create_demo_response()
     userid = try_int(userid)
     if not current_user.is_super_admin or userid == current_user.id:
         abort(403)

@@ -38,7 +38,7 @@ requirejs.config({
     }
 });
 
-requirejs(['jquery','onoc.tooltips'], function($,Tooltips) {
+requirejs(['jquery','onoc.tooltips'], function(jQuery,Tooltips) {
     var onoc_start = function(module) {
         if(typeof(module) === 'string') {
             module = [module];
@@ -48,11 +48,21 @@ requirejs(['jquery','onoc.tooltips'], function($,Tooltips) {
     }
 
 
-    $(document).ready(function() {
+    jQuery(document).ready(function() {
         var help = new Tooltips();
-        help.bind($('#content'));
+        help.bind(jQuery('#content'));
         if(onoc_main_modules && onoc_main_modules.length > 0) {
             onoc_start(onoc_main_modules);
+        }
+    });
+    
+    // Set up a global AJAX error handler to catch 501 errors.
+    // These errors are specific to the features that are disabled in demo mode.
+    // When they happen, show a popup to the user explaining that he can't do that
+    jQuery(document).ajaxComplete(function(event, jqxhr, settings) {
+        // Is this a global demo error?
+        if(jqxhr.status == 501 && jqxhr.responseText == 'Not implemented in the demo version') {
+            alert('This action cannot be done in the demo version of the application. Download and install it at home to play with it!');
         }
     });
 });
