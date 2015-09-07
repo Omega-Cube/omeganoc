@@ -27,7 +27,8 @@ from flask.ext.login import login_user, login_required, logout_user, UserMixin, 
 from sqlalchemy.sql import text
 from wtforms import Form, TextField, IntegerField, SelectField, validators
 from wtforms.validators import DataRequired
-from utils import try_int, is_in_demo, create_demo_response, create_demo_redirect
+from utils import try_int
+from demo import is_in_demo, create_demo_response, create_demo_redirect
 
 from ajax import jsondump
 

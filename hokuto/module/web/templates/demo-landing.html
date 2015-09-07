@@ -1,0 +1,35 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2015 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+<link rel="Stylesheet" type="text/css" href="{{url_for('static',filename='css/main.css')}}" />
+{% endblock %}
+
+{% block content %}
+<div class="presentation">
+    <h1 class="title">Operation not available in demo mode</h1>
+
+    <p>Sorry, but the action you requested is not available in this demo! Make </p>
+
+    <p><a href="javascript:history.back()">Go back</a>, or 
+        <a href="https://github.com/Omega-Cube/omeganoc/blob/master/README.md">download and install</a>
+        Omega Noc to check out this feature in the comfort of your own server!
+    </p>
+</div>
+{% endblock %}

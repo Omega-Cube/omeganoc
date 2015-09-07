@@ -27,7 +27,6 @@ import sys
 
 from on_reader import livestatus
 from contextlib import contextmanager
-from flask import redirect
 
 from . import app
 
@@ -90,15 +89,3 @@ def get_contact_permissions(shinken_contact):
     results = {'hosts': hosts_permissions , 'services': services_permissions, 'hostgroups': hostgroups_permissions, 'servicegroups': servicegroups_permissions, 'hosts_with_services': hosts_with_services}
 
     return results
-
-def is_in_demo():
-    """ Returns True if the demo mode is enabled, False otherwise """
-    return app.config.get('DEMO', False) == True
-
-def create_demo_response():
-    """ Creates a standard response sent to the client when an AJAX request cannot be fullfilled because it is not available in demo mode """
-    return 'Not implemented in the demo version', 501
-    
-def create_demo_redirect():
-    """ Creates a standard response sent to the client when a page is not available because we're in demo mode """
-    return redirect('static/demo.html')

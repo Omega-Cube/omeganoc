@@ -39,7 +39,8 @@ from on_reader.livestatus import livestatus
 
 from . import app, db, login_manager
 from ajax import redirect_or_json, template_or_json
-from utils import try_int, generate_salt, is_in_demo, create_demo_response, create_demo_redirect
+from utils import try_int, generate_salt
+from demo import is_in_demo, create_demo_response, create_demo_redirect
 
 @login_manager.user_loader
 def load_user(userid):
