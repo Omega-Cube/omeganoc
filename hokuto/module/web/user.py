@@ -34,6 +34,7 @@ from flask import request, flash, url_for, redirect, render_template, abort
 from flask.ext.babel import gettext as _, lazy_gettext as __
 from flask.ext.login import login_user, login_required, logout_user, UserMixin, current_user
 from wtforms import Form, TextField, PasswordField, BooleanField, validators, SelectField
+from sqlalchemy.sql import select
 
 from on_reader.livestatus import livestatus
 
@@ -41,6 +42,8 @@ from . import app, db, login_manager
 from ajax import redirect_or_json, template_or_json
 from utils import try_int, generate_salt
 from demo import is_in_demo, create_demo_response, create_demo_redirect
+from grapher import graphTokenTable
+from dashboard import partsTable, partsConfTable
 
 @login_manager.user_loader
 def load_user(userid):
@@ -273,7 +276,28 @@ def destroy_user(userid=None):
     userid = try_int(userid)
     if not current_user.is_super_admin or userid == current_user.id:
         abort(403)
+    if not remove_user(userid):
+        abort(404)
+    return 'Ok',200
+
+def remove_user(userid):
+    """ Removes the specified user from the database """
     user = User.query.get(userid)
+    if user is None:
+        return False
+    # Remove graph data
+    db.session.execute(graphTokenTable.delete().where(graphTokenTable.c.user_id == userid))
+
+    # Remove dashboards data
+    query = select([partsTable.c.id]).where(partsTable.c.user_id == userid).distinct()
+    for row in db.session.execute(query):
+        # Remove parts configs
+        db.session.execute(partsConfTable.delete().where(partsConfTable.c.parts_id == row[0]))
+    # Remove actual parts
+    db.session.execute(partsTable.delete().where(partsTable.c.user_id == userid))
+    
+    # Remove the usre itself
     db.session.delete(user)
     db.session.commit()
-    return 'Ok',200
+    return True
+    
