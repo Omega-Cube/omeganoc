@@ -32,7 +32,7 @@ from on_reader.livestatus import livestatus
 
 from flask import request, flash, url_for, redirect, render_template, abort
 from flask.ext.babel import gettext as _, lazy_gettext as __
-from flask.ext.login import login_user, login_required, logout_user, UserMixin, current_user
+from flask.ext.login import login_user, login_required, logout_user, UserMixin, current_user#, user_accessed
 from wtforms import Form, TextField, PasswordField, BooleanField, validators, SelectField
 from sqlalchemy.sql import select
 
@@ -48,7 +48,12 @@ from dashboard import partsTable, partsConfTable
 @login_manager.user_loader
 def load_user(userid):
     """ Flask-Login user loading helper """
-    return User.query.filter(User.username == userid).first()
+    user = User.query.filter(User.username == userid).first()
+    if user is not None:
+        # Update last activity date
+        user.last_activity_date = datetime.utcnow()
+        db.session.commit()
+    return user
 
 class User(db.Model, UserMixin):
     """ User data model """
@@ -67,6 +72,7 @@ class User(db.Model, UserMixin):
 
     create_date = db.Column('create_date', db.DateTime)
     change_date = db.Column('change_date', db.DateTime)
+    last_activity_date = db.Column('last_activity_date', db.DateTime)
 
     __password = db.Column('password', db.String(64))
     __password_salt = db.Column('password_salt', db.String(32))
@@ -86,7 +92,6 @@ class User(db.Model, UserMixin):
         self.change_date = self.create_date
 
         self.set_password(password)
-
 
     @classmethod
     def __hash_pass(cls, password, salt):
@@ -301,3 +306,7 @@ def remove_user(userid):
     db.session.commit()
     return True
     
+#def le_connector(current_app):
+#    print 'I have been connected!'
+    
+#user_accessed.connect()
