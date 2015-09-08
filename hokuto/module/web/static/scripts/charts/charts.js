@@ -2877,59 +2877,61 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         probePosition.append(form.unitSelect(false, false, units));
 
         //add unit
-        var add = $('<p><button class="add">Add unit</button></p>');
-        add.on('click',function(e){
-            e.preventDefault();
-            var target = e.target.getBoundingClientRect();
-            var units = this.units;
+        if(window.ONOC.is_admin){
+            var add = $('<p><button class="add">Add unit</button></p>');
+            add.on('click',function(e){
+                e.preventDefault();
+                var target = e.target.getBoundingClientRect();
+                var units = this.units;
 
-            $.ajax("/units/add").success(function(e){
-                var form = $(e);
-                var popin = $('<div class="popin" style="top:'+(target.top - 200)+'px;left:'+target.left+'px;"></div>');
-                var close = $('<button class="close" title="close"></button>');
-                close.on('click',function(){ popin.remove(); });
-                var title = $('<h3>Add unit</h3>');
-                popin.append(close);
-                popin.append(title);
+                $.ajax("/units/add").success(function(e){
+                    var form = $(e);
+                    var popin = $('<div class="popin" style="top:'+(target.top - 200)+'px;left:'+target.left+'px;"></div>');
+                    var close = $('<button class="close" title="close"></button>');
+                    close.on('click',function(){ popin.remove(); });
+                    var title = $('<h3>Add unit</h3>');
+                    popin.append(close);
+                    popin.append(title);
 
-                form.find('.submit').on('click',function(e){
-                    e.preventDefault();
+                    form.find('.submit').on('click',function(e){
+                        e.preventDefault();
 
-                    $.ajax('/units/add',{
-                        'type':'POST',
-                        'data': {
-                            'name': document.forms.add_unit.name.value,
-                            'symbol': document.forms.add_unit.symbol.value,
-                            'factor': document.forms.add_unit.factor.value
-                        }
-                    }).success(function(u){
-                        units.add(u.name, u);
-                        var option = document.createElement('option');
-                        option.setAttribute('value',u.name);
-                        option.setAttribute('selected','selected');
-                        option.appendChild(document.createTextNode(u.name));
+                        $.ajax('/units/add',{
+                            'type':'POST',
+                            'data': {
+                                'name': document.forms.add_unit.name.value,
+                                'symbol': document.forms.add_unit.symbol.value,
+                                'factor': document.forms.add_unit.factor.value
+                            }
+                        }).success(function(u){
+                            units.add(u.name, u);
+                            var option = document.createElement('option');
+                            option.setAttribute('value',u.name);
+                            option.setAttribute('selected','selected');
+                            option.appendChild(document.createTextNode(u.name));
 
-                        document.forms['add_chart_form_'+id].unit.appendChild(option);
-                        popin.remove();
-                    }.bind({"units": units})).error(function(e){
-                        var response = e.responseJSON;
-                        var li = false;
-                        popin.find('.errors').empty();
-                        for(var label in response){
-                            li = popin.find('.errors.'+label);
-                            for(var i = 0, len = response[label].length; i<len; i++)
-                                li.append('<li>'+response[label][i]+'</li>');
-                        };
+                            document.forms['add_chart_form_'+id].unit.appendChild(option);
+                            popin.remove();
+                        }.bind({"units": units})).error(function(e){
+                            var response = e.responseJSON;
+                            var li = false;
+                            popin.find('.errors').empty();
+                            for(var label in response){
+                                li = popin.find('.errors.'+label);
+                                for(var i = 0, len = response[label].length; i<len; i++)
+                                    li.append('<li>'+response[label][i]+'</li>');
+                            };
+                        });
+
+                        return false;
                     });
 
-                    return false;
+                    popin.append(form);
+                    $('body').append(popin);
                 });
-
-                popin.append(form);
-                $('body').append(popin);
-            });
-        }.bind(this));
-        probePosition.append(add);
+            }.bind(this));
+            probePosition.append(add);
+        }
 
         //chart type and color
         settings.append('<label>Chart type : </label>')
