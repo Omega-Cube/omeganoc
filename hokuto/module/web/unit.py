@@ -74,7 +74,10 @@ def manage_units():
 @app.route('/units/add', methods=['GET','POST'])
 @login_required
 def add_unit():
-    """ Save a new unit to the database """
+    """ Save a new unit to the database, popin mode """
+    if not current_user.is_super_admin:
+        abort(403)
+
     form= AddUnitForm(request.form)
 
     if request.method == 'POST':
@@ -108,7 +111,10 @@ def add_unit():
 @app.route('/units/create', methods=['GET','POST'])
 @login_required
 def create_unit():
-    """ Save a new unit to the database """
+    """ Save a new unit to the database from the manager """
+    if not current_user.is_super_admin:
+        abort(403)
+
     form= AddUnitForm(request.form)
 
     if request.method == 'POST':
@@ -137,6 +143,9 @@ def create_unit():
 @login_required
 def edit_unit(unitid):
     """ Edit an unit """
+    if not current_user.is_super_admin:
+        abort(403)
+
     unit= Unit.query.get(unitid)
     if not unit:
         return "Unit doesn't exist",404
@@ -147,13 +156,13 @@ def edit_unit(unitid):
         factor = request.form.get('factor') if request.form.get('factor') else None
         magnitudes = ['','k','M','G','T'] if request.form.get('factor') else None
 
-        if request.form.get('name'):
-            unit.name = request.form.get('name')
-        if request.form.get('symbol'):
-            unit.symbol = request.form.get('symbol')
-        if request.form.get('factor'):
-            unit.factor = int(request.form.get('factor'))
-            unit.magnitudes = str(['','k','M','G','T'])
+        if name:
+            unit.name = name
+        if symbol:
+            unit.symbol = symbol
+        if factor:
+            unit.factor = int(factor)
+            unit.magnitudes = json.dumps(magnitudes)
         else:
             unit.magnitudes = None
 
@@ -183,9 +192,12 @@ def delete_unit(unitid):
     if not current_user.is_super_admin:
         abort(403)
     unit = Unit.query.get(unitid)
+    if unit.name == 'None':
+        abort(403)
     if not unit:
         abort(404)
     db.session.delete(unit)
+    # Set None unit to all existing dashboards with the deleting unit
     db.engine.execute(text("UPDATE parts_conf SET value = 'None' where key like '%|unit' and value = :unit;"),{'unit': unit.name});
     db.session.commit()
     return 'Ok',204

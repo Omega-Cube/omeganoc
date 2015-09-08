@@ -151,4 +151,10 @@
       {{ gettext('Copyright &copy; 2014 Omega Cube &nbsp;&nbsp;&nbsp;') }}
     </footer>
   </body>
+  {# Setup some environment variable, beware that none of this value are secure and should only be used to ease navigation and display. #}
+  <script type="text/javascript">
+    window.ONOC = {
+        'is_admin': ('{{ current_user.is_super_admin }}' === 'True') ? true : false,
+    };
+  </script>
 </html>
