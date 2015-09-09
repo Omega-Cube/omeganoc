@@ -19,9 +19,18 @@
 
 """ Utilities related to the demo mode """
 
+from datetime import datetime
+from time import time
+
 from flask import render_template, redirect, url_for
 
 from . import app
+
+# Accounts will be deleted if they were created more than this amount of seconds ago
+_max_lifetime = 7200 #60*60*2
+
+# Accounts will be deleted if they were not active since this amount of seconds
+_activity_timeout = 1800 #60*30
 
 @app.route('/demo-landing')
 def demo_landing():
@@ -39,3 +48,27 @@ def create_demo_response():
 def create_demo_redirect():
     """ Creates a standard response sent to the client when a page is not available because we're in demo mode """
     return redirect(url_for('demo_landing'))
+
+def flush_old_demo_data():
+    print 'Flushing demo data'
+    # We do the import here to avoid a circular reference at startup (because user import demo)
+    from user import User, remove_user
+    t = time()
+    create_limit = datetime.fromtimestamp(t - _max_lifetime)
+    last_activity_limit = datetime.fromtimestamp(t - _activity_timeout)
+    users = User.query.all()
+    for u in users:
+        # Do not remove the admin user
+        if u.id == 1:
+            continue
+        remove = False
+        # Check the creation date
+        if u.create_date < create_limit:
+            app.logger.debug('User {0} "{1}" marked for flushing (too old)'.format(u.id, u.username))
+            remove = True
+        # Check last activity date
+        elif u.last_activity_date < last_activity_limit:
+            app.logger.debug('User {0} "{1}" marked for flushing (activity timeout)'.format(u.id, u.username))
+            remove = True
+        if remove:
+            remove_user(u.id)

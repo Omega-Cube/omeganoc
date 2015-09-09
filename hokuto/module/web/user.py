@@ -26,13 +26,10 @@ This module contains all the actions related to user management
 
 from datetime import datetime
 import hashlib
-import os
-from on_reader.livestatus import livestatus
-
 
 from flask import request, flash, url_for, redirect, render_template, abort
 from flask.ext.babel import gettext as _, lazy_gettext as __
-from flask.ext.login import login_user, login_required, logout_user, UserMixin, current_user#, user_accessed
+from flask.ext.login import login_user, login_required, logout_user, current_user, UserMixin
 from wtforms import Form, TextField, PasswordField, BooleanField, validators, SelectField
 from sqlalchemy.sql import select
 
@@ -40,14 +37,16 @@ from on_reader.livestatus import livestatus
 
 from . import app, db, login_manager
 from ajax import redirect_or_json, template_or_json
-from utils import try_int, generate_salt
-from demo import is_in_demo, create_demo_response, create_demo_redirect
-from grapher import graphTokenTable
 from dashboard import partsTable, partsConfTable
+from demo import is_in_demo, create_demo_response, create_demo_redirect, flush_old_demo_data
+from grapher import graphTokenTable
+from utils import try_int, generate_salt
 
 @login_manager.user_loader
 def load_user(userid):
     """ Flask-Login user loading helper """
+    if is_in_demo():
+        flush_old_demo_data()
     user = User.query.filter(User.username == userid).first()
     if user is not None:
         # Update last activity date
@@ -123,6 +122,27 @@ class User(db.Model, UserMixin):
         """ Returns the username member """
         return self.username
 
+def remove_user(userid):
+    """ Removes the specified user from the database """
+    user = User.query.get(userid)
+    if user is None:
+        return False
+    # Remove graph data
+    db.session.execute(graphTokenTable.delete().where(graphTokenTable.c.user_id == userid))
+
+    # Remove dashboards data
+    query = select([partsTable.c.id]).where(partsTable.c.user_id == userid).distinct()
+    for row in db.session.execute(query):
+        # Remove parts configs
+        db.session.execute(partsConfTable.delete().where(partsConfTable.c.parts_id == row[0]))
+    # Remove actual parts
+    db.session.execute(partsTable.delete().where(partsTable.c.user_id == userid))
+    
+    # Remove the usre itself
+    db.session.delete(user)
+    db.session.commit()
+    return True
+    
 class LoginForm(Form):
     """ Login page view model """
     username = TextField(__('Username'),
@@ -284,29 +304,3 @@ def destroy_user(userid=None):
     if not remove_user(userid):
         abort(404)
     return 'Ok',200
-
-def remove_user(userid):
-    """ Removes the specified user from the database """
-    user = User.query.get(userid)
-    if user is None:
-        return False
-    # Remove graph data
-    db.session.execute(graphTokenTable.delete().where(graphTokenTable.c.user_id == userid))
-
-    # Remove dashboards data
-    query = select([partsTable.c.id]).where(partsTable.c.user_id == userid).distinct()
-    for row in db.session.execute(query):
-        # Remove parts configs
-        db.session.execute(partsConfTable.delete().where(partsConfTable.c.parts_id == row[0]))
-    # Remove actual parts
-    db.session.execute(partsTable.delete().where(partsTable.c.user_id == userid))
-    
-    # Remove the usre itself
-    db.session.delete(user)
-    db.session.commit()
-    return True
-    
-#def le_connector(current_app):
-#    print 'I have been connected!'
-    
-#user_accessed.connect()
