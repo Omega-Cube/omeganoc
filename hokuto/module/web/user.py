@@ -89,6 +89,7 @@ class User(db.Model, UserMixin):
         self.is_super_admin = is_super_admin
         self.create_date = datetime.utcnow()
         self.change_date = self.create_date
+        self.last_activity_date = self.create_date
 
         self.set_password(password)
 
