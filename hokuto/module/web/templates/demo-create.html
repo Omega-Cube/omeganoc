@@ -1,0 +1,47 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2015 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+<link rel="Stylesheet" type="text/css" href="{{url_for('static',filename='css/main.css')}}" />
+{% endblock %}
+
+{% block content %}
+<div class="presentation">
+    <h1 class="title">Getting your Omega NOC ready...</h1>
+
+    <p>We created an account you can use to ckeck out Omega NOC's features without other testers getting in the way.
+    Note that this account will be removed after one hour of inactivity, or two jours after its creation.
+    But you can always come back with a fresh account!
+    </p>
+
+    <h2>Your demo account</h2>
+    <p>
+        <label for="username">Username</label>
+        <input id="username" value="{{ username }}" readonly/>
+    </p>
+    <p>
+        <label for="password">Password</label>
+        <input id="password" value="{{ password }}" readonly/>
+    </p>
+    
+    <h2>You're good to go!</h2>
+    <p>We have automatically logged you in with this account, but maybe you want to keep these identifiers, just in case!</p>
+    <p><a href="{{url_for('index')}}" target="_blank">Open the home page in a new tab</a></p>
+</div>
+{% endblock %}

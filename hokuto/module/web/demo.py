@@ -24,6 +24,7 @@ from random import random, choice
 from time import time
 
 from flask import render_template, redirect, url_for
+from flask.ext.login import login_user, current_user
 from sqlalchemy.sql import bindparam
 
 from . import app, db
@@ -41,6 +42,17 @@ _demo_shinken_user = 'drgkill'
 def demo_landing():
     """ This page tells the user that he tried to use a feature that is not available in demo mode """
     return render_template('demo-landing.html')
+    
+@app.route('/demo-create')
+def demo_create():
+    """ This page creates a new user account and gives the new login data to the user """
+    # Don't create an account if the user already have one
+    app.logger.debug(current_user)
+    if current_user is not None and not current_user.is_anonymous():
+        return redirect(url_for('index'))
+    login, passwd, user = create_demo_user()
+    login_user(user)
+    return render_template('demo-create.html', username=login, password=passwd)
     
 def is_in_demo():
     """ Returns True if the demo mode is enabled, False otherwise """
@@ -97,7 +109,7 @@ def create_demo_user():
     db.session.commit()
     create_default_graph(user.id)
     create_default_dashboard(user.id)
-    return name, password
+    return name, password, user
 
 def create_default_graph(userid):
     from grapher import graphTokenTable
