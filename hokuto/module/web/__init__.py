@@ -100,7 +100,6 @@ def init(config):
         handler.level = logging.DEBUG
         app.logger.addHandler(handler)
 
-
     # SQLAlchemy
     db = SQLAlchemy(app)
 
@@ -161,3 +160,4 @@ def init(config):
         return render_template('main.html')
 
     init_db(user.User)
+    return app
