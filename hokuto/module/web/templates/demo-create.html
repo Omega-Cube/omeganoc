@@ -19,6 +19,18 @@
 
 {% block head %}
 <link rel="Stylesheet" type="text/css" href="{{url_for('static',filename='css/main.css')}}" />
+<style>
+    .submit {
+        background-color: #019875;
+        background-image: none;
+        text-shadow: none;
+        border: none;
+        border-radius: 0.5em;
+        padding: 3px 10px;
+        line-height: 22px;
+        display: inline-block;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -31,17 +43,19 @@
     </p>
 
     <h2>Your demo account</h2>
-    <p>
-        <label for="username">Username</label>
-        <input id="username" value="{{ username }}" readonly/>
-    </p>
-    <p>
-        <label for="password">Password</label>
-        <input id="password" value="{{ password }}" readonly/>
-    </p>
+    <div class="formlayout">
+        <div>
+            <label for="username">Username</label>
+            <input id="username" value="{{ username }}" readonly/>
+        </div>
+        <div>
+            <label for="password">Password</label>
+            <input id="password" value="{{ password }}" readonly/>
+        </div>
+    </div>
     
     <h2>You're good to go!</h2>
-    <p>We have automatically logged you in with this account, but maybe you want to keep these identifiers, just in case!</p>
-    <p><a href="{{url_for('index')}}" target="_blank">Open the home page in a new tab</a></p>
+    <p>We have automatically logged you in with this account, but maybe you want to keep these identifiers, just in case!<br /></p>
+    <p><a href="{{url_for('index')}}" target="_blank" class="button submit">Open the home page in a new tab</a></p>
 </div>
 {% endblock %}

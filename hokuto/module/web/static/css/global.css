@@ -206,6 +206,24 @@ input.error {
     background-color: #ffdbdb;
 }
 
+.formlayout {
+    display: table;
+}
+
+.formlayout > div {
+    display: table-row;
+    line-height: 45px;
+}
+
+.formlayout > div > * {
+    display: table-cell;
+}
+
+.formlayout > div > label {
+    font-weight: bold;
+    padding-right: 2em;
+}
+
 /* Top menu tabs */
 header > ul{
     margin:0;
