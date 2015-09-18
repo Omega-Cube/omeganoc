@@ -24,13 +24,10 @@ import time
 import traceback
 
 from shinken.basemodule import BaseModule
-from shinken.objects.module import Module
 from shinken.daemon import Daemon
 from shinken.log import logger
 from shinken.message import Message
 from shinken.misc.regenerator import Regenerator
-
-import web
 
 # used by SLA manager
 import re
@@ -47,28 +44,13 @@ properties = {
 }
 
 def get_instance(plugin):
-    return HokutoUi(plugin)
+    return HokutoLogCacher(plugin)
 
-class HokutoUi(BaseModule, Daemon):
+class HokutoLogCacher(BaseModule, Daemon):
     def __init__(self, modconf):
         BaseModule.__init__(self, modconf)
 
         logger.debug('[hokuto] Initializing')
-
-        self.port = int(getattr(modconf, 'port', '7768'))
-        self.host = getattr(modconf, 'host', '0.0.0.0')
-        self.dbpath = getattr(modconf, 'dbpath', '/var/lib/shinken/hokuto.db')
-        self.secret_key = getattr(modconf, 'secretkey', 'Enter the secretest key here!')
-        self.logging = getattr(modconf, 'logging', '/var/log/shinken/hokuto.log')
-        self.threaded = getattr(modconf, 'threaded', '1') == '1'
-        self.nanto_database = getattr(modconf, 'nanto_database', None)
-        
-        self.livestatus_socket = getattr(modconf, 'livestatus_socket', None)
-        self.livestatus_host = None
-        self.livestatus_port = None
-        if self.livestatus_socket is None:
-            self.livestatus_host = getattr(modconf, 'livestatus_host', '127.0.0.1')
-            self.livestatus_port = getattr(modconf, 'livestatus_port', 50000)
 
         self.regen = Regenerator() # TODO: Keep this ? seems useless
 
@@ -100,25 +82,8 @@ class HokutoUi(BaseModule, Daemon):
 
     def do_main(self):
         self.set_exit_handler()
-
-        # It seems that since we are an external Broker plugin, we HAVE to listen to messages from the
-        # broker and clear the queue, otherwise it will blow up and the module will restart
         self.data_thread = threading.Thread(None, self.manage_brok_thread, 'datathread')
         self.data_thread.start()
-
-        web.init({'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + self.dbpath,
-                  'SQLALCHEMY_ECHO': False,
-                  'SECRET_KEY': self.secret_key,
-                  'LOGGING': self.logging,
-                  'NANTO_DATABASE': self.nanto_database,
-                  'LIVESTATUS_HOST': self.livestatus_host,
-                  'LIVESTATUS_PORT': self.livestatus_port,
-                  'LIVESTATUS_SOCKET': self.livestatus_socket})
-        web.app.run(host=self.host,
-                port=self.port,
-                debug=False, # WARNING : DO NOT SET THIS TO TRUE, or Werkzeug will eat your babies and burn your house
-                             # (and exit the process without any message whatsoever)
-                threaded=self.threaded)
 
     # SLA
     def manage_log_brok(self,b):
