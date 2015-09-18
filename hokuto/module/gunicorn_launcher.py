@@ -19,16 +19,22 @@
 
 """ Hokuto launcher using the Gunicorn server """
 
+import sys
+
 import gunicorn.app.base
 
 from web import init
 
-class GunicornApp(gunicorn.app.base.BaseApplication):
+class GunicornApp(gunicorn.app.base.Application):
     def __init__(self, app):
         self.application = app
         super(GunicornApp, self).__init__()
         
     def load_config(self):
+        config = self.application.config
+        if 'PIDFILE' in config:
+            self.application.logger.debug('Setting gunicorn pidfile value to "{0}"'.format(config['PIDFILE']))
+            self.cfg.set('pidfile', config['PIDFILE'])
         for key, value in self.application.config.iteritems():
             if key.startswith('GUNICORN_'):
                 gkey = key[9:].lower()
@@ -39,6 +45,15 @@ class GunicornApp(gunicorn.app.base.BaseApplication):
         return self.application
 
 if __name__ == '__main__':
-    hokuto = init(None)
-    gapp = GunicornApp(hokuto)
+    try:
+        hokuto = init(None)
+        gapp = GunicornApp(hokuto)
+    except Exception as ex:
+        try:
+            print "wut"
+            hokuto.logger.critical('An error occured during initialization', exc_info = True)
+        except:
+            print 'Error during initialization: ' + ex.message
+        sys.exit(1)
+    hokuto.logger.info('Starting hokuto')
     gapp.run()
