@@ -20,6 +20,7 @@
 """ Hokuto launcher using the Gunicorn server """
 
 import sys
+import os.path
 
 import gunicorn.app.base
 
@@ -32,9 +33,13 @@ class GunicornApp(gunicorn.app.base.Application):
         
     def load_config(self):
         config = self.application.config
+        # Constant configuration
+        self.cfg.set('proc_name', 'hokuto')
+        # Renamed values / forwarded values
         if 'PIDFILE' in config:
             self.application.logger.debug('Setting gunicorn pidfile value to "{0}"'.format(config['PIDFILE']))
             self.cfg.set('pidfile', config['PIDFILE'])
+        # Transfer of values starting with GUNICORN_
         for key, value in self.application.config.iteritems():
             if key.startswith('GUNICORN_'):
                 gkey = key[9:].lower()
@@ -44,16 +49,25 @@ class GunicornApp(gunicorn.app.base.Application):
     def load(self):
         return self.application
 
-if __name__ == '__main__':
+def check_is_running(hokuto):
+    pidpath = hokuto.conf['PIDFILE']
+    return os.file.isfile(pidpath)
+    
+def run_app(hokuto):
+    gapp = GunicornApp(hokuto)
+    hokuto.logger.info('Starting hokuto')
+    gapp.run()
+    
+def main():
     try:
         hokuto = init(None)
-        gapp = GunicornApp(hokuto)
+        run_app(hokuto)
     except Exception as ex:
         try:
-            print "wut"
             hokuto.logger.critical('An error occured during initialization', exc_info = True)
         except:
             print 'Error during initialization: ' + ex.message
         sys.exit(1)
-    hokuto.logger.info('Starting hokuto')
-    gapp.run()
+    
+if __name__ == '__main__':
+    main()
