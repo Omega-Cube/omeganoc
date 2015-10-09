@@ -251,6 +251,7 @@ def edit_user(userid=None):
             user.shinken_contact = form.shinken_contact.data if is_admin else user.shinken_contact
             if form.password.data:
                 user.set_password(form.password.data)
+            user.change_date = datetime.utcnow()
             db.session.commit()
         else:
             # Create new
