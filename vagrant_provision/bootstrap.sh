@@ -41,6 +41,7 @@ make graphite shinken on-reader clean
 
 # Create symbolic links for Hokuto
 ln -s /vagrant/hokuto/standalone /usr/local/hokuto
+ln -s /vagrant/hokuto/etc/hokuto.cfg /etc/hokuto.cfg
 ln -s /vagrant/hokuto/etc/init.d/hokuto /etc/init.d/hokuto
 update-rc.d hokuto defaults
 
