@@ -39,14 +39,10 @@ cp /vagrant/vagrant_provision/livestatus.cfg.template /etc/shinken/modules/lives
 # instead of copies to facilitate development.
 make graphite shinken on-reader clean
 
-# Create symbolic links for Hokuto and Nanto daemons
+# Create symbolic links for Hokuto
 ln -s /vagrant/hokuto/standalone /usr/local/hokuto
-ln -s /vagrant/nanto /usr/local/nanto
-# Same for their startup scripts
 ln -s /vagrant/hokuto/etc/init.d/hokuto /etc/init.d/hokuto
-ln -s /vagrant/nanto/etc/init.d/nanto /etc/init.d/nanto
 update-rc.d hokuto defaults
-update-rc.d nanto defaults
 
 # Auto start the carbon daemon on launch
 cp /vagrant/vagrant_provision/carbon.init.template /etc/init.d/carbon

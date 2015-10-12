@@ -37,7 +37,7 @@ sudoer:
 		exit 1; \
 	fi
 
-install: dependencies sudoer graphite shinken on-reader nanto hokuto clean
+install: dependencies sudoer graphite shinken on-reader hokuto clean
 
 dependencies: shinken-dependencies graphite-dependencies
 
@@ -98,11 +98,6 @@ shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins s
 	@echo Add "'modules graphite, livestatus, hokuto'" to your broker-master.cfg file
 	@echo Add modules logstore-sqlite to livestatus.cfg.
 
-# Nanto - Copy nanto files to their install directory
-nanto: sudoer
-	@echo Installing Nanto
-	cp nanto /usr/local/nanto
-	
 # Hokuto - Copy hokuto files to their install directory
 hokuto: sudoer
 	@echo Installing Hokuto
