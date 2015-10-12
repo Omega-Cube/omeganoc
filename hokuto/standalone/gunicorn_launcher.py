@@ -24,7 +24,7 @@ import os.path
 
 import gunicorn.app.base
 
-from web import init
+from . import init
 
 class GunicornApp(gunicorn.app.base.Application):
     def __init__(self, app):
