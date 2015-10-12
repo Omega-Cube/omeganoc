@@ -102,6 +102,7 @@ shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins s
 hokuto: sudoer
 	@echo Installing Hokuto
 	cp hokuto/standalone /usr/local/hokuto
+	cp hokuto/etc/hokuto.cfg /etc/hokuto.cfg
 
 #install shinken from sources
 vendors:

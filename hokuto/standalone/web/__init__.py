@@ -94,7 +94,7 @@ def init(config):
     # Main application object
     app = Flask(__name__)
     if config is None:
-        app.config.from_pyfile('config.cfg')
+        app.config.from_pyfile('/etc/hokuto.cfg')
     else:
         for key in config:
             app.config[key] = config[key]
