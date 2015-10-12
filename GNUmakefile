@@ -37,7 +37,7 @@ sudoer:
 		exit 1; \
 	fi
 
-install: dependencies sudoer graphite shinken on-reader clean
+install: dependencies sudoer graphite shinken on-reader nanto hokuto clean
 
 dependencies: shinken-dependencies graphite-dependencies
 
@@ -65,6 +65,7 @@ graphite: graphite-prebuild graphite-dependencies sudoer
 
 #shinken
 shinken-dependencies:
+	# Checks that Shinken is installed
 	@command -v python 2>&1 || { echo >&2 "Missing python"; exit 1;}
 	@command -v shinken 2>&1 || { echo >&2 "Missing shinken"; exit 1;}
 
@@ -96,6 +97,16 @@ shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins s
 	@echo Omeganoc have been succefully installed
 	@echo Add "'modules graphite, livestatus, hokuto'" to your broker-master.cfg file
 	@echo Add modules logstore-sqlite to livestatus.cfg.
+
+# Nanto - Copy nanto files to their install directory
+nanto: sudoer
+	@echo Installing Nanto
+	cp nanto /usr/local/nanto
+	
+# Hokuto - Copy hokuto files to their install directory
+hokuto: sudoer
+	@echo Installing Hokuto
+	cp hokuto/standalone /usr/local/hokuto
 
 #install shinken from sources
 vendors:
