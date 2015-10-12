@@ -64,5 +64,4 @@ update-rc.d carbon defaults
 # Start things up
 /etc/init.d/carbon start
 service shinken restart
-service nanto start
 service hokuto start
