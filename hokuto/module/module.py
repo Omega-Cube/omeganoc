@@ -19,7 +19,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import threading
+import os
+import Queue
+import sqlite3
 import time
 import traceback
 
@@ -49,14 +51,16 @@ def get_instance(plugin):
 class HokutoLogCacher(BaseModule, Daemon):
     def __init__(self, modconf):
         BaseModule.__init__(self, modconf)
-
-        logger.debug('[hokuto] Initializing')
-
+        logger.debug('[hokuto-log-cacher] Initializing')
         self.regen = Regenerator() # TODO: Keep this ? seems useless
+        self.db_path = getattr(modconf, 'db_path', None)
+        if self.db_path is None:
+            logger.error('[hokuto-log-cacher] No database path configured. Please specify one with db_path in the module configuration file.')
+            raise
 
     # Broker init
     def init(self):
-        logger.debug('[hokuto] Initializing module {0}'.format(self.name))
+        logger.debug('[hokuto-log-cacher] Initializing module {0}'.format(self.name))
 
     def main(self):
         self.set_proctitle(self.name)
@@ -66,7 +70,7 @@ class HokutoLogCacher(BaseModule, Daemon):
         try:
             self.do_main()
         except Exception, ex:
-            logger.warning('[hokuto] error! ' + ex.message)
+            logger.warning('[hokuto-log-cacher] An error occured in  ' + ex.message)
             logger.debug(traceback.format_exc())
             msg = Message(id=0, type='ICrash', data={
                     'name': self.get_name(),
@@ -82,14 +86,11 @@ class HokutoLogCacher(BaseModule, Daemon):
 
     def do_main(self):
         self.set_exit_handler()
-        self.data_thread = threading.Thread(None, self.manage_brok_thread, 'datathread')
-        self.data_thread.start()
+        self.manage_brok_thread()
 
     # SLA
     def manage_log_brok(self,b):
         """ Intercept log type brok and append state change to the SLA database if needed """
-        from web import db
-        from web.sla import Sla
 
         data = b.data
         line = data['log']
@@ -105,25 +106,41 @@ class HokutoLogCacher(BaseModule, Daemon):
                 return
 
             if logline.logclass != LOGCLASS_INVALID:
-                logger.debug("[hokuto] %s %s %s.%s"%(values['time'],values['state'],values['host_name'],values["service_description"]))
-                lastState = Sla.query\
-                               .filter_by(host_name = values['host_name'], service_description = values["service_description"])\
-                               .order_by(Sla.time.desc())\
-                               .first()
-
-                if lastState is not None and lastState.state == values['state']:
-                    return
-                entry = Sla(values['host_name'],values["service_description"],values['time'],values['state'])
-                db.session.add(entry)
-                db.session.commit()
+                logger.debug('[hokuto-log-cacher] %s %s %s.%s'%(values['time'],values['state'],values['host_name'],values['service_description']))
+                with sqlite3.connect(self.db_path) as conn:
+                    if not self.check_db_has_sla(conn): # Abort if the table doesn't exist. 
+                                                   # This may happen if hokuto was just installed and the broker receives data
+                                                   # before Hokuto initializes the database
+                        logger.warning("[hokuto-log-cacher] A log brok was skipped: hokuto's database wasn't ready to receive it. Launching Hokuto once should solve this problem.")
+                        return
+                    row = conn.execute("SELECT state FROM sla WHERE host_name=? AND service_description=? ORDER BY time DESC LIMIT 1", (values['host_name'], values['service_description'])).fetchone()
+                    #lastState = Sla.query\
+                    #               .filter_by(host_name = values['host_name'], service_description = values['service_description'])\
+                    #               .order_by(Sla.time.desc())\
+                    #               .first()
+    
+                    if row is None or row[0] != values['state']:
+                        conn.execute('INSERT INTO sla (host_name, service_description, state, time) VALUES (?, ?, ?, ?)', (values['host_name'], values['service_description'], values['state'], values['service_description']))
 
         except Exception, exp:
-            logger.error("[hokuto] %s"%str(exp))
+            logger.error("[hokuto-log-cacher] %s"%str(exp))
+
+    def check_db_has_sla(self, conn):
+        """ Checks whether the specified sqlite connection has an SLA table """
+        return conn.execute("SELECT name FROM sqlite_master WHERE name='sla' AND type='table'").fetchone() is not None
 
     def manage_brok_thread(self):
-        """ Receive brok message and empty the queue to prevent memory leaks. """
-        while True:
-            l = self.to_q.get()
-            for b in l:
-                self.manage_brok(b)
-            self.to_q.task_done()
+        """ Receive and process brok messages """
+        while not self.interrupted:
+            try:
+                l = self.to_q.get()
+            except IOError as ex:
+                if ex.errno != os.errno.EINTR:
+                    raise
+            except Queue.Empty:
+                pass
+            else:
+                for b in l:
+                    # b.prepare()
+                    self.manage_brok(b)
+                self.to_q.task_done()
