@@ -101,7 +101,7 @@ shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins s
 # Hokuto - Copy hokuto files to their install directory
 hokuto: sudoer
 	@echo Installing Hokuto
-	cp hokuto/standalone /usr/local/hokuto
+	cp -r hokuto/standalone /usr/local/hokuto
 	cp hokuto/etc/hokuto.cfg /etc/hokuto.cfg
 
 #install shinken from sources
