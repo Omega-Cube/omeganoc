@@ -1,10 +1,10 @@
 {
     "name": "hokuto",
     "types": ["module"],
-    "version": "0.1",
+    "version": "0.2",
     "homepage": "http://omegacube.fr/",
-    "author": "Omegacube",
-    "description": "WEB monitoring  user-interface",
+    "author": "Omega Cube",
+    "description": "This component connects to Shinken to enhance Hokuto's performance",
     "contributors": [
         {
             "name": "Xavier Roger-Machart",

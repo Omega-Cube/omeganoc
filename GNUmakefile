@@ -37,7 +37,7 @@ sudoer:
 		exit 1; \
 	fi
 
-install: dependencies sudoer graphite shinken on-reader clean
+install: dependencies sudoer graphite shinken on-reader hokuto clean
 
 dependencies: shinken-dependencies graphite-dependencies
 
@@ -65,12 +65,13 @@ graphite: graphite-prebuild graphite-dependencies sudoer
 
 #shinken
 shinken-dependencies:
+	# Checks that Shinken is installed
 	@command -v python 2>&1 || { echo >&2 "Missing python"; exit 1;}
 	@command -v shinken 2>&1 || { echo >&2 "Missing shinken"; exit 1;}
 
 shinken-install-dependencies: sudoer
 	@echo -n "\033]0;Installing shinken plugins dependencies\007"
-	pip install 'pycurl==7.19.0' 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' carbon 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'graphite-query==0.11.3' 'python-mk-livestatus==0.4' pynag chardet
+	pip install 'pycurl==7.19.0' 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' carbon 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'graphite-query==0.11.3' 'python-mk-livestatus==0.4' 'gunicorn==19.3.0' pynag chardet
 
 shinken-install-plugins: sudoer vendors
 	-useradd --user-group graphite
@@ -96,6 +97,12 @@ shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins s
 	@echo Omeganoc have been succefully installed
 	@echo Add "'modules graphite, livestatus, hokuto'" to your broker-master.cfg file
 	@echo Add modules logstore-sqlite to livestatus.cfg.
+
+# Hokuto - Copy hokuto files to their install directory
+hokuto: sudoer
+	@echo Installing Hokuto
+	cp -r hokuto/standalone /usr/local/hokuto
+	cp hokuto/etc/hokuto.cfg /etc/hokuto.cfg
 
 #install shinken from sources
 vendors:

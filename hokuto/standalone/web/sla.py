@@ -25,6 +25,9 @@ import json
 
 class Sla(db.Model):
     """ SLA data model """
+    # IMPORTANT : If you change the structure of this table, make sure the query in
+    # the broker module (hokuto/module/module.py, manage_log_brok method) still works 
+    # with the new structure
     id = db.Column('id', db.Integer, primary_key=True)
     host_name = db.Column('host_name', db.String(128), nullable=False)
     service_description = db.Column('service_description',db.String(32), nullable=True)

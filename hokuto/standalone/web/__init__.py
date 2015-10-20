@@ -25,6 +25,7 @@ the Omega Noc monitoring system.
 
 import os
 import sys
+import logging
 
 from flask import Flask, render_template
 from flask.ext.login import LoginManager, login_required
@@ -75,6 +76,16 @@ def init_db(User):
     if needcommit:
         db.session.commit()
 
+def parse_logger_level(value):
+    try:
+        try:
+            result = int(value)
+        except ValueError:
+            result = getattr(logging, value.upper(), None)
+    except:
+        print 'log level cant be parsed ' + value
+        return None
+    return result
 
 def init(config):
     global app
@@ -86,7 +97,7 @@ def init(config):
     # Main application object
     app = Flask(__name__)
     if config is None:
-        app.config.from_pyfile('config.cfg')
+        app.config.from_pyfile('/etc/hokuto.cfg')
     else:
         for key in config:
             app.config[key] = config[key]
@@ -96,11 +107,14 @@ def init(config):
         app.config.from_envvar('ONOC_CONFIG')
 
     # Logging
-    logfile = app.config.get('LOGGING', None)
+    logfile = app.config.get('LOGGER_FILE', None)
     if logfile is not None:
-        import logging
         handler = logging.FileHandler(logfile)
-        handler.level = logging.DEBUG
+        loglevel = parse_logger_level(app.config.get('LOGGER_LEVEL'))
+        if loglevel is not None:
+            print 'setting log level ' + str(loglevel)
+            app.logger.setLevel(loglevel)
+            handler.level = loglevel
         app.logger.addHandler(handler)
 
     # Caching
@@ -168,3 +182,4 @@ def init(config):
         return render_template('main.html')
 
     init_db(user.User)
+    return app
