@@ -140,6 +140,7 @@ def _getconf():
             p.wait()
 
         shinken_file = TMP_DIR + CONF_FILE
+        app.logger.debug('PyNag is loading configuration at: ' + shinken_file)
         conf = config(shinken_file) # Let pynag find out the configuration path by itself
         conf.parse()
         cache.set('nag_conf', conf, timeout=CACHE_TIMEOUT) #TODO : Configure cache timeout
