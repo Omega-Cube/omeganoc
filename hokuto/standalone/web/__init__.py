@@ -110,11 +110,13 @@ def init(config):
     logfile = app.config.get('LOGGER_FILE', None)
     if logfile is not None:
         handler = logging.FileHandler(logfile)
+        handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
         loglevel = parse_logger_level(app.config.get('LOGGER_LEVEL'))
         if loglevel is not None:
             app.logger.setLevel(loglevel)
             handler.level = loglevel
         app.logger.addHandler(handler)
+    app.logger.info('Hokuto is initializing...')
 
     # Caching
     # A little bit simplistic for now, we could improve that
@@ -181,4 +183,5 @@ def init(config):
         return render_template('main.html')
 
     init_db(user.User)
+    app.logger.debug('Initialization successful!')
     return app
