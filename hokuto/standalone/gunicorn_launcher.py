@@ -19,8 +19,9 @@
 
 """ Hokuto launcher using the Gunicorn server """
 
-import sys
 import os.path
+import sys
+import traceback
 
 import gunicorn.app.base
 
@@ -60,13 +61,26 @@ def run_app(hokuto):
     
 def main():
     try:
+        hokuto = None
         hokuto = init(None)
+        if hokuto is None:
+            print 'Hokuto could not be initialized'
+            sys.exit(2)
         run_app(hokuto)
-    except Exception as ex:
+    except:
         try:
-            hokuto.logger.critical('An error occured during initialization', exc_info = True)
+            (extype, exvalue, tb) = sys.exc_info()
+            if hokuto is None:
+                print 'Could not initialize Hokuto!'
+                print 'Error type: ' + str(extype)
+                print 'Error message: ' + exvalue.message
+                traceback.print_tb(tb)
+            else:
+                hokuto.logger.critical('An error occured during initialization', exc_info = True)
         except:
-            print 'Error during initialization: ' + ex.message
+            (extype, exvalue, tb) = sys.exc_info()
+            print 'Error during initialization: ' + str(exvalue)
+            traceback.print_tb(tb)
         sys.exit(1)
     
 if __name__ == '__main__':
