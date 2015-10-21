@@ -1,0 +1,60 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2015 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% extends "config/form_template.html" %}
+{% block form %}
+    {% if not data %}
+    <fieldset>
+      <legend>New file</legend>
+      {{ _rf(form.filename) }}
+    </fieldset>
+    {% endif %}
+    
+    <fieldset>
+      <legend>Description</legend>
+      {{ _rf(form.timeperiod_name) }}
+      {{ _rf(form.alias) }}
+    </fieldset>
+
+    <fieldset>
+      <legend>Weekdays</legend>
+      <p><small>leave blank or set 00:00-00:00 to exclude a weekday from the timeperiod.</small></p>
+      {{_rf(form.sunday)}}
+      {{_rf(form.monday)}}
+      {{_rf(form.tuesday)}}
+      {{_rf(form.wednesday)}}
+      {{_rf(form.thursday)}}
+      {{_rf(form.friday)}}
+      {{_rf(form.saturday)}}
+    </fieldset>
+    
+    <fieldset>
+      <legend>Exceptions</legend>
+      {{ _rf(form.exclude) }}
+      <p><small>Set a timerange of 00:00-00:00 or a blank value to exclude a date from the timeperiod.</small></p>
+      {% for f in data.meta.custom %}
+          {{_rf(form[f])}}
+      {% endfor %}
+    </fieldset>
+
+    <fieldset class="collapsed">
+      <legend>Templates</legend>
+        {{ _rf(form.name) }}
+        {{ _rf(form.use) }}
+        {{ _rf(form.register) }}
+    </fieldset>
+{% endblock %}

@@ -1,0 +1,216 @@
+#mainContent {
+    position: relative;
+    overflow: auto;
+    height: calc(100% - 56px);
+    padding: 2em;
+}
+
+p.intro {
+    margin: 1em 0 2em 0;
+}
+
+#config_main_list {
+    border: 2px solid #555555;
+}
+
+#config_main_list > thead {
+    background-color: #3A4348;
+}
+
+/* infobox  */
+#mainContent .infobox{
+    padding: 0.5em 0.25em;
+    margin: 1em 0;
+    overflow: auto;
+}
+
+#mainContent .infobox.alert{
+    background-color: #E63C3E;
+}
+
+#mainContent .infobox.info{
+    background-color: #2e75b6;
+}
+
+#mainContent .infobox h2{
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 1em;
+}
+
+#mainContent .infobox h2 small{
+    display:block;
+    font-size: 0.65em;
+}
+
+#mainContent .infobox .actions{
+    float: right;
+    padding-right: 4em;
+}
+
+#mainContent .infobox .actions .button{
+    width: 90px;
+    margin: 0.1em;
+    white-space: nowrap;
+    text-decoration: none;
+    color: #fff;
+}
+
+#mainContent .infobox .actions a.button{
+    width: calc(90px - 22px);
+}
+
+#mainContent .button a{
+    text-decoration: none;
+}
+
+#mainContent .infobox .actions .button.alert{
+    background-color: #E63C3E;
+}
+#mainContent .infobox .actions .button.apply{
+    background-color:#019875;
+}
+#mainContent .infobox .actions .button.info{
+    background-color:#2e75b6;
+}
+#mainContent .infobox .actions .button.disabled{
+    color: #888;
+    cursor: initial;
+}
+
+#mainContent #conf-lock{
+    margin-top: 1.5em;
+}
+
+/* list top menu*/
+.conf-menu{
+    text-align: center;
+}
+
+.conf-menu h4{
+    font-size: 1.5em;
+}
+
+.conf-menu .droplist {
+    background-image: url("../images/dropdown-1.png");
+    background-position: right center;
+    padding-right: 20px;
+    background-repeat: no-repeat;
+    display: inline-block;
+    text-align: left;
+    vertical-align: top;
+    position:relative;
+    margin: 0 0.5em;
+    whitespace: no-wrap;
+}
+
+.conf-menu .droplist > ul{
+    display: none;
+    min-width: 100%;
+    top: 100%;
+    left: 0;
+    position: absolute;
+    border: 1px solid #000;
+    background-color: #333;
+    font-size: 1.25em;
+}
+
+.conf-menu .droplist:hover >ul{
+    display: block;
+}
+
+.conf-menu .droplist ul li{
+    line-height: 1.5em;
+}
+
+.conf-menu .droplist ul .legend{
+    font-style: italic;
+    padding: 0 1.3em;
+    font-size: 0.9em;
+}
+
+.conf-menu .droplist ul li a{
+    text-decoration: none;
+    white-space: nowrap;
+    display: block;
+    padding: 0 0.5em;
+}
+.conf-menu .droplist ul li a:hover{
+    background-color: white;
+    color: black;
+    text-shadow: none;
+}
+
+/* list title */
+.configlist{
+    border: 1px solid #555;
+    width: 80%;
+    margin: 1em auto;
+}
+
+.configlist-title{
+    background-color: #3A4348;
+    overflow: auto;
+    padding: 0.5em;
+    border-bottom: 1px solid #555;
+}
+
+.configlist-title span{
+    margin-right: 1em;
+}
+
+.configlist-title .title-total{
+    font-weight: bold;
+}
+
+.configlist-title .title-actions{
+    float: right;
+}
+
+#config_create{
+    background-color: #019875;
+    padding: 3px 10px;
+    color: #fff;
+    text-decoration: none;
+    line-height: 20px;
+}
+
+/* list content */
+.configlist-content{
+    display: table;
+    border-collapse: collapse;
+    background-color: #444;
+    width: 100%;
+}
+
+.configlist-content li{
+    display: table-row;
+    border: 1px solid #555;
+}
+
+.configlist-content .empty{
+    line-height: 2em;
+    text-align: center;
+}
+
+.configlist-content .cell{
+    display: table-cell;
+    padding: 0.25em;
+}
+
+/* logs */
+#logs{
+    height: calc(100% - 32px);
+    overflow: auto;
+    padding: 1em;
+}
+
+#logs .info{
+}
+#logs .warn{
+    color: #FBDC0C;
+}
+#logs .erro{
+    color: #E63C3E;
+    font-weight: bold;
+}

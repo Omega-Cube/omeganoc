@@ -1,0 +1,190 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2014 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% extends "layout.html" %}
+
+{% block head %}
+<link href="{{ url_for('static', filename='css/config.css') }}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<div id="mainContent">
+  {% if is_locked %}
+  <div class="infobox alert">
+    <div class="actions">
+      <p>
+        <a href="/config/logs" class="button info" data-tooltip="Show last configuration check results" style="margin-top: 1.5em;">
+          View logs
+        </a>
+      </p>
+    </div>
+    <h2>Configuration is currently locked by {{owner_name}}!<small>You will not be able to edit/delete or create new files.</small></h2>
+  </div>
+  {% elif owner_name %}
+  <div class="infobox alert">
+    <div class="actions">
+      {% if is_ready %}
+      <p><button id="conf-apply-changes" class="button apply" data-tooltip="Apply changes (will restart shinken in the process)">Apply</button></p>
+      {% else %}
+      <p><button class="button disabled" data-tooltip="There is errors in your configuration, please check logs and fix them.">Apply</button></p>
+      {% endif %}
+      <p>
+        <a href="/config/logs" class="button info" data-tooltip="Show last configuration check results">View logs</a>
+      </p>
+      <p><button id="conf-reset-changes" class="button info" data-tooltip="Undo all changes made and unlock configuration">Rollback</button></p>
+    </div>
+    <h2 class="alert">Configuration is currently locked by you.<small>Beware that no one will be able to do any modification until you reset or validate your changes!</small></h2>
+  </div>
+  {% else %}
+  <div class="infobox info">
+    <div class="actions">
+      <p><button id="conf-lock" class="button alert" data-tooltip="Only you will be able to modify the configuration until you apply or rollback your modifications.">Start editing</button></p>
+    </div>
+    <h2 class="info">Nobody is currently editing the configuration.</h2>
+  </div>
+  {% endif %}
+
+  <h3 class="title"> {{gettext('Configuration elements')}} </h3>
+  <p class="intro">This section lists the elements that are present in your monitoring configuration files. You can list, edit, create and remove
+  these elements, and the changes you make will be saved into the monitoring system's configuration files.</p>
+
+  <ul class="conf-menu">
+    <li class="droplist">
+      <h4>Hosts</h4>
+      <ul>
+        <li class="legend"><p>Configuration</p></li>
+        <li><a href="#hosts">Hosts</a></li>
+        <li><a href="#hostdependency">Host dependency</a></li>
+        <li><a href="#hostescalation">Host escalation</a></li>
+        <li><a href="#hostgroups">Host groups</a></li>
+        <li class="legend"><p>Templates</p></li>
+        <li><a href="#hosttemplates">Hosts</a></li>
+        <li><a href="#hostdependencytemplates">Hosts dependencies</a></li>
+        <li><a href="#hostescalationtemplates">Hosts escalation</a></li>
+        <li><a href="#hostgrouptemplates">Hosts groups</a></li>
+      </ul>
+    </li>
+
+    <li class="droplist">
+      <h4>Services</h4>
+      <ul>
+        <li class="legend"><p>Configuration</p></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#servicegroups">Service groups</a></li>
+        <li><a href="#servicedependency">Service dependency</a></li>
+        <li><a href="#serviceescalation">Service escalation</a></li>
+
+        <li class="legend"><p>Templates</p></li>
+        <li><a href="#servicetemplates">Services</a></li>
+        <li><a href="#servicegrouptemplates">Service groups</a></li>
+        <li><a href="#servicedependencytemplates">Service dependencies</a></li>
+        <li><a href="#serviceescalationtemplates">Service escalations</a></li>
+      </ul>
+    </li>
+
+    <li class="droplist">
+      <h4>Contacts</h4>
+      <ul>
+        <li class="legend"><p>Configuration</p></li>
+        <li><a href="#contacts">Contacts</a></li>
+        <li><a href="#contactgroups">Contact groups</a></li>
+        <li><a href="#notificationway">Notificationway</a></li>
+
+        <li class="legend"><p>Templates</p></li>
+        <li><a href="#contacttemplates">Contacts</a></li>
+        <li><a href="#contactgrouptemplates">Contact groups</a></li>
+        <li><a href="#notificationwaytemplates">Notificationway</a></li>
+      </ul>
+    </li>
+
+    <li class="droplist">
+      <h4>Timeperiods</h4>
+      <ul>
+        <li class="legend"><p>Configuration</p></li>
+        <li><a href="#timeperiods">Time periods</a></li>
+
+        <li class="legend"><p>Templates</p></li>
+        <li><a href="#timeperiodtemplates">Time periods</a></li>
+      </ul>
+    </li>
+
+    <li class="droplist">
+      <h4>Commands</h4>
+      <ul>
+        <li class="legend"><p>Configuration</p></li>
+        <li><a href="#commands">Commands</a></li>
+
+        <li class="legend"><p>Templates</p></li>
+        <li><a href="#commandtemplates">Commands</a></li>
+      </ul>
+    </li>
+
+    <li class="droplist">
+      <h4>Realms</h4>
+      <ul>
+        <li class="legend"><p>Configuration</p></li>
+        <li><a href="#realm">Realms</a></li>
+
+        <li class="legend"><p>Templates</p></li>
+        <li><a href="#realmtemplates">Realms</a></li>
+      </ul>
+    </li>
+
+    <li class="droplist">
+      <h4>Workers</h4>
+      <ul>
+        <li class="legend"><p>Configuration</p></li>
+        <li><a href="#arbiter">Arbiters</a></li>
+        <li><a href="#scheluder">Scheluders</a></li>
+        <li><a href="#poller">Pollers</a></li>
+        <li><a href="#reactionner">Reactionners</a></li>
+        <li><a href="#broker">Brokers</a></li>
+
+        <li class="legend"><p>Templates</p></li>
+        <li><a href="#arbitertemplates">Arbiters</a></li>
+        <li><a href="#scheludertemplates">Scheluders</a></li>
+        <li><a href="#pollertemplates">Pollers</a></li>
+        <li><a href="#reactionnertemplates">Reactionners</a></li>
+        <li><a href="#brokertemplates">Brokers</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <section class="configlist">
+    <div class="configlist-title">
+      <p class="title-actions">
+        <input type="text" class="search" placeholder="search"/>
+        <a id="config_create" href="" class="button">Create new</a>
+      </p>
+      <p>
+        <span class="title-total"></span>
+        <span class="paginate"></span>
+        <span class="description"></span>
+      </p>
+    </div>
+    <ul class="configlist-content"></ul>
+  </section>
+</div>
+
+<script type="text/javascript">
+  window.ONOC = window.ONOC || {};
+  window.ONOC.conf_is_locked = {{ is_locked | tojson | safe }};
+  window.ONOC.conf_locked_owner = {{ owner_name | tojson | safe }};
+  onoc_main_modules.push('config.table');
+</script>
+
+{% endblock %}
