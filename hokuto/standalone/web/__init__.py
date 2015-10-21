@@ -112,7 +112,6 @@ def init(config):
         handler = logging.FileHandler(logfile)
         loglevel = parse_logger_level(app.config.get('LOGGER_LEVEL'))
         if loglevel is not None:
-            print 'setting log level ' + str(loglevel)
             app.logger.setLevel(loglevel)
             handler.level = loglevel
         app.logger.addHandler(handler)
