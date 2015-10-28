@@ -111,6 +111,21 @@ vendors:
 shinken-install: vendors sudoer
 	@cd vendor/shinken && python setup.py install clean
 
+# Nanto
+nanto: nanto-dependencies nanto-r-libs
+	cp -r nanto/src /usr/local/nanto
+	cp nanto/etc/nanto.cfg /etc/nanto.cfg
+
+nanto-dependencies:
+	# Checks that R is installed
+	@command -v Rscript 2>&1 || { echo >&2 "Missing R"; exit 1; }
+
+nanto-libs: sudoer
+	# Installs R and Python libraries required by the default forecasting scripts
+	Rscript -e "install.packages('forecast', repos='http://cran.r-project.org')"
+	Rscript -e "install.packages('changepoint', repos='http://cran.r-project.org')"
+	pip install singledispatch rpy2 python-daemon
+	
 #libs
 watcher: sudoer
 	@echo -n "\033]0;Installing hokuto-watcher scripts.\007"
