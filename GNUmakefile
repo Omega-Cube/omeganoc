@@ -112,7 +112,7 @@ shinken-install: vendors sudoer
 	@cd vendor/shinken && python setup.py install clean
 
 # Nanto
-nanto: nanto-dependencies nanto-r-libs
+nanto: nanto-dependencies nanto-libs
 	cp -r nanto/src /usr/local/nanto
 	cp nanto/etc/nanto.cfg /etc/nanto.cfg
 
