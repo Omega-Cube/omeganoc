@@ -143,6 +143,14 @@ def _getconf():
         app.logger.debug('PyNag is loading configuration at: ' + shinken_file)
         conf = config(shinken_file) # Let pynag find out the configuration path by itself
         conf.parse()
+        
+        # TODO : Improve error handling
+        # We remove the errors from the configuration as the error type 
+        # (ParserError) cannot be deserialized by the cache system
+        for e in conf.errors:
+            app.logger.warning('PyNag error: ' + str(e))
+        conf.errors = []
+        
         cache.set('nag_conf', conf, timeout=CACHE_TIMEOUT) #TODO : Configure cache timeout
     return conf
 
