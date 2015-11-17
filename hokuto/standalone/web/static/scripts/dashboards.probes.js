@@ -170,6 +170,47 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
         },
 
         /**
+         * Extract the host from a probe name
+         * @param {string} probe - The full probe name
+         * @return the host name
+         */
+        extractHost: function(probe){
+            var metrics = this.metrics;
+            var split = probe.split('.');
+            while(split.length){
+                split.pop();
+                var host = split.join('.');
+                for(var i in metrics){
+                    if(host === i){
+                        return host;
+                    }
+                }
+            }
+        },
+
+        /**
+         * Extract the service from a probe name
+         * @param {string} probe - The full probe name
+         * @return the service description name
+         */
+        extractService: function(probe){
+            var metrics = this.metrics;
+            var split = probe.split('.');
+            while(split.length){
+                split.pop();
+                var service = split.join('.');
+                for(var host in metrics){
+                    for(var i in metrics[host]){
+                        if(service === host + '.' +i){
+                            return i;
+                        }
+                    }
+                }
+            }
+        },
+
+
+        /**
          * Fetch all available metrics from the server
          * @param {Function} callback
          */
