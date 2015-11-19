@@ -13,7 +13,7 @@ Dependencies:
 
 *For Debian/Ubuntu*
 
-    apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev
+    apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev
 *For CentOS 7+*
 
     # install setup tools
@@ -57,9 +57,7 @@ Edit broker-master.cfg to add hokuto, graphite and livestatus modules
     #/etc/shinken/brokers/broker-master.cfg
     modules    graphite, livestatus, hokuto
     
-Also, if you have a lot of livestatus logs data (this typically happens when 
-you monitoring system has been running for a long time, or with a high amount
-of monitored elements), you can get better performance by configuring 
+Also, if you have a lot of livestatus logs data, you can get better performance by enabling aggressive_sql mode 
 logstore-sqlite:
 
      #/etc/shinken/modules/logstore_sqlite.cfg
@@ -73,43 +71,13 @@ You'll need to initialize the sla database with existing archived logs
 
     make import-sla
 
-STEP 4 : CONFIGURE
-------------------
-
-To change settings update /etc/shinken/modules/hokuto.cfg :
-```
-## Module:      Omega Noc
-## Loaded by:   Broker
-# The Omeganoc web interface and integrated web server
-define module {
-    module_name     hokuto
-    module_type     hokuto
-    host            0.0.0.0;                       The hostname to listen on. 0.0.0.0 to listen from any sources.
-    port            5000;                          The port of the webserver.
-    dbpath          /var/lib/shinken/hokuto.db;    The path the OmegaNoc's database file
-    secretkey       Enter the secretest key here!; The server's secret key used for signing cookies
-    logging         /var/log/shinken/hokuto.log;   Log file
-    threaded        1  ;                           Set to 0 if you want to manage all requests on the same thread. Slower but may
-                       ;                           improve stability in some cases
-}
-```
-Don't forget to restart the service after any change:
-
-      /etc/init.d/shinken restart
-
-You can then access hokuto from http://<host>:<port>
-
-STEP 5 : START OR RESTART DAEMONS
+STEP 4 : START OR RESTART DAEMONS
 ---------------------------------
 
 In order to work correctly Omega Noc needs three daemons running:
 * Shinken, to collect monitoring data
 * Carbon, to receive and store metrics measured by Shinken
 * Hokuto, the website that will show all that data to you
-
-So after install, Shinken needs to be (re)started:
-
-    service shinken [re]start
     
 You'll also need to start Carbon:
 
@@ -124,7 +92,22 @@ Run this from the installation directory to install it:
     cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
     update-rc.d hokuto defaults
 
+So after install, Shinken and hokuto needs to be (re)started:
 
+    /etc/init.d/shinken [re]start
+    /etc/init.d/hokuto [re]start
+
+
+STEP 5 : CONFIGURE
+------------------
+
+To change settings like adress and port for the omeganoc interface edit /etc/shinken/hokuto.cfg .
+
+Don't forget to restart the service after any change:
+
+      /etc/init.d/hokuto restart
+
+You now should be able to load the interface from the adress and port defined in hokuto.cfg : http://<host>:<port>
 
 STEP 6 : SET ADMIN USER PASSWORD
 --------------------------------
@@ -164,20 +147,20 @@ Another reason can be that carbon daemon is not running, which prevents Shinken
 from sending data to the metrics database (see *STEP 5: Start or restart daemons*
 in the installation procedure above).
 
-* SLA tools don't use events prior to my installation
+* SLA tools don't take events prior to my installation into acount
 
 Retrieving SLA informations from livestatus was very ressource consuming, so 
-Omega Noc uses its own database to process such data.
+OmegaNoc use his own database to process such data.
 
 To import all data from archived livestatus logs (collected if you use Shinken
-without Omega Noc before), you can import your existing data into Omega Noc's 
-database. To do this, run that command from the installation folder:
+without OmegaNoc before), you can import your existing data by running
+that command from the installation folder:
 
     make import-sla
      
-* Dashboard's widget are very slow to load / the spinner thingy in them never goes away
+* Dashboard's widget are very slow to load / the spinner never goe away
 
-This may be cause by performance problems in Livestatus. Try enabling 
+This may be caused by performance issues with Livestatus. Try enabling 
 use_aggressive_sql in logstore-sqlite's configuration.
 
 * I just installed shinken but the default configuration seems wrong / I do not any data
@@ -189,5 +172,5 @@ usually find with with the name nagios-plugins in package managers).
 Don't forget to check if carbon is currently running!
 
 Last thing is that the hosts and services won't show up in the dashboards until
-Shinken sent their first batch of data. This can take a few minutes, make sure
-Shinken is running and wait 5 or 10 minutes for the data to flow in! 
+Shinken have sent their first batch of data. This can take a few minutes, make sure
+Shinken is running and wait 5 or 10 minutes for the data to flow in. 
