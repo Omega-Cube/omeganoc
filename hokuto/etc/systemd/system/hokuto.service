@@ -1,0 +1,10 @@
+[Unit]
+Description=Hokuto daemon
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/hokuto.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

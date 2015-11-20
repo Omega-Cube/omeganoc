@@ -81,13 +81,17 @@ To start Carbon:
 Note: It can be helpful to add an init script into your boot loader, as 
 forgetting to start carbon is a common mistake.
 
-If you are on Debian, you can use the provided startup script for Hokuto.
+If you are on Debian or probably any init based OS, you can use the provided startup script for Hokuto.
 Run this from the installation directory to install it:
 
     cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
     update-rc.d hokuto defaults
 
-So after install, Shinken and hokuto needs to be (re)started:
+Or if your are using systemd you can try our script :
+   cp hokuto/etc/systemd/system/hokuto.service /etc/systemd/system/hokuto.service
+   systelctk enable hokuto.service
+
+After install, Shinken, Carbon and hokuto needs to be (re)started:
 
     /etc/init.d/shinken [re]start
 If you have installed the debian start script :
@@ -100,7 +104,7 @@ You also have to restart the cron daemon :
     #or
     crond restart
 
-Also after the first launch some files have the wrong permissions, you have to run some chown to made hokuto fully functional:
+After the first launch some files have the wrong permissions, you have to run some chown to made hokuto fully functional:
      chown shinken:shinken /var/lib/shinken/hokuto.db
      chown -R shinken:shinken /tmp/shinken
 

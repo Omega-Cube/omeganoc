@@ -42,9 +42,9 @@ install: dependencies sudoer graphite shinken on-reader hokuto clean
 shinken-init: sudoer shinken-install
 	shinken --init
 
-debian: debian-prebuild shinken-init install debian-clean
+debian: debian-prebuild shinken-init install init-daemons
 
-ubuntu: ubuntu-prebuild shinken-init install debian-clean
+ubuntu: ubuntu-prebuild shinken-init install init-daemons
 
 ubuntu-prebuild:
 	@echo "Installing ubunt build"
@@ -56,19 +56,22 @@ debian-prebuild: sudoer
 	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev
 	useradd --user-group shinken
 
-debian-clean: sudoer
+init-daemons: sudoer
 	@echo "Cleaning debian specific files"
 	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
-	python /opt/graphite/bin/carbon-cache.py start
+	cp vendor/scripts/carbon-cache-init.sh /etc/init.d/carbon-cache
 	cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
+	update-rc.d carbon-cache defaults
 	update-rc.d hokuto defaults
+	update-rc.d shinken defaults
+	/etc/init.d/carbon-cache start
 	/etc/init.d/shinken start
 	/etc/init.d/hokuto start
 	/etc/init.d/cron restart
 	chown shinken:shinken /var/lib/shinken/hokuto.db
 	chown -R shinken:shinken /tmp/shinken
 
-centos: centos-prebuild shinken-init install centos-clean
+centos: centos-prebuild shinken-init install systemd-daemons
 
 centos-prebuild: sudoer
 	@echo "Installing centos build"
@@ -78,12 +81,23 @@ centos-prebuild: sudoer
 	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
 	useradd --user-group shinken
 
-centos-clean:
+systemd-daemons:
 	@echo "Cleaning centos install"
 	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
-	python /opt/graphite/bin/carbon-cache.py start
-	/etc/init.d/shinken start
-	/usr/local/hokuto/gunicorn_launcher.py
+	cp vendor/scripts/carbon-cache-systemd.service /etc/systemd/system/carbon-cache.service
+	cp vendor/scripts/carbon-cache-systemd.sh /usr/bin/carbon-cache.sh
+	chmod +x /usr/bin/carbon-cache.sh
+	cp vendor/scripts/shinken-systemd.service /etc/systemd/system/shinken.service
+	cp hokuto/etc/systemd/system/hokuto.service /etc/systemd/system/hokuto.service
+	cp hokuto/etc/systemd/system/hokuto.sh /usr/bin/hokuto.sh
+	chmod +x /usr/bin/hokuto.sh
+	systemctl enable carbon-cache.service
+	systemctl enable shinken.service
+	systemctl enable hokuto.service
+	systemctl start hokuto.service
+	systemctl start carbon-cache.service
+	systemctl start shinken.service
+
 	systemctl restart crond
 	chown shinken:shinken /var/lib/shinken/hokuto.db
 	chown -R shinken:shinken /tmp/shinken
