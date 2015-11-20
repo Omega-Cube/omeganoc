@@ -23,7 +23,7 @@ WHOAMI = $(shell whoami)
 .IGNORE: check-dependencies graphite-prebuild shinken-prebuild
 
 #prevent up-to-date return
-.PHONY: mock help default install clean test
+.PHONY: mock help default install debian centos clean test
 
 default: help
 
@@ -38,6 +38,56 @@ sudoer:
 	fi
 
 install: dependencies sudoer graphite shinken on-reader hokuto clean
+
+shinken-init: sudoer shinken-install
+	shinken --init
+
+debian: debian-prebuild shinken-init install debian-clean
+
+ubuntu: ubuntu-prebuild shinken-init install debian-clean
+
+ubuntu-prebuild:
+	@echo "Installing ubunt build"
+	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt11-dev libgnutls-dev
+	useradd --user-group shinken
+
+debian-prebuild: sudoer
+	@echo "Installing debian build"
+	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev
+	useradd --user-group shinken
+
+debian-clean: sudoer
+	@echo "Cleaning debian specific files"
+	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
+	python /opt/graphite/bin/carbon-cache.py start
+	cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
+	update-rc.d hokuto defaults
+	/etc/init.d/shinken start
+	/etc/init.d/hokuto start
+	/etc/init.d/cron restart
+	chown shinken:shinken /var/lib/shinken/hokuto.db
+	chown -R shinken:shinken /tmp/shinken
+
+centos: centos-prebuild shinken-init install centos-clean
+
+centos-prebuild: sudoer
+	@echo "Installing centos build"
+	curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
+	curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
+	easy_install pip
+	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
+	useradd --user-group shinken
+
+centos-clean:
+	@echo "Cleaning centos install"
+	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
+	python /opt/graphite/bin/carbon-cache.py start
+	/etc/init.d/shinken start
+	/usr/local/hokuto/gunicorn_launcher.py
+	systemctl restart crond
+	chown shinken:shinken /var/lib/shinken/hokuto.db
+	chown -R shinken:shinken /tmp/shinken
+
 
 dependencies: shinken-dependencies graphite-dependencies
 
@@ -74,6 +124,7 @@ shinken-install-dependencies: sudoer
 	pip install pycurl 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' carbon 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'graphite-query==0.11.3' 'python-mk-livestatus==0.4' 'gunicorn==19.3.0' pynag chardet
 
 shinken-install-plugins: sudoer vendors
+	@mkdir -p /var/lib/shinken/share && chown shinken:shinken /var/lib/shinken/share
 	-useradd --user-group graphite
 	@echo -n "\033]0;Installing shinken - livestatus plugin\007"
 	shinken install --local vendor/livestatus
@@ -118,7 +169,6 @@ watcher: sudoer
 	@cp hokuto/shinken_watcher.py /usr/local/bin/
 	@cp hokuto/mplock.py /usr/local/bin/
 	@grep -q 'shinken_watcher.py' /etc/crontab || echo '*  *    * * *   root    /usr/local/bin/shinken_watcher.py' >> /etc/crontab
-	@/etc/init.d/cron restart
 
 on-reader: sudoer
 	@echo -n "\033]0;Installing livestatus libraries.\007"

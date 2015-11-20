@@ -11,18 +11,13 @@ Dependencies:
 * python-devel
 * libxml2-devel
 
-*For Debian/Ubuntu*
+There is currently an installer for three OS : CentOS (7+), Debian and Ubuntu.
+If you are runing one of this OS you can directly run one of this command :
 
-    apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev
-*For CentOS 7+*
-
-    # install setup tools
-    curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
-    # install pip
-    curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
-    easy_install pip
-
-    yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
+   make debian
+   make ubuntu
+   make centos
+And move directly to STEP 5.
 
 STEP 0 : FETCH GIT SUBMODULES
 -----------------------------
@@ -71,22 +66,22 @@ You'll need to initialize the sla database with existing archived logs
 
     make import-sla
 
-STEP 4 : START OR RESTART DAEMONS
+STEP 4 : START/RESTART DAEMONS
 ---------------------------------
 
 In order to work correctly Omega Noc needs three daemons running:
-* Shinken, to collect monitoring data
-* Carbon, to receive and store metrics measured by Shinken
-* Hokuto, the website that will show all that data to you
+* Shinken, collect metrics and monitoring data
+* Carbon, receive and store metrics returned by Shinken
+* Hokuto, the web interface
     
-You'll also need to start Carbon:
+To start Carbon:
 
     python /opt/graphite/bin/carbon-cache.py start
     
 Note: It can be helpful to add an init script into your boot loader, as 
 forgetting to start carbon is a common mistake.
 
-Also, if you are on Debian, you can use the provided startup script for Hokuto.
+If you are on Debian, you can use the provided startup script for Hokuto.
 Run this from the installation directory to install it:
 
     cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
@@ -95,8 +90,19 @@ Run this from the installation directory to install it:
 So after install, Shinken and hokuto needs to be (re)started:
 
     /etc/init.d/shinken [re]start
+If you have installed the debian start script :
     /etc/init.d/hokuto [re]start
+Eitherway on others distribution you have to launch the gunicorn daemon manually :
+    /usr/local/hokuto/gunicorn_launcher.py
 
+You also have to restart the cron daemon :
+    /etc/init.d/cron restart
+    #or
+    crond restart
+
+Also after the first launch some files have the wrong permissions, you have to run some chown to made hokuto fully functional:
+     chown shinken:shinken /var/lib/shinken/hokuto.db
+     chown -R shinken:shinken /tmp/shinken
 
 STEP 5 : CONFIGURE
 ------------------
