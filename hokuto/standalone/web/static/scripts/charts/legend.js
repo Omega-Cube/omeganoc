@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['d3'],function(d3){
+define(['d3','dashboards.probes'],function(d3,DashboardProbes){
 
     /**
      * Manage basicchart widget's legends
@@ -95,8 +95,8 @@ define(['d3'],function(d3){
      * @param {Object} data - The probe data (name, color, ...)
      */
     Legends.prototype.addLegend = function(data){
-        var host = data.name.split('.')[0];
-        var service = data.name.substr(data.name.indexOf('.') + 1);
+        var host = DashboardProbes.extractHost(data.name);
+        var service = data.name.replace(host + '.','');
         var group = this.getHostGroup(host);
         group.count++;
         var container = group.container.append('g')
@@ -153,7 +153,7 @@ define(['d3'],function(d3){
      */
     Legends.prototype.removeLegend = function(probe){
         var container = this.elements[this._probes[probe]];
-        var host = probe.split('.')[0];
+        var host = DashboardProbes.extractHost(probe);
         var group = this.getHostGroup(host);
         if(container)
             container.remove();

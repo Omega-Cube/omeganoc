@@ -193,11 +193,10 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             if(!title){
                 this.tooltips.toogle(false);
             }else{
-                var split = title.split('.');
-                var host = split.shift();
-                var service = split.shift();
+                var host = DashboardProbes.extractHost(title);
+                var service = DashboardProbes.extractService(title);
                 if(service === '__HOST__') service = "";
-                var probe = split.join('.');
+                var probe = host.concat('.',service);
                 var date = target.getAttribute('data-date');
                 var value = target.getAttribute('data-value');
                 var template = [{
@@ -277,7 +276,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             }
             this.counter = order;
         }
-        
+
         //draw the legend and resize the box
         var setLegend = function(){
             var check = this.legendManager.redraw();
@@ -678,7 +677,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         predict = this.predict.getLastPredictedDate();
         if(predict > x.max) x.max = new Date(predict);
-        
+
         if(this.conf.fromDate)
             x.min = this.conf.fromDate;
         if(this.conf.untilDate)
@@ -1374,7 +1373,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             }
         }
     };
-    
+
     /**
      * Flush containers and redraw the content.
      * @param {Object} data - Probe's data.
@@ -2726,7 +2725,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
         //list used hosts
         for(var p in currentConf.conf.probes){
-            var h = p.split('.')[0];
+            var h = DashboardProbes.extractHost(p);
             if(!hosts[h]) hosts[h] = h;
         }
 
@@ -2761,10 +2760,10 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             var tmp = {};
             for(var h in hosts){
                 for(var p in conf.probes){
-                    var i = p.split('.');
-                    if(i[0] !== h) continue;
-                    i.shift();
-                    tmp[hosts[h].concat('.',i.join('.'))] = conf.probes[p];
+                    var j = DashboardProbes.extractHost(p);
+                    if( j !== h) continue;
+                    var i = p.replace(j,'');
+                    tmp[hosts[h].concat(i)] = conf.probes[p];
                 }
             }
 
@@ -2943,7 +2942,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         var submit = $('<button class="submit" id="add_chart_submit" data-tooltip="Add a new chart to this widget">Add</button>');
         subcontainer.append(subandclose);
         subcontainer.append(submit);
-        
+
         addForm.append(probeSelection);
         addForm.append(probePosition);
         addForm.append(settings);
@@ -2981,8 +2980,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
 
             //TODO: add some tooltips or an enabled/disabled state
             if(!query) return false;
-            
-            var probeList = DashboardProbes.getProbeList(query);
+            //var probeList = DashboardProbes.getProbeList(query);
+            var probeList = [query];
 
             var addCount = 0;
             for(var i in probeList){
@@ -3001,7 +3000,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                     subcontainer.children()[0].remove();
                 }
             }
-            
+
             for(var i in probeList){
                 var name = probeList[i];
                 var order = ++this.counter;
@@ -3068,7 +3067,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             }
             if(!query) return false;
 
-            var probeList = DashboardProbes.getProbeList(query);
+            //var probeList = DashboardProbes.getProbeList(query);
+            var probeList = [query];
             var addCount = 0;
             for(var i in probeList){
                 if(this.probes[name]) continue;
@@ -3377,7 +3377,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                     }
                 }
             }
-            
+
             if(max > tmpMaxScales[s].max) tmpMaxScales[s].max = max;
             if(typeof tmpMaxScales[s].min === 'boolean') tmpMaxScales[s].min = min;
             else if(min < tmpMaxScales[s].min) tmpMaxScales[s].min = min;

@@ -1,0 +1,10 @@
+[Unit]
+Description=Carbon daemon
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/carbon-cache.sh start
+ExecStop=/usr/bin/carbon-cache.sh stop
+
+[Install]
+WantedBy=multi-user.target

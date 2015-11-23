@@ -202,7 +202,7 @@ class EditUserForm(Form):
         [validators.EqualTo('password', message=__('Passwords must match'))])
     is_super_admin = BooleanField(__('Super Administrator'))
     is_disabled = BooleanField(__('Disabled'))
-    shinken_contact = SelectField(__('Contact Shinken'))
+    shinken_contact = SelectField(__('Shinken contact'))
 
     def __init__(self, formvalues):
         super(EditUserForm, self).__init__(formvalues)
