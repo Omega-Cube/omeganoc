@@ -114,7 +114,7 @@ After the first launch some files have the wrong permission settings, you have t
 STEP 5 : CONFIGURE
 ------------------
 
-To change settings, like address and port for omeganoc interface, edit the file /etc/shinken/hokuto.cfg.
+To change settings, like address and port for omeganoc interface, edit the file /etc/hokuto.cfg.
 
 Don't forget to restart the service after any change:
 

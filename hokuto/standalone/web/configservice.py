@@ -183,9 +183,10 @@ def _normalizestrings(data):
     """
     if isinstance(data, str):
         # Non unicode strings : turn to unicode, secure invalid chars
-        #return unicode(data,errors="replace")
         encode = chardet.detect(data)['encoding'];
-        return data.decode(encode)
+        if not encode:
+            encode = 'ascii'
+        return data.decode(str(encode))
     elif isinstance(data, unicode):
         # Already unicode strings : return as-is
         return data
