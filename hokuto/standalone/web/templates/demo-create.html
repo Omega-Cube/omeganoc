@@ -31,12 +31,14 @@
         display: inline-block;
     }
 </style>
+<script src='https://www.google.com/recaptcha/api.js'></script>
 {% endblock %}
 
 {% block content %}
 <div class="presentation">
     <h1 class="title">Getting your Omega NOC ready...</h1>
 
+    {% if verified %}
     <p>We created an account you can use to ckeck out Omega NOC's features without other testers getting in the way.
     Note that this account will be removed after one hour of inactivity, or two jours after its creation.
     But you can always come back with a fresh account!
@@ -57,5 +59,24 @@
     <h2>You're good to go!</h2>
     <p>We have automatically logged you in with this account, but maybe you want to keep these identifiers, just in case!<br /></p>
     <p><a href="{{url_for('index')}}" target="_blank" class="button submit">Open the home page in a new tab</a></p>
+    {% else %}
+    {% if captcha_error %}
+    <p class="errors">Oh no! The captcha validation did not validate... try again?</p>
+    {% endif %}
+    <p>All you have to do is pass this captcha and you'll be good to go!</p>
+    
+    <form method="post">
+        <br/>
+        <div class="g-recaptcha" data-sitekey="6LdOlRETAAAAAJlcYAWsQx9JQPD48OYuFzqwHLrk" data-callback="onCheckCompleted"></div>
+        <br />
+        <input type="submit" value="Continue" id="continue" disabled />
+    </form>
+    
+    <script>
+        function onCheckCompleted() {
+            document.getElementById('continue').removeAttribute('disabled');
+        }
+    </script>
+    {% endif %}
 </div>
 {% endblock %}

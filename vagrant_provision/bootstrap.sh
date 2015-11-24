@@ -15,6 +15,8 @@ aptitude -y -q install openntpd
 chmod u+s /usr/lib/nagios/plugins/check_icmp
 #download-mibs
 
+pip install requests
+
 # Configure ntp
 cp /vagrant/vagrant_provision/ntpd.conf.template /etc/openntpd/ntpd.conf
 

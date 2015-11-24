@@ -19,15 +19,25 @@
 
 """ Utilities related to the demo mode """
 
+import os.path
 from datetime import datetime
 from random import random, choice
 from time import time
 
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, request, abort
 from flask.ext.login import login_user, current_user
 from sqlalchemy.sql import bindparam
 
 from . import app, db
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
+CAPTCHA_CORRECT = 'correct'
+CAPTCHA_INCORRECT = 'incorrect'
+CAPTCHA_ERROR = 'error'
 
 # Accounts will be deleted if they were created more than this amount of seconds ago
 _max_lifetime = 7200 #60*60*2
@@ -35,24 +45,51 @@ _max_lifetime = 7200 #60*60*2
 # Accounts will be deleted if they were not active since this amount of seconds
 _activity_timeout = 1800 #60*30
 
+# The ID of the user the dashboard and graph settings will be copied from
 _reference_user_id = 1
+
+# The name of the shinken contact used for demo users
 _demo_shinken_user = 'drgkill'
+
+# A super secret server token for the captcha generator!
+_captcha_server_token = None
 
 @app.route('/demo-landing')
 def demo_landing():
     """ This page tells the user that he tried to use a feature that is not available in demo mode """
     return render_template('demo-landing.html')
     
-@app.route('/demo-create')
+@app.route('/demo-create', methods=['POST', 'GET'])
 def demo_create():
     """ This page creates a new user account and gives the new login data to the user """
+    if not is_in_demo():
+        app.logger.debug('Someone tried to access the demo user creation page, but the demo mode is disabled!')
+        return abort(404)
+    # Check that the requests lib is available
+    if requests is None:
+        app.logger.error('Someone tried to access the demo user creation page, but the requests lib is not available!')
+        return abort(500)
     # Don't create an account if the user already have one
-    app.logger.debug(current_user)
     if current_user is not None and not current_user.is_anonymous():
         return redirect(url_for('index'))
-    login, passwd, user = create_demo_user()
-    login_user(user)
-    return render_template('demo-create.html', username=login, password=passwd)
+    verified = False
+    captcha_error = False
+    login = ''
+    passwd = ''
+    app.logger.debug('form values: ')
+    # Do we have a captcha result ?
+    if 'g-recaptcha-response' in request.form:
+        usertoken = request.form['g-recaptcha-response']
+        result = _check_captcha_response(usertoken)
+        if result == CAPTCHA_CORRECT:
+            login, passwd, user = create_demo_user()
+            login_user(user)
+            verified = True
+        elif result == CAPTCHA_INCORRECT:
+            captcha_error = True
+        else:
+            return abort(500)
+    return render_template('demo-create.html', username=login, password=passwd, verified=verified, captcha_error=captcha_error)
     
 def is_in_demo():
     """ Returns True if the demo mode is enabled, False otherwise """
@@ -122,7 +159,8 @@ def create_default_graph(userid):
                 'graph_id': row['graph_id'],
                 'key': row['key'],
                 'value': row['value']} for row in db.engine.execute(source)]
-    db.engine.execute(graphTokenTable.insert(), inserts)
+    if len(inserts) > 0:
+        db.engine.execute(graphTokenTable.insert(), inserts)
     
 def create_default_dashboard(userid):
     from dashboard import partsTable, partsConfTable
@@ -145,3 +183,35 @@ def create_default_dashboard(userid):
     #parts (user_id)
     #parts_conf (parts_id)
     pass
+    
+def _get_captcha_server_token():
+    global _captcha_server_token
+    if _captcha_server_token is None:
+        # Load the token from a token file
+        tokenpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'captcha.key')
+        if os.path.isfile(tokenpath):
+            with open(tokenpath, 'r') as f:
+                _captcha_server_token = f.read()
+                return _captcha_server_token
+        _captcha_server_token = ''
+    return _captcha_server_token
+    
+def _check_captcha_response(usertoken):
+    servertoken = _get_captcha_server_token()
+    if not servertoken:
+        app.logger.error('There is no server key available for the captcha system!')
+        return CAPTCHA_ERROR
+    # Check the captcha
+    response = requests.post('https://www.google.com/recaptcha/api/siteverify', data={'secret': servertoken, 'response': usertoken})
+    if response.status_code != 200:
+        app.logger.warning('The captcha verification service returned an error! (status {0}: {1}'.format(response.status_code, r.reason))
+        return CAPTCHA_ERROR
+    rdata = response.json()
+    if rdata['success']:
+        return CAPTCHA_CORRECT
+    errors = app.logger.warning('The captcha verification failed, with error codes ' + ', '.join(rdata['error-codes']))
+    if 'invalid-input-response' in rdata['error-codes'] or 'missing-input-response' in rdata['error-codes']:
+        return CAPTCHA_INCORRECT
+    else:
+        app.logger.warning('The captcha service rejected our secret key (see previous log line)')
+        return CAPTCHA_ERROR
