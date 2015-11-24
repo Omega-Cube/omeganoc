@@ -153,8 +153,6 @@ def create_default_graph(userid):
     global _reference_user_id
     source = graphTokenTable.select()\
                             .where(graphTokenTable.c.user_id == _reference_user_id)
-                            
-    insertQuery = graphTokenTable.insert()
     inserts = [{'user_id': userid,
                 'graph_id': row['graph_id'],
                 'key': row['key'],
