@@ -42,9 +42,9 @@ install: dependencies sudoer graphite shinken on-reader hokuto clean
 shinken-init: sudoer shinken-install
 	shinken --init
 
-debian: debian-prebuild shinken-init install init-daemons
+debian: debian-prebuild shinken-init install nanto init-daemons
 
-ubuntu: ubuntu-prebuild shinken-init install init-daemons
+ubuntu: ubuntu-prebuild shinken-init install nanto init-daemons
 
 ubuntu-prebuild:
 	@echo "Installing ubunt build"
@@ -53,7 +53,7 @@ ubuntu-prebuild:
 
 debian-prebuild: sudoer
 	@echo "Installing debian build"
-	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev
+	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev r-base r-base-dev
 	useradd --user-group shinken
 
 init-daemons: sudoer
@@ -61,11 +61,14 @@ init-daemons: sudoer
 	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
 	cp vendor/scripts/carbon-cache-init.sh /etc/init.d/carbon-cache
 	cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
+	cp nanto/etc/init.d/nanto /etc/init.d/nanto
 	update-rc.d carbon-cache defaults
 	update-rc.d hokuto defaults
+	update-rc.d nanto defaults
 	update-rc.d shinken defaults
 	/etc/init.d/carbon-cache start
 	/etc/init.d/shinken start
+	/etc/init.d/nanto start
 	/etc/init.d/hokuto start
 	/etc/init.d/cron restart
 	chown shinken:shinken /var/lib/shinken/hokuto.db
@@ -78,7 +81,9 @@ centos-prebuild: sudoer
 	curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
 	curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
 	easy_install pip
-	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
+	rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+	yum update
+	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel R
 	useradd --user-group shinken
 
 systemd-daemons:
@@ -91,12 +96,17 @@ systemd-daemons:
 	cp hokuto/etc/systemd/system/hokuto.service /etc/systemd/system/hokuto.service
 	cp hokuto/etc/systemd/system/hokuto.sh /usr/bin/hokuto.sh
 	chmod +x /usr/bin/hokuto.sh
+	cp nanto/etc/systemd/system/nanto.service /etc/systemd/system/nanto.service
+	cp nanto/etc/systemd/system/nanto.sh /usr/bin/nanto.sh
+	chmod +x /usr/bin/nanto.sh
 	systemctl enable carbon-cache.service
 	systemctl enable shinken.service
 	systemctl enable hokuto.service
+	systemctl enable nanto.service
 	systemctl start hokuto.service
 	systemctl start carbon-cache.service
 	systemctl start shinken.service
+	systemctl start nanto.service
 
 	systemctl restart crond
 	chown shinken:shinken /var/lib/shinken/hokuto.db
@@ -182,16 +192,16 @@ nanto: nanto-dependencies nanto-libs
 	cp -r nanto/src /usr/local/nanto
 	cp nanto/etc/nanto.cfg /etc/nanto.cfg
 
+# Checks that R is installed
 nanto-dependencies:
-	# Checks that R is installed
 	@command -v Rscript 2>&1 || { echo >&2 "Missing R"; exit 1; }
 
+# Installs R and Python libraries required by the default forecasting scripts
 nanto-libs: sudoer
-	# Installs R and Python libraries required by the default forecasting scripts
 	Rscript -e "install.packages('forecast', repos='http://cran.r-project.org')"
 	Rscript -e "install.packages('changepoint', repos='http://cran.r-project.org')"
 	pip install singledispatch rpy2 python-daemon
-	
+
 #libs
 watcher: sudoer
 	@echo -n "\033]0;Installing hokuto-watcher scripts.\007"

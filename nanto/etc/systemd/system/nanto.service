@@ -1,0 +1,10 @@
+[Unit]
+Description=Nanto daemon
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/nanto.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
