@@ -37,7 +37,7 @@ from shinken.property import BoolProp, PythonizeError
 from subprocess import call, Popen
 from werkzeug.contrib.cache import SimpleCache
 from user import User
-
+import copy
 import chardet
 
 from . import app, cache
@@ -246,8 +246,10 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
             if not _check_lock():
                 abort(403)
             _set_lock()
+            #TODO : add values from template before validate
+            #TODO : apply the same check for new form
 
-            if form.validate():
+            if _validatefullform(form,target):
                 # Save !
                 _save_existing(conf, target, form, False)
         else: #GET
@@ -398,7 +400,7 @@ def _save_existing(conf, data, form, form_is_comprehensive):
 
         elif _normalizestrings(fdata[i]) != _normalizestrings(attr[i]):
             # Edit
-            currentval = _normalizestrings(fdata[i]).encode('utf-8')
+            currentval = _normalizestrings(fdata[i])
             data[i] = currentval
             did_change = True
 
@@ -408,7 +410,7 @@ def _save_existing(conf, data, form, form_is_comprehensive):
             data[k] = str(v)
             # If we don't remove the field name from the data's template fields, it won't be saved by pynag
             if k in data['meta']['template_fields']:
-                del data['meta']['template_fields'][k]
+                del data['meta']['template_fields'][data['meta']['template_fields'].index(k)]
             did_change = True
 
     if did_change:
@@ -502,6 +504,15 @@ def _addtimeperiodsfield(form,data):
     for d in removeme:
         del data[d]
         del data['meta']['defined_attributes'][d]
+
+def _validatefullform(form,data):
+    """ Validate the form, taking all template fields into acount """
+    tmp = form
+    for field in tmp:
+        # Is the value inherited ?
+        if not field.data and field.name in data['meta']['inherited_attributes']:
+            field.validators.append(validators.Optional());
+    return tmp.validate()
 
 def _annotateform(form, data):
     typedata = getattr(shinken.objects, data['meta']['object_type'].title(), None)
@@ -1257,6 +1268,7 @@ def brokertemplate_details(objid):
 
 # #########################################################################################################
 # Forms
+# TODO: Moveme to an other file
 
 class HostForm(Form):
     #Description
