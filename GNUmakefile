@@ -48,12 +48,14 @@ ubuntu: ubuntu-prebuild shinken-init install nanto init-daemons
 
 ubuntu-prebuild:
 	@echo "Installing ubunt build"
-	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt11-dev libgnutls-dev
+	echo 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/' >> /etc/apt/sources.list
+	apt-get update
+	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt11-dev libgnutls-dev libreadline-dev r-base r-base-dev
 	useradd --user-group shinken
 
 debian-prebuild: sudoer
 	@echo "Installing debian build"
-	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev r-base r-base-dev
+	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev libreadline-dev r-base r-base-dev
 	useradd --user-group shinken
 
 init-daemons: sudoer
@@ -73,17 +75,18 @@ init-daemons: sudoer
 	/etc/init.d/cron restart
 	chown shinken:shinken /var/lib/shinken/hokuto.db
 	chown -R shinken:shinken /tmp/shinken
+	chown shinken:shinken /var/log/shinken/arbiterd.log
 
-centos: centos-prebuild shinken-init install systemd-daemons
+centos: centos-prebuild shinken-init install nanto systemd-daemons
 
 centos-prebuild: sudoer
 	@echo "Installing centos build"
 	curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
 	curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
 	easy_install pip
-	rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+	rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 	yum update
-	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel R
+	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel readline-devel R
 	useradd --user-group shinken
 
 systemd-daemons:
@@ -111,6 +114,7 @@ systemd-daemons:
 	systemctl restart crond
 	chown shinken:shinken /var/lib/shinken/hokuto.db
 	chown -R shinken:shinken /tmp/shinken
+	chown shinken:shinken /var/log/shinken/arbiterd.log
 
 
 dependencies: shinken-dependencies graphite-dependencies
