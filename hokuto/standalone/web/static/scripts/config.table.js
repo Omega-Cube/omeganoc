@@ -268,7 +268,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
                 span.append('<a href="'+url+'" class="button">Edit</a>');
                 span.append('<a href="'+urladv+'" class="button" data-tooltip="For experts only, edit config file directly.">Advanced</a>');
                 li.append(span);
-                li.append('<span class="cell"><a href="'+urldel+'" class="button">Remove</a></span>');
+                li.append('<span class="cell"><a href="'+urldel+'" class="button remove">Remove</a></span>');
             }else{
                 li.append('<span class="cell"><a href="'+url+'" class="button">View</a></span>');
             }

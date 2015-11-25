@@ -84,14 +84,14 @@
     <section>
       <a href="{{ url_for('config_list') }}#{{ type }}" class="button">Back to list</a>
       {% if not is_locked %}
-      <input type="submit" value="Save" />
+      <input type="submit" value="Save" class="apply" />
       {% endif %}
     </section>
     {% block form %}{% endblock %}
     <section>
       <a href="{{ url_for('config_list') }}#{{ type }}" class="button">Back to list</a>
       {% if not is_locked %}
-      <input type="submit" value="Save" />
+      <input type="submit" value="Save" class="apply" />
       {% endif %}
     </section>
   </form>
