@@ -51,12 +51,12 @@ ubuntu-prebuild:
 	echo 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/' >> /etc/apt/sources.list
 	apt-get update
 	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt11-dev libgnutls-dev libreadline-dev r-base r-base-dev
-	useradd --user-group shinken
+	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
 
 debian-prebuild: sudoer
 	@echo "Installing debian build"
 	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev libreadline-dev r-base r-base-dev
-	useradd --user-group shinken
+	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
 
 init-daemons: sudoer
 	@echo "Cleaning debian specific files"
@@ -87,7 +87,7 @@ centos-prebuild: sudoer
 	rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 	yum update
 	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel readline-devel R
-	useradd --user-group shinken
+	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
 
 systemd-daemons:
 	@echo "Cleaning centos install"
