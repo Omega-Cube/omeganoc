@@ -29,8 +29,8 @@ STEP 0 : FETCH GIT SUBMODULES
 
 If you are installing or upgrading from the git repository you'll need to fetch external modules before running any commands.
 
-   git submodules init
-   git submodules update
+     git submodule init
+     git submodule update
 
 STEP 1 : SHINKEN INSTALL
 ------------------------
