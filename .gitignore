@@ -39,3 +39,6 @@ tools/tmp
 
 #tarball
 omeganoc*.tar.gz
+
+# Private files that should not land in Git
+captcha.key

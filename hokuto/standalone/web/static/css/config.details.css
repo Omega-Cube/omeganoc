@@ -1,0 +1,118 @@
+#mainContent {
+    position: relative;
+    overflow: auto;
+    max-height: calc(100% - 56px);
+    padding: 2em;
+}
+
+form > section, form > fieldset {
+    margin: 1em;
+    padding: 1em;
+    border: 1px solid #555;
+    overflow: hidden;
+    tansition: height 0.3s, padding 0.3s;
+    
+}
+
+form > fieldset > legend {
+    padding: 0.2em 0.2em 0.2em 1.2em;
+    cursor: pointer;
+    position: relative;
+    font-size: 18pt;
+    font-weight: bold;
+}
+
+form > fieldset > legend:before {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    z-index: -1;
+    left: 4px;
+    top: 15px;
+    background: url('../images/dragr.png') 0 0 no-repeat;
+    transform: rotate(90deg);
+    transform-origin: 5px 5px;
+    transition: transform 0.5s;
+}
+
+form > fieldset.collapsed {
+    height: 0;
+    padding: 0 1em;
+}
+
+form > fieldset.collapsed > legend:before {
+    transform: rotate(0deg);
+}
+
+form > section > h4 {
+    margin-bottom: 1em;
+}
+
+form > fieldset input, form > fieldset select, form > fieldset .select2-container, form > fieldset textarea {
+    margin: 0.3em;
+    width: 400px;
+}
+
+form > fieldset.expert textarea{
+    width: 100%;
+    height: 400px;
+}
+
+/* For some reason number fields are 12px larger */
+form > fieldset input[type="number"] {
+    width: 60px;
+}
+
+label {
+    display: inline-block;
+    width: 50%;
+    max-width: 20em;
+}
+
+.field-description {
+    color: #AAA;
+    font-style: italic;
+    vertical-align: middle;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}
+
+.errors {
+    padding: 1em;
+    border: 1px solid red;
+    background-color: rgba(255, 0, 0, 0.3);
+    color: white;
+}
+
+.errors ul {
+    padding: 0 0 0 2em;
+}
+
+.errors li {
+    list-style-type: disc;
+}
+
+/* Fix select2 */
+.select2-container {
+    text-shadow: none;
+}
+
+.select2-drop {
+    text-shadow: none;
+}
+
+/* fields */
+.required{
+    font-weight: bold;
+}
+
+.required label:before{
+    color: #FF463E;
+    content:"*";
+    float: left;
+    margin-left: -8px;
+}

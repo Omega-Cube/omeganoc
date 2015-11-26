@@ -1,0 +1,125 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2015 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% extends "config/form_template.html" %}
+
+{% block form %}
+    {% if not data %}
+    <fieldset>
+      <legend>New file</legend>
+      {{ _rf(form.filename) }}
+    </fieldset>
+    {% endif %}
+    
+    <fieldset>
+        <legend>Description</legend>
+        
+        {{ _rf(form.host_name) }}
+        {{ _rf(form.alias) }}
+        {{ _rf(form.display_name) }}
+        {{ _rf(form.address) }}
+        {{ _rf(form.notes) }}
+        {{ _rf(form.notes_url) }}
+        {{ _rf(form.action_url) }}
+        {{ _rf(form.labels) }}
+    </fieldset>
+    <fieldset class="collapsed">
+        <legend>Structure</legend>
+        
+        {{ _rf(form.parents) }}
+        {{ _rf(form.hostgroups) }}
+        {{ _rf(form.realm) }}
+        {{ _rf(form.service_overrides) }}
+        {{ _rf(form.service_excludes) }}
+    </fieldset>
+    <fieldset class="collapsed">
+        <legend>Checking</legend>
+        
+        {{ _rf(form.check_command) }}
+        {{ _rf(form.initial_state) }}
+        {{ _rf(form.max_check_attempts) }}
+        {{ _rf(form.check_interval) }}
+        {{ _rf(form.retry_interval) }}
+        {{ _rf(form.active_checks_enabled) }}
+        {{ _rf(form.passive_checks_enabled) }}
+        {{ _rf(form.check_period) }}
+        {{ _rf(form.maintenance_period) }}
+        {{ _rf(form.obsess_over_host) }}
+        {{ _rf(form.check_freshness) }}
+        {{ _rf(form.freshness_threshold) }}
+        {{ _rf(form.poller_tag) }}
+        {{ _rf(form.resultmodulations) }}
+    </fieldset>
+    <fieldset class="collapsed">
+        <legend>Status management</legend>
+        
+        {{ _rf(form.event_handler_enabled) }}
+        {{ _rf(form.event_handler) }}
+        {{ _rf(form.flap_detection_enabled) }}
+        {{ _rf(form.low_flap_threshold) }}
+        {{ _rf(form.high_flap_threshold) }}
+        {{ _rf(form.flap_detection_options) }}
+        {{ _rf(form.retain_status_information) }}
+        {{ _rf(form.retain_nonstatus_information) }}
+    </fieldset>
+    <fieldset class="collapsed">
+        <legend>Notifications</legend>
+
+        {{ _rf(form.notifications_enabled) }}
+        {{ _rf(form.contacts) }}
+        {{ _rf(form.contact_groups) }}
+        {{ _rf(form.notification_interval) }}
+        {{ _rf(form.first_notification_delay) }}
+        {{ _rf(form.notification_period) }}
+        {{ _rf(form.notification_options) }}
+        {{ _rf(form.escalations) }}
+    </fieldset>
+    <fieldset class="collapsed">
+        <legend>Business rules</legend>
+        
+        {{ _rf(form.business_impact) }}
+        {{ _rf(form.business_impact_modulations) }}
+        {{ _rf(form.business_rule_output_template) }}
+        {{ _rf(form.business_rule_smart_notifications) }}
+        {{ _rf(form.business_rule_downtime_as_ack) }}
+        {{ _rf(form.business_rule_host_notification_options) }}
+        {{ _rf(form.business_rule_service_notification_options) }}
+    </fieldset>
+    <fieldset class="collapsed">
+        <legend>Snapshots</legend>
+        
+        {{_rf(form.snapshot_enabled) }}
+        {{_rf(form.snapshot_command) }}
+        {{_rf(form.snapshot_period) }}
+        {{_rf(form.snapshot_criteria) }}
+        {{_rf(form.snapshot_interval) }}
+    </fieldset>
+    <fieldset class="collapsed">
+        <legend>Misc.</legend>
+        
+        {{ _rf(form.process_perf_data) }}
+        {{ _rf(form.stalking_options) }}
+        {{ _rf(form.trigger_broker_raise_enabled) }}
+        {{ _rf(form.trigger_name) }}
+    </fieldset>
+    <fieldset class="collapsed">
+      <legend>Templates</legend>
+        {{ _rf(form.name) }}
+        {{ _rf(form.use) }}
+        {{ _rf(form.register) }}
+    </fieldset>
+{% endblock %}

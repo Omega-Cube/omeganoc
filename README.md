@@ -11,26 +11,25 @@ Dependencies:
 * python-devel
 * libxml2-devel
 
-*For Debian/Ubuntu*
+There is currently an installer for three OS : CentOS (7+), Debian and Ubuntu.
+If you are runing one of this you can directly run one of this command :
 
-     apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev
-*For CentOS 7+*
+   make debian
+   make ubuntu
+   make centos
 
-     # install setup tools
-     curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
-     # install pip
-     curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
-     easy_install pip
-
-     yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
+This installers have been tested on : Centos 7.0, Debian 8.1 and Ubuntu 14.04.
+And move directly to STEP 5.
+Note: if you are installing from the git repository you still have to do the submodule step (0) before.
 
 STEP 0 : FETCH GIT SUBMODULES
 -----------------------------
 
-If you are installing or upgrading from the git repository you'll need to fetch external modules before running any commands.
+If you are installing or upgrading from the git repository you'll need to fetch
+external modules before running any commands.
 
-   git submodules init
-   git submodules update
+    git submodules init
+    git submodules update
 
 STEP 1 : SHINKEN INSTALL
 ------------------------
@@ -50,11 +49,14 @@ Run the install script with root privileges
 
     cd <omeganoc>/<directory>
     make install
+
 Edit broker-master.cfg to add hokuto, graphite and livestatus modules
 
     #/etc/shinken/brokers/broker-master.cfg
     modules    graphite, livestatus, hokuto
-Also if you have a lot of logs data set use_aggressive_sql to 1 from logstore-sqlite
+
+Also, if you have a lot of livestatus logs data, you can get better performance by enabling aggressive_sql mode
+logstore-sqlite:
 
      #/etc/shinken/modules/logstore_sqlite.cfg
      use_aggressive_sql      1   ; Set to 1 for large installations
@@ -67,98 +69,122 @@ You'll need to initialize the sla database with existing archived logs
 
     make import-sla
 
-STEP 4 : CONFIG
----------------
-
-To change settings update /etc/shinken/modules/hokuto.cfg :
-```
-## Module:      Omega Noc
-## Loaded by:   Broker
-# The Omeganoc web interface and integrated web server
-define module {
-    module_name     hokuto
-    module_type     hokuto
-    host            0.0.0.0;                       The hostname to listen on. 0.0.0.0 to listen from any sources.
-    port            5000;                          The port of the webserver.
-    dbpath          /var/lib/shinken/hokuto.db;    The path the OmegaNoc's database file
-    secretkey       Enter the secretest key here!; The server's secret key used for signing cookies
-    logging         /var/log/shinken/hokuto.log;   Log file
-    threaded        1  ;                           Set to 0 if you want to manage all requests on the same thread. Slower but may
-                       ;                           improve stability in some cases
-}
-```
-Don't forget to restart the service after any change:
-
-      /etc/init.d/shinken restart
-
-You can then access hokuto from http://<host>:<port>
-
-STEP 5 : START OR RESTART DAEMONS
+STEP 4 : START/RESTART DAEMONS
 ---------------------------------
 
-Graphite requiere carbon daemon.
+In order to work correctly Omega Noc needs three daemons running:
+* Shinken, collect metrics and monitoring data
+* Carbon, receive and store metrics returned by Shinken
+* Hokuto, the web interface
+
+To start Carbon:
 
     python /opt/graphite/bin/carbon-cache.py start
-Note: It can be helpfull to add an init script into your boot loader, forgetting to start carbon is a common mistake.
 
-Shinken daemon also need to be (re)started.
+Note: It can be helpful to add an init script into your boot loader, as
+forgetting to start carbon is a common mistake.
 
-    service shinken start|restart
+If you are on Debian or probably any init based OS, you can use the provided startup script for Hokuto.
+Run this from the installation directory to install it:
 
+    cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
+    update-rc.d hokuto defaults
+
+Or if your are using systemd you can try our script :
+   cp hokuto/etc/systemd/system/hokuto.service /etc/systemd/system/hokuto.service
+   systemctl enable hokuto.service
+
+After the install Shinken, Carbon and Hokuto needs to be (re)started:
+
+    /etc/init.d/shinken [re]start
+If you have installed the debian start script :
+    /etc/init.d/hokuto [re]start
+Eitherway on others distribution you have to launch the gunicorn daemon manually :
+    /usr/local/hokuto/gunicorn_launcher.py
+
+You also have to restart the cron daemon :
+    /etc/init.d/cron restart
+    #or
+    crond restart
+
+After the first launch some files have the wrong permission settings, you have to run some chown to made hokuto fully functional:
+     chown shinken:shinken /var/lib/shinken/hokuto.db
+     chown -R shinken:shinken /tmp/shinken
+
+STEP 5 : CONFIGURE
+------------------
+
+To change settings, like address and port for omeganoc interface, edit the file /etc/hokuto.cfg.
+
+Don't forget to restart the service after any change:
+
+      /etc/init.d/hokuto restart
+      #or
+      systemctl restart hokuto.service
+
+You now should be able to load the interface from the address and port defined in hokuto.cfg : http://<host>:<port>
 
 STEP 6 : SET ADMIN USER PASSWORD
 --------------------------------
 
-At this stage you should be able to access omeganoc from http://<host>:<port> (see STEP 4).
-Omeganoc default admin user is :
+At this stage you should be able to access Omega Noc at http://<host>:<port>
+(or whatever address / port you configured in step 4).
+Omega Noc default user credentials are:
 
          username : admin
          password : admin
 
-Don't forget to login and update this user with a more secured password.
+Don't forget to login and change this for a more secure password.
 
 ADDING NEW HOSTS, CONTACTS AND SERVICES
 =======================================
 
-An admin interface to manage hosts/services/contacts and probes is currently under development.
+From the interface go to Manage Omeganoc -> Manage shinken , this tool is still under development but you should be able to define basic host/contact/services from here.
+To prevent any conflict on config file, when someone edit some file he will lock the whole configuration until he decide to apply or cancel his changes.
 
-For now if you need to add or edit hosts, services, contacts and monitoring data see [shinken settings and configuration](https://shinken.readthedocs.org/en/latest/05_thebasics/index.html).
+For more informations about shinken setings see [shinken settings and configuration](https://shinken.readthedocs.org/en/latest/05_thebasics/index.html).
 
 TROUBLESHOOTING
 ===============
 
-*Shinken is (re)starting normaly but I can't reach the webserver
+* I can't see any host/probe
 
-There have been some major change between shinken 2.0.x and shinken 2.2, if you have installed livestatus and shinken manually they may be incompatible (livestatus from shinken.io, which you get when you launch `shinken install livestatus`, don't work with the latest version of shinken).
-* If you are using shinken < 2.2 install livestatus from sources
+By default all users are created with the shinken contact 'None', which
+prevents the user to get information from any host. This is because a user can
+only see the elements that has been assigned to his/her Shinken contact.
 
-  cd </omeganoc/directory> && shinken install --local livestatus
-* If you are using shinken 2.0.x install livestatus from shinken.io
+To fix that problem, edit your profile to use an appropriate shinken contact
+(or ask an admin to do it for you). Shinken contacts are imported from shinken,
+for more information see [Shinken contact configuration](https://shinken.readthedocs.org/en/latest/08_configobjects/contact.html).
 
-  shinken install livestatus
+Another reason can be that carbon daemon is not running, which prevents Shinken
+from sending data to the metrics database (see *STEP 5: Start or restart daemons*
+in the installation procedure above).
 
-*I can't see any host/probe
+* SLA tools don't take events prior to my installation into acount
 
-By default all users are created with the shinken contact 'None' which prevent the user to get information from any host.
-Edit your profile with the proper shinken contact (or ask an admin for it).
-Shinken contact are imported from shinken, for more information see [Shinken contact configuration](https://shinken.readthedocs.org/en/latest/08_configobjects/contact.html).
+Retrieving SLA informations from livestatus was very ressource consuming, so
+OmegaNoc use his own database to process such data.
 
-Another reason can be that carbon daemon is not running, carbon doesn't start on startup by default and need to be launch after each reboot.
-
-*SLA tools don't return data prior to my installation*
-
-Retrieve SLA informations from livestatus was very ressource consuming, so hokuto is using his own database to process such data.
-To import all data from archived livestatus logs run
+To import all data from archived livestatus logs (collected if you use Shinken
+without OmegaNoc before), you can import your existing data by running
+that command from the installation folder:
 
     make import-sla
-From your installation directory.
 
-*Dashboard's widget are very slow to loadup and if I try to reload data from one of theme I get an infinite spinner
+* Dashboard's widget are very slow to load / the spinner never goe away
 
-Enable use_aggressive_sql from logstore-sqlite's configuration.
+This may be caused by performance issues with Livestatus. Try enabling
+use_aggressive_sql in logstore-sqlite's configuration.
 
-*I just installed shinken but exemple config seems not working (showing file not exist warnings)
+* I just installed shinken but the default configuration seems wrong / I do not any data
 
-Shinken is given with a prebuild config which monitor localhost (don't forget to give correct shinken contact to your user), anyway you'll need nagios-plugins to made theme work.
-Don't forget to check if carbon is currently running.
-Also hosts will not show up on host selection until they have some datas so you may need to wait few minutes.
+Shinken is provided with a prebuild config which monitors localhost. If you
+want to use it, you'll have to install the Nagios standard plugins (you can
+usually find with with the name nagios-plugins in package managers).
+
+Don't forget to check if carbon is currently running!
+
+Last thing is that the hosts and services won't show up in the dashboards until
+Shinken have sent their first batch of data. This can take a few minutes, make sure
+Shinken is running and wait 5 or 10 minutes for the data to flow in.

@@ -15,6 +15,8 @@ aptitude -y -q install openntpd
 chmod u+s /usr/lib/nagios/plugins/check_icmp
 #download-mibs
 
+pip install requests
+
 # Configure ntp
 cp /vagrant/vagrant_provision/ntpd.conf.template /etc/openntpd/ntpd.conf
 
@@ -48,9 +50,15 @@ cp /vagrant/vagrant_provision/utils.pm.template /var/lib/shinken/libexec/utils.p
 rsync -avlp /vagrant/vagrant_provision/shinken_config/ /etc/shinken/
 
 # Launch the installer
-# We do not use the "install" target as it will  install the on-reader lib by copying the files
-# Instead we'll create links to directly manipulate the files during development
-make install
+# We do not use the "install" target because we we to create symlinks to the development files
+# instead of copies to facilitate development.
+make graphite shinken on-reader clean
+
+# Create symbolic links for Hokuto
+ln -s /vagrant/hokuto/standalone /usr/local/hokuto
+ln -s /vagrant/hokuto/etc/hokuto.cfg /etc/hokuto.cfg
+ln -s /vagrant/hokuto/etc/init.d/hokuto /etc/init.d/hokuto
+update-rc.d hokuto defaults
 
 # Auto start the carbon daemon on launch
 cp /vagrant/vagrant_provision/carbon.init.template /etc/init.d/carbon
@@ -68,13 +76,10 @@ update-rc.d carbon defaults
 #ln -s /vagrant/lib/on_reader/on_reader /home/vagrant/.local/lib/python2.7/site-packages/on_reader
 #chown -R vagrant:vagrant /home/vagrant/.local
 
-# Create links so that the shinken module is in the right place
-#ln -s /vagrant/hokuto/module /var/lib/shinken/modules/hokuto
-#ln -s /vagrant/hokuto/etc/modules/hokuto.cfg /etc/shinken/modules/hokuto.cfg
-
 #
 # Start things up
 #/etc/init.d/carbon start
 service shinken restart
 service snmpd restart
 service openntpd restart
+service hokuto start

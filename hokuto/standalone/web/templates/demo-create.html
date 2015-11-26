@@ -1,0 +1,82 @@
+{#
+ # This file is part of Omega Noc
+ # Copyright Omega Noc (C) 2015 Omega Cube and contributors
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU Affero General Public License as
+ # published by the Free Software Foundation, either version 3 of the
+ # License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU Affero General Public License for more details.
+ #
+ # You should have received a copy of the GNU Affero General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #}
+{% extends "layout.html" %}
+
+{% block head %}
+<link rel="Stylesheet" type="text/css" href="{{url_for('static',filename='css/main.css')}}" />
+<style>
+    .submit {
+        background-color: #019875;
+        background-image: none;
+        text-shadow: none;
+        border: none;
+        border-radius: 0.5em;
+        padding: 3px 10px;
+        line-height: 22px;
+        display: inline-block;
+    }
+</style>
+<script src='https://www.google.com/recaptcha/api.js'></script>
+{% endblock %}
+
+{% block content %}
+<div class="presentation">
+    <h1 class="title">Getting your Omega NOC ready...</h1>
+
+    {% if verified %}
+    <p>We created an account you can use to ckeck out Omega NOC's features without other testers getting in the way.
+    Note that this account will be removed after one hour of inactivity, or two jours after its creation.
+    But you can always come back with a fresh account!
+    </p>
+
+    <h2>Your demo account</h2>
+    <div class="formlayout">
+        <div>
+            <label for="username">Username</label>
+            <input id="username" value="{{ username }}" readonly/>
+        </div>
+        <div>
+            <label for="password">Password</label>
+            <input id="password" value="{{ password }}" readonly/>
+        </div>
+    </div>
+    
+    <h2>You're good to go!</h2>
+    <p>We have automatically logged you in with this account, but maybe you want to keep these identifiers, just in case!<br /></p>
+    <p><a href="{{url_for('index')}}" target="_blank" class="button submit">Open the home page in a new tab</a></p>
+    {% else %}
+    {% if captcha_error %}
+    <p class="errors">Oh no! The captcha validation did not validate... try again?</p>
+    {% endif %}
+    <p>All you have to do is pass this captcha and you'll be good to go!</p>
+    
+    <form method="post">
+        <br/>
+        <div class="g-recaptcha" data-sitekey="6LdOlRETAAAAAJlcYAWsQx9JQPD48OYuFzqwHLrk" data-callback="onCheckCompleted"></div>
+        <br />
+        <input type="submit" value="Continue" id="continue" disabled />
+    </form>
+    
+    <script>
+        function onCheckCompleted() {
+            document.getElementById('continue').removeAttribute('disabled');
+        }
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Shinken daemon
+
+[Service]
+Type=oneshot
+ExecStart=/etc/init.d/shinken start
+ExecStop=/etc/init.d/shinken stop
+
+[Install]
+WantedBy=multi-user.target
