@@ -47,7 +47,7 @@ cp /vagrant/vagrant_provision/utils.pm.template /var/lib/shinken/libexec/utils.p
 # Configure Shinken
 #cp /vagrant/vagrant_provision/broker-master.cfg.template /etc/shinken/brokers/broker-master.cfg
 #cp /vagrant/vagrant_provision/livestatus.cfg.template /etc/shinken/modules/livestatus.cfg
-rsync -avlp /vagrant/vagrant_provision/shinken/ /etc/shinken/
+rsync -avlp /vagrant/vagrant_provision/shinken_config/ /etc/shinken/
 
 # Launch the installer
 # We do not use the "install" target because we we to create symlinks to the development files
