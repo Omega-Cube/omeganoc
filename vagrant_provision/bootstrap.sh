@@ -52,13 +52,19 @@ rsync -avlp /vagrant/vagrant_provision/shinken/ /etc/shinken/
 # Launch the installer
 # We do not use the "install" target because we we to create symlinks to the development files
 # instead of copies to facilitate development.
-make graphite shinken on-reader clean
+make graphite shinken on-reader nanto-libs clean
 
 # Create symbolic links for Hokuto
 ln -s /vagrant/hokuto/standalone /usr/local/hokuto
 ln -s /vagrant/hokuto/etc/hokuto.cfg /etc/hokuto.cfg
 ln -s /vagrant/hokuto/etc/init.d/hokuto /etc/init.d/hokuto
 update-rc.d hokuto defaults
+
+# Create symbolic links for Nanto
+ln -s /vagrant/nanto/src /usr/local/nanto
+cp /vagrant/nanto/etc/nanto.cfg /etc/nanto.cfg
+ln -s /vagrant/nanto/etc/init.d/nanto /etc/init.d/nanto
+update-rc.d nanto defaults
 
 # Auto start the carbon daemon on launch
 cp /vagrant/vagrant_provision/carbon.init.template /etc/init.d/carbon
@@ -83,3 +89,4 @@ service shinken restart
 service snmpd restart
 service openntpd restart
 service hokuto start
+service nanto start

@@ -214,3 +214,19 @@ p.intro {
     color: #E63C3E;
     font-weight: bold;
 }
+
+/* buttons */
+.apply{
+    color: #fff;
+    background-color: #019875;
+}
+
+a.remove{
+    color: #fff;
+    background-color: #E63C3E;
+    text-decoration: none;
+}
+
+.apply:hover, .remove:hover{
+    text-decoration: underline;
+}

@@ -1,0 +1,7 @@
+ONoc-Predict is the mathematical prediction module for OmegaNoc
+
+Dependencies :
+- The R core package (version 3 or higher !)
+- The rpy2 python package
+- The R "forecast" package
+- The R "changepoint" package

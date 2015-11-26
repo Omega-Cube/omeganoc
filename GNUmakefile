@@ -42,44 +42,52 @@ install: dependencies sudoer graphite shinken on-reader hokuto clean
 shinken-init: sudoer shinken-install
 	shinken --init
 
-debian: debian-prebuild shinken-init install init-daemons
+debian: debian-prebuild shinken-init install nanto init-daemons
 
-ubuntu: ubuntu-prebuild shinken-init install init-daemons
+ubuntu: ubuntu-prebuild shinken-init install nanto init-daemons
 
 ubuntu-prebuild:
 	@echo "Installing ubunt build"
-	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt11-dev libgnutls-dev
-	useradd --user-group shinken
+	echo 'deb http://cran.rstudio.com/bin/linux/ubuntu trusty/' >> /etc/apt/sources.list
+	apt-get update
+	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt11-dev libgnutls-dev libreadline-dev r-base r-base-dev
+	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
 
 debian-prebuild: sudoer
 	@echo "Installing debian build"
-	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev
-	useradd --user-group shinken
+	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev libreadline-dev r-base r-base-dev
+	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
 
 init-daemons: sudoer
 	@echo "Cleaning debian specific files"
 	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
 	cp vendor/scripts/carbon-cache-init.sh /etc/init.d/carbon-cache
 	cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
+	cp nanto/etc/init.d/nanto /etc/init.d/nanto
 	update-rc.d carbon-cache defaults
 	update-rc.d hokuto defaults
+	update-rc.d nanto defaults
 	update-rc.d shinken defaults
 	/etc/init.d/carbon-cache start
 	/etc/init.d/shinken start
+	/etc/init.d/nanto start
 	/etc/init.d/hokuto start
 	/etc/init.d/cron restart
 	chown shinken:shinken /var/lib/shinken/hokuto.db
 	chown -R shinken:shinken /tmp/shinken
+	chown shinken:shinken /var/log/shinken/arbiterd.log
 
-centos: centos-prebuild shinken-init install systemd-daemons
+centos: centos-prebuild shinken-init install nanto systemd-daemons
 
 centos-prebuild: sudoer
 	@echo "Installing centos build"
 	curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
 	curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
 	easy_install pip
-	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel
-	useradd --user-group shinken
+	rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+	yum update
+	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel readline-devel R
+	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
 
 systemd-daemons:
 	@echo "Cleaning centos install"
@@ -91,16 +99,22 @@ systemd-daemons:
 	cp hokuto/etc/systemd/system/hokuto.service /etc/systemd/system/hokuto.service
 	cp hokuto/etc/systemd/system/hokuto.sh /usr/bin/hokuto.sh
 	chmod +x /usr/bin/hokuto.sh
+	cp nanto/etc/systemd/system/nanto.service /etc/systemd/system/nanto.service
+	cp nanto/etc/systemd/system/nanto.sh /usr/bin/nanto.sh
+	chmod +x /usr/bin/nanto.sh
 	systemctl enable carbon-cache.service
 	systemctl enable shinken.service
 	systemctl enable hokuto.service
+	systemctl enable nanto.service
 	systemctl start hokuto.service
 	systemctl start carbon-cache.service
 	systemctl start shinken.service
+	systemctl start nanto.service
 
 	systemctl restart crond
 	chown shinken:shinken /var/lib/shinken/hokuto.db
 	chown -R shinken:shinken /tmp/shinken
+	chown shinken:shinken /var/log/shinken/arbiterd.log
 
 
 dependencies: shinken-dependencies graphite-dependencies
@@ -176,6 +190,21 @@ vendors:
 
 shinken-install: vendors sudoer
 	@cd vendor/shinken && python setup.py install clean
+
+# Nanto
+nanto: nanto-dependencies nanto-libs
+	cp -r nanto/src /usr/local/nanto
+	cp nanto/etc/nanto.cfg /etc/nanto.cfg
+
+# Checks that R is installed
+nanto-dependencies:
+	@command -v Rscript 2>&1 || { echo >&2 "Missing R"; exit 1; }
+
+# Installs R and Python libraries required by the default forecasting scripts
+nanto-libs: sudoer
+	Rscript -e "install.packages('forecast', repos='http://cran.r-project.org')"
+	Rscript -e "install.packages('changepoint', repos='http://cran.r-project.org')"
+	pip install singledispatch rpy2 python-daemon
 
 #libs
 watcher: sudoer
