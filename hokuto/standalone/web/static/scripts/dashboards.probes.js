@@ -30,6 +30,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
         probes: {},
         metrics: false,
         worker: new Worker("static/scripts/workers/probes.worker.js"),
+        probesDoneLoadingCallbacks: [],
 
         /**
          * Add a new probe, will not fetch his data to allow the use of only one request with this.fetchAllData()
@@ -209,6 +210,22 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
             }
         },
 
+        /**
+         * Queues a callback that will be run as soon as possible,
+         * but only after the probes manager received the probes data
+         */
+        onMetricsReady: function(callback) {
+            if(this.probesDoneLoadingCallbacks === null) {
+                // Metrics already loaded;
+                // call the callback immediately
+                callback(this.metrics);
+            }
+            else {
+                // Metrics not available yet
+                // Put the callback in a waiting line
+                this.probesDoneLoadingCallbacks.push(callback);
+            }
+        },
 
         /**
          * Fetch all available metrics from the server
@@ -219,6 +236,12 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
                 this.metrics = response;
                 if(callback && typeof callback === 'function')
                     callback(this.metrics);
+                if(this.probesDoneLoadingCallbacks !== null) {
+                    for(var i in this.probesDoneLoadingCallbacks) {
+                        this.probesDoneLoadingCallbacks(response);
+                    }
+                    this.probesDoneLoadingCallbacks = null;
+                }
             }.bind(this));
         },
 
