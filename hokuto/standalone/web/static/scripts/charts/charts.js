@@ -261,8 +261,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 var order = 0;
                 for(var p in this.probes){
                     order++;
-                    //GRUICKKKKKK
-                    this.probes[p].stacked = Boolean(eval(this.probes[p].stacked));
+                    //this.probes[p].stacked = Boolean(eval(this.probes[p].stacked)); // Really ???
+                    this.probes[p].stacked = this.probes[p].stacked === '1' ||
+                                             this.probes[p].stacked === 'true' ||
+                                             this.probes[p].stacked === 1 ||
+                                             this.probes[p].stacked === true;
     
                     if(!this.probes[p]['order']) this.probes[p]['order'] = order;
                     if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
