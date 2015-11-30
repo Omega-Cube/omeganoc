@@ -61,6 +61,7 @@ debian-prebuild: sudoer
 init-daemons: sudoer
 	@echo "Cleaning debian specific files"
 	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
+	sed -i "s/modules.*/modules	named-pipe, PickleRetentionArbiter/g" /etc/shinken/arbiters/arbiter-master.cfg
 	cp vendor/scripts/carbon-cache-init.sh /etc/init.d/carbon-cache
 	cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
 	cp nanto/etc/init.d/nanto /etc/init.d/nanto
@@ -92,6 +93,7 @@ centos-prebuild: sudoer
 systemd-daemons:
 	@echo "Cleaning centos install"
 	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
+	sed -i "s/modules.*/modules	named-pipe, PickleRetentionArbiter/g" /etc/shinken/arbiters/arbiter-master.cfg
 	cp vendor/scripts/carbon-cache-systemd.service /etc/systemd/system/carbon-cache.service
 	cp vendor/scripts/carbon-cache-systemd.sh /usr/bin/carbon-cache.sh
 	chmod +x /usr/bin/carbon-cache.sh
@@ -162,6 +164,10 @@ shinken-install-plugins: sudoer vendors
 	shinken install --local vendor/logstore-sqlite
 	@echo -n "\033]0;Installing shinken - hokuto plugin\007"
 	shinken install --local hokuto
+	@echo -n "\033]0;Installing shinken - named pipe\007"
+	shinken install named-pipe
+	@echo -n "\033]0;Installing shinken - pickle retention\007"
+	shinken install pickle-retention-file-generic
 
 shinken-plugins-config: sudoer watcher
 	@echo -n "\033]0;Initialize livestatus config files\007"
@@ -175,6 +181,7 @@ shinken-plugins-config: sudoer watcher
 shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins shinken-plugins-config
 	@echo Omeganoc have been succefully installed
 	@echo Add "'modules graphite, livestatus, hokuto'" to your broker-master.cfg file
+	@echo Add modules named-pipe, PickleRetentionArbiter to your arbiter-master.cfg file
 	@echo Add modules logstore-sqlite to livestatus.cfg.
 
 # Hokuto - Copy hokuto files to their install directory
