@@ -247,176 +247,166 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             this.updateBoxSize();
         }.bind(this);
 
-        this.probes = options.conf.probes;
-        //toogle the spinner if probes
-        if(Object.keys(this.probes).length){
-            this.toogleSpinner(this.container.main);
-
-            for(var s in options.conf.scales)
-                this.addScale(s,options.conf.scales[s]);
-
-            var order = 0;
-            for(var p in this.probes){
-                order++;
-                //GRUICKKKKKK
-                this.probes[p].stacked = Boolean(eval(this.probes[p].stacked));
-
-                if(!this.probes[p]['order']) this.probes[p]['order'] = order;
-                if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
-
-                DashboardProbes.addProbe(p);
-                this.legends[p] = this.legendManager.addLegend({
-                    'name': p,
-                    'color': this.probes[p].color
-                });
-
-                this.legendManager.getProbeContainer(p).on('click',function(){
-                    this.context.moveOrderToTop(this.probe);
-                }.bind({"context": this, "probe": p}));
-            }
-            this.counter = order;
-        }
-
-        //draw the legend and resize the box
-        var setLegend = function(){
-            var check = this.legendManager.redraw();
-            if(!check){
-                setTimeout(setLegend.bind(this),1000);
-                return;
-            }
-            this.updateBoxSize();
-        }
-        setLegend.call(this);
-
-        //add listeners to the probe worker to update this chart on updates
-        DashboardProbes.worker.on('cursor',this.showCursor.bind(this));
-        DashboardProbes.worker.on('fetch', function(data){
-            this.container.main.parent().find('.refresh').attr('class','refresh');
-            DashboardProbes.worker.postMessage([6,{
-                'probes': this.probes,
-                'start': this.conf.fromDate,
-                'end': this.conf.untilDate,
-                'mode': this.conf.mode
-            },this.id]);
-        }.bind(this), this.id);
-        DashboardProbes.worker.on('predict',function(data){
-            this.predict.set(data);
-            //update scale domains
-            for(var p in data){
-                if(!data[p]) continue;
-                var range = [false,false];
-                for(var d in data[p].values){
-                    if(data[p].values[d][1] > range[1]) range[1] = data[p].values[d][1];
-                    if(typeof range[0] === 'boolean' || range[0] > data[p].values[d][3]) range[0] = data[p].values[d][3];
+        // For the rest of the initialization we need the probes data
+        // to be ready; the callback here will be called when it is
+        DashboardProbes.onMetricsReady(function(metrics) {
+            this.probes = options.conf.probes;
+            //toogle the spinner if probes
+            if(Object.keys(this.probes).length){
+                this.toogleSpinner(this.container.main);
+    
+                for(var s in options.conf.scales)
+                    this.addScale(s,options.conf.scales[s]);
+    
+                var order = 0;
+                for(var p in this.probes){
+                    order++;
+                    //this.probes[p].stacked = Boolean(eval(this.probes[p].stacked)); // Really ???
+                    this.probes[p].stacked = this.probes[p].stacked === '1' ||
+                                             this.probes[p].stacked === 'true' ||
+                                             this.probes[p].stacked === 1 ||
+                                             this.probes[p].stacked === true;
+    
+                    if(!this.probes[p]['order']) this.probes[p]['order'] = order;
+                    if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
+    
+                    DashboardProbes.addProbe(p);
+                    this.legends[p] = this.legendManager.addLegend({ 
+                        'name': p,
+                        'color': this.probes[p].color
+                    });
+    
+                    this.legendManager.getProbeContainer(p).on('click',function(){
+                        this.context.moveOrderToTop(this.probe);
+                    }.bind({"context": this, "probe": p}));
                 }
-                this.scales[this.probes[p].scale].updateDomain({'range': range});
+                this.counter = order;
             }
-            this.redraw();
-        }.bind(this),this.id);
-        DashboardProbes.worker.on('get', function(data){
-            var stacked = {};
-            var probes = this.probes;
-            this.buildScale();
-            this.setDomain(data);
-            for(var p in data){
-                if(!data[p] || !probes[p]) continue;
-                if(probes[p].stacked){
-                    stacked[probes[p].scale] = stacked[probes[p].scale] || {};
-                    stacked[probes[p].scale][p] = probes[p];
+    
+            //draw the legend and resize the box
+            var setLegend = function(){
+                var check = this.legendManager.redraw();
+                if(!check){
+                    setTimeout(setLegend.bind(this),1000);
+                    return;
                 }
+                this.updateBoxSize();
             }
-            for(var s in stacked){
-                stacked[s]._stackedData = DashboardProbes.getStackedData(stacked[s],data);
-                if(stacked[s]._stackedData.length)
-                    this.scales[s].updateDomain(stacked[s]._stackedData[stacked[s]._stackedData.length - 1]);
-            }
-
-            this.redraw(data);
-            this.buildAxis();
-            if(this.conf.brushstart && this.conf.brushend){
-                var context = this.axis.x2.domain();
-                setTimeout(function(){
-                    this.container.brush.extent([this.conf.brushstart, this.conf.brushend]);
-                    this.container.context.select('.x.brush').call(this.container.brush);
-                    this.axis.x.domain([this.conf.brushstart, this.conf.brushend]);
-
-                    DashboardProbes.worker.postMessage([8,{
-                        'probes': this.probes,
-                        'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                        'focusTimeline': [this.conf.brushstart.getTime(),this.conf.brushend.getTime()],
-                        'mode': this.conf.mode
-                    },this.id])
-                }.bind(this),500);
-            }
-        }.bind(this), this.id);
-        DashboardProbes.worker.on('aggregate',function(data){
-            var stacked = {};
-            for(var p in data){
-                var probe = this.probes[p];
-                var scale = this.scales[probe.scale];
-                if(probe.stacked){
-                    stacked[probe.scale] = stacked[probe.scale] || {};
-                    stacked[probe.scale][p] = data[p];
-                }
-            }
-            //TODO: Add a method to generate stacked arrays to prevent DRY.
-            for(var s in stacked){
-                var stackedData = DashboardProbes.getStackedData(stacked[s],data);
-                if(stackedData.length){
-                    var i = 0;
-                    for(var p in stacked[s]){
-                        data[p].values = stackedData[i];
-                        //if(this.content[p])
-                        //    this.content[p].redraw(stackedData[i]);
-                        i++;
-                    }
-                }
-            }
-            //prevent any glitch if the worker havn't returned all probes for any reason
-            for(var p in this.currentData){
-                if(!data[p]){
-                    data[p] = this.currentData[p];
-                }
-            }
-            this.currentData = data;
-            if(this.needAutoScale) this.autoScale();
-            else{
-                this.soft_redraw();
-            }
-        }.bind(this),this.id);
-
-        //main timeline events
-        $('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
-            var domain = this.axis.x2.domain();
-            this.conf.brushstart = start;
-            this.conf.brushend = end;
-            if(start >= domain[0] && end <= domain[1]){
-                this.axis.x.domain([start,end]);
-
-                for(var c in this.content)
-                    this.content[c].redraw();
-                this.drawLogs();
-                this.container.focus.select(".x.axis").call(this.axis.xAxis);
-                this.drawGrid();
-                this.container.brush.extent([start,end]);
-                this.container.context.call(this.container.brush);
-
-                //check if require to update scale range
-                DashboardProbes.worker.postMessage([8,{
+            setLegend.call(this);
+    
+            //add listeners to the probe worker to update this chart on updates
+            DashboardProbes.worker.on('cursor',this.showCursor.bind(this));
+            DashboardProbes.worker.on('fetch', function(data){
+                this.container.main.parent().find('.refresh').attr('class','refresh');
+                DashboardProbes.worker.postMessage([6,{
                     'probes': this.probes,
-                    'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
-                    'focusTimeline': [start.getTime(),end.getTime()],
+                    'start': this.conf.fromDate,
+                    'end': this.conf.untilDate,
                     'mode': this.conf.mode
                 },this.id]);
-            }else{
-                if(start < domain[0])
-                    this.updateFromDate(start.getTime());
-                if(end > domain[1])
-                    this.updateUntilDate(end.getTime());
-                domain = this.axis.x2.domain();
-                if(start != domain[0] || end != domain[1]){
+            }.bind(this), this.id);
+            DashboardProbes.worker.on('predict',function(data){
+                this.predict.set(data);
+                //update scale domains
+                for(var p in data){
+                    if(!data[p]) continue;
+                    var range = [false,false];
+                    for(var d in data[p].values){
+                        if(data[p].values[d][1] > range[1]) range[1] = data[p].values[d][1];
+                        if(typeof range[0] === 'boolean' || range[0] > data[p].values[d][3]) range[0] = data[p].values[d][3];
+                    }
+                    this.scales[this.probes[p].scale].updateDomain({'range': range});
+                }
+                this.redraw();
+            }.bind(this),this.id);
+            DashboardProbes.worker.on('get', function(data){
+                var stacked = {};
+                var probes = this.probes;
+                this.buildScale();
+                this.setDomain(data);
+                for(var p in data){
+                    if(!data[p] || !probes[p]) continue;
+                    if(probes[p].stacked){
+                        stacked[probes[p].scale] = stacked[probes[p].scale] || {};
+                        stacked[probes[p].scale][p] = probes[p];
+                    }
+                }
+                for(var s in stacked){
+                    stacked[s]._stackedData = DashboardProbes.getStackedData(stacked[s],data);
+                    if(stacked[s]._stackedData.length)
+                        this.scales[s].updateDomain(stacked[s]._stackedData[stacked[s]._stackedData.length - 1]);
+                }
+    
+                this.redraw(data);
+                this.buildAxis();
+                if(this.conf.brushstart && this.conf.brushend){
+                    var context = this.axis.x2.domain();
+                    setTimeout(function(){
+                        this.container.brush.extent([this.conf.brushstart, this.conf.brushend]);
+                        this.container.context.select('.x.brush').call(this.container.brush);
+                        this.axis.x.domain([this.conf.brushstart, this.conf.brushend]);
+    
+                        DashboardProbes.worker.postMessage([8,{
+                            'probes': this.probes,
+                            'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                            'focusTimeline': [this.conf.brushstart.getTime(),this.conf.brushend.getTime()],
+                            'mode': this.conf.mode
+                        },this.id])
+                    }.bind(this),500);
+                }
+            }.bind(this), this.id);
+            DashboardProbes.worker.on('aggregate',function(data){
+                var stacked = {};
+                for(var p in data){
+                    var probe = this.probes[p];
+                    var scale = this.scales[probe.scale];
+                    if(probe.stacked){
+                        stacked[probe.scale] = stacked[probe.scale] || {};
+                        stacked[probe.scale][p] = data[p];
+                    }
+                }
+                //TODO: Add a method to generate stacked arrays to prevent DRY.
+                for(var s in stacked){
+                    var stackedData = DashboardProbes.getStackedData(stacked[s],data);
+                    if(stackedData.length){
+                        var i = 0;
+                        for(var p in stacked[s]){
+                            data[p].values = stackedData[i];
+                            //if(this.content[p])
+                            //    this.content[p].redraw(stackedData[i]);
+                            i++;
+                        }
+                    }
+                }
+                //prevent any glitch if the worker havn't returned all probes for any reason
+                for(var p in this.currentData){
+                    if(!data[p]){
+                        data[p] = this.currentData[p];
+                    }
+                }
+                this.currentData = data;
+                if(this.needAutoScale) this.autoScale();
+                else{
+                    this.soft_redraw();
+                }
+            }.bind(this),this.id);
+    
+            //main timeline events
+            $('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
+                var domain = this.axis.x2.domain();
+                this.conf.brushstart = start;
+                this.conf.brushend = end;
+                if(start >= domain[0] && end <= domain[1]){
+                    this.axis.x.domain([start,end]);
+    
+                    for(var c in this.content)
+                        this.content[c].redraw();
+                    this.drawLogs();
+                    this.container.focus.select(".x.axis").call(this.axis.xAxis);
+                    this.drawGrid();
                     this.container.brush.extent([start,end]);
                     this.container.context.call(this.container.brush);
+    
                     //check if require to update scale range
                     DashboardProbes.worker.postMessage([8,{
                         'probes': this.probes,
@@ -424,29 +414,46 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                         'focusTimeline': [start.getTime(),end.getTime()],
                         'mode': this.conf.mode
                     },this.id]);
+                }else{
+                    if(start < domain[0])
+                        this.updateFromDate(start.getTime());
+                    if(end > domain[1])
+                        this.updateUntilDate(end.getTime());
+                    domain = this.axis.x2.domain();
+                    if(start != domain[0] || end != domain[1]){
+                        this.container.brush.extent([start,end]);
+                        this.container.context.call(this.container.brush);
+                        //check if require to update scale range
+                        DashboardProbes.worker.postMessage([8,{
+                            'probes': this.probes,
+                            'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
+                            'focusTimeline': [start.getTime(),end.getTime()],
+                            'mode': this.conf.mode
+                        },this.id]);
+                    }
                 }
-            }
+            }.bind(this));
+    
+            //logs return event
+            DashboardProbes.worker.on('logs',function(data){
+                //flush cache
+                this._stackedLogsCache = {};
+    
+                this.logs = this.logs || {};
+                for(var host in data){
+                    this.logs[host] = this.logs[host] || {};
+                    for(var service in data[host])
+                        this.logs[host][service] = data[host][service];
+                }
+                this.drawLogs();
+            }.bind(this),this.id);
+    
+            //TODO: maybe a global call should be done after all widget init instead?
+            DashboardProbes.worker.postMessage([3,{
+                'probes': Object.keys(this.probes),
+                'start': (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
+            },this.id]);
         }.bind(this));
-
-        //logs return event
-        DashboardProbes.worker.on('logs',function(data){
-            //flush cache
-            this._stackedLogsCache = {};
-
-            this.logs = this.logs || {};
-            for(var host in data){
-                this.logs[host] = this.logs[host] || {};
-                for(var service in data[host])
-                    this.logs[host][service] = data[host][service];
-            }
-            this.drawLogs();
-        }.bind(this),this.id);
-
-        //TODO: maybe a global call should be done after all widget init instead?
-        DashboardProbes.worker.postMessage([3,{
-            'probes': Object.keys(this.probes),
-            'start': (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
-        },this.id]);
     };
 
     /**
