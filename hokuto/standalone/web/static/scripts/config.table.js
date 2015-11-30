@@ -345,7 +345,8 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
                 if(!response.success){
                     alert(response.error);
                 }else{
-                    alert("Shinken will restart with the new configuration in less than one minute.");
+                    if(response.service_changed) alert("Shinken will restart with the new configuration in less than one minute.\nBeware that you have changed some services names, if you don't want to lose their data you have to move theme manually from /opt/graphite/storage/whisper.");
+                    else alert("Shinken will restart with the new configuration in less than one minute.");
                 }
             }).error(function(response){
                 console.log(response);
