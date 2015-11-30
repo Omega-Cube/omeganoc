@@ -216,7 +216,7 @@ nanto-libs: sudoer
 #libs
 watcher: sudoer
 	@echo -n "\033]0;Installing hokuto-watcher scripts.\007"
-	@echo -n "Installing cron routine and restarting cron service...\n"
+	@echo -n "Installing watcher and cron routine...\n"
 	@cp hokuto/shinken_watcher.py /usr/local/bin/
 	@cp hokuto/mplock.py /usr/local/bin/
 	@grep -q 'shinken_watcher.py' /etc/crontab || echo '*  *    * * *   root    /usr/local/bin/shinken_watcher.py' >> /etc/crontab

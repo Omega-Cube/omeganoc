@@ -119,8 +119,6 @@ def get_service_formated_logs(host,service):
     if host not in permissions['hosts']:
         return "User %s is not allowed to get informations from %s"%(shinken_contact,host),403
 
-    from shinken.log import logger
-
     query = livestatus.livestatus.log._query
     start = request.args.get('start') if request.args.get('start') != 'false' else time.time() - 30 * 24 * 3600
     end = request.args.get('end') if request.args.get('end') != 'false' else time.time()

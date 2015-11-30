@@ -18,7 +18,7 @@
 #
 # Build a new tarball with minified ressources.
 
-VERSION="v0.90"
+VERSION="v0.93"
 BUILDNAME="omeganoc_"$VERSION
 
 echo Building $BUILDNAME archive...;
