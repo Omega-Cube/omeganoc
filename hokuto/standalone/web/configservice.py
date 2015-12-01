@@ -19,13 +19,15 @@
 
 """ Contains pages and web services used to manipulate shinken configuration files """
 
+import copy
 import os
 import os.path
+import re
 import shutil
+from subprocess import call, Popen
 
-from pynag.Parsers import config
 import pynag.Model
-
+from pynag.Parsers import config
 from flask import jsonify, render_template, abort, request, redirect
 from flask.ext.login import login_required, current_user
 from wtforms import Form, TextField, SelectField, SelectMultipleField, TextAreaField, SelectFieldBase, validators
@@ -35,15 +37,11 @@ from shinken.property import none_object
 import shinken.objects
 from shinken.objects.config import Config
 from shinken.property import BoolProp, PythonizeError
-from subprocess import call, Popen
-from werkzeug.contrib.cache import SimpleCache
-from user import User
-import copy
 import chardet
 
 from . import app, cache
+from user import User
 
-import re
 
 _typekeys = {
     'host': 'host_name',
