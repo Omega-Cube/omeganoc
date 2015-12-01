@@ -41,7 +41,7 @@ import chardet
 
 from . import app, cache
 from user import User
-
+from demo import is_in_demo, create_demo_response, create_demo_redirect
 
 _typekeys = {
     'host': 'host_name',
@@ -103,6 +103,8 @@ def is_lock_owner():
 def _set_lock():
     ''' Set the lock '''
     if(not _check_lock()):
+        return False
+    if is_in_demo():
         return False
     if(os.path.isfile(LOCK_FILE)):
         return True
@@ -217,6 +219,8 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
             if not _check_lock():
                 abort(403)
             if form.validate():
+                if is_in_demo():
+                    return create_demo_redirect()
                 # Save !
                 _set_lock()
                 _save_new(form, objtype)
@@ -252,6 +256,8 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
             #TODO : apply the same check for new form
 
             if _validatefullform(form,target):
+                if is_in_demo():
+                    return create_demo_redirect()
                 # Save !
                 _set_lock()
                 _save_existing(conf, target, form, False)
@@ -644,6 +650,8 @@ def lockConf():
         abort(403)
     if not _checkConf():
         abort(403)
+    if is_in_demo():
+        return create_demo_redirect()
     success = _set_lock()
     return jsonify({'success': success})
 
@@ -736,9 +744,10 @@ def delete_conf(typeid,objid):
     """ Delete a configuration file """
     if not current_user.is_super_admin:
         abort(403)
-    
     if not _check_lock():
         abort(403)
+    if is_in_demo():
+        return create_demo_redirect()
     _set_lock()
     is_template = False
 
@@ -803,6 +812,8 @@ def expert_mode(typeid,objid):
     if request.method == 'POST':
         if not _check_lock():
             abort(403)
+        if is_in_demo():
+            return create_demo_redirect()
         _set_lock()
         f = open(filename,'w')
         fdata = {k.name:k.data for k in form}
