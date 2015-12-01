@@ -128,6 +128,10 @@ def _release_lock():
     return False
 
 def _getconf():
+    import traceback
+    app.logger.debug('calling _getConf from:')
+    app.logger.debug(traceback.format_stack())
+
     conf = cache.get('nag_conf')
     if conf is None:
         # No conf in cache; load it
@@ -748,7 +752,7 @@ def delete_conf(typeid,objid):
     else:
         primkey = _typekeys[typeid]
 
-    targettype = getattr(pynag.Model,typeid.capitalize(),False)
+    targettype = getattr(pynag.Model,typeid.capitalize() + 's',False)
     if targettype:
         args = {}
         args[primkey] = objid
@@ -1315,19 +1319,19 @@ class HostForm(Form):
     parents = SelectMultipleField(
         'Parents',
         [validators.Optional()],
-        choices=_listobjects_choices('host'),
+        choices=None, # Initialized in __init__
         description='This directive is used to define a list of short names of "parent" hosts for this particular host. Parent hosts are typically routers, switches, firewalls, etc. that lie between the monitoring host and a remote hosts.'
     )
     hostgroups = SelectMultipleField(
         'Host groups',
         [validators.Optional()],
-        choices=_listobjects_choices('hostgroup'),
+        choices=None,
         description='This directive is used to identify the short name(s) of the hostgroup(s) that the host belongs to.'
     )
     realm = SelectField(
         'Realm',
         [validators.Optional()],
-        choices=_listobjects_choices('realm', True),
+        choices=None,
         description='This variable is used to define the realm where the host will be put. By putting the host in a realm, it will be manage by one of the scheduler of this realm.'
     )
     service_overrides = TextField(
@@ -1338,7 +1342,7 @@ class HostForm(Form):
     service_excludes = SelectMultipleField(
         'Poller tag',
         [validators.Optional()],
-        choices=_listobjects_choices('service', False, 'service_description'),
+        choices=None,
         description='This variable may be used to exclude a service from a host. It addresses the situations where a set of serices is inherited from a pack or attached from a hostgroup, and an identified host should NOT have one (or more, comma separated) services defined.'
     )
 
@@ -1346,7 +1350,7 @@ class HostForm(Form):
     check_command = SelectField(
         'Check command',
         [validators.Optional()],
-        choices=_listobjects_choices('command', True),
+        choices=None,
         description='This directive is used to specify the short name of the command that should be used to check if the host is up or down. Typically, this command would try and ping the host to see if it is "alive". The command must return a status of OK (0) or Shinken will assume the host is down. If you leave this argument blank, the host will not be actively checked. Thus, Shinken will likely always assume the host is up (it may show up as being in a "PENDING" state in the web interface). This is useful if you are monitoring printers or other devices that are frequently turned off. The maximum amount of time that the notification command can run is controlled by the host_check_timeout option.'
     )
     initial_state = SelectField(
@@ -1385,13 +1389,13 @@ class HostForm(Form):
     check_period = SelectField(
         'Check period',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='This directive is used to specify the short name of the time period during which active checks of this host can be made.'
     )
     maintenance_period = SelectField(
         'Maintenance period',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='Shinken-specific variable to specify a recurring downtime period. This works like a scheduled downtime, so unlike a check_period with exclusions, checks will still be made (no "blackout" times).'
     )
     obsess_over_host = SelectField(
@@ -1419,14 +1423,14 @@ class HostForm(Form):
     resultmodulations = SelectMultipleField(
         'Result modulations',
         [validators.Optional()],
-        choices=_listobjects_choices('resultmodulation'),
+        choices=None,
         description='This variable is used to link with resultmodulations objects. It will allow such modulation to apply, like change a warning in critical for this host.'
     )
 
     #Status management
     event_handler = SelectField(
         'Event handler',
-        choices=_listobjects_choices('command', True),
+        choices=None,
         description='This directive is used to specify the short name of the command that should be run whenever a change in the state of the host is detected (i.e. whenever it goes down or recovers). Read the documentation on event handlers for a more detailed explanation of how to write scripts for handling events. The maximum amount of time that the event handler command can run is controlled by the event_handler_timeout option.'
     )
     event_handler_enabled = SelectField(
@@ -1479,12 +1483,12 @@ class HostForm(Form):
     )
     contacts = SelectMultipleField(
         'Contacts',
-        choices=_listobjects_choices('contact'),
+        choices=None,
         description='This is a list of the short names of the contacts that should be notified whenever there are problems (or recoveries) with this host.'
     )
     contact_groups = SelectMultipleField(
         'Contact groups',
-        choices=_listobjects_choices('contactgroup'),
+        choices=None,
         description='This is a list of the short names of the contact groups that should be notified whenever there are problems (or recoveries) with this host.'
     )
     notification_interval = IntegerField(
@@ -1500,7 +1504,7 @@ class HostForm(Form):
     notification_period = SelectField(
         'Notification period',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='This directive is used to specify the short name of the time period during which notifications of events for this host can be sent out to contacts. If a host goes down, becomes unreachable, or recoveries during a time which is not covered by the time period, no notifications will be sent out.'
     )
     notification_options = SelectMultipleField(
@@ -1512,7 +1516,7 @@ class HostForm(Form):
     escalations = SelectMultipleField(
         'Escalations',
         [validators.Optional()],
-        choices=_listobjects_choices('escalation'),
+        choices=None,
         description='This variable is used to link with escalations objects. It will allow such escalations rules to appy.'
     )
 
@@ -1525,7 +1529,7 @@ class HostForm(Form):
     business_impact_modulations = SelectMultipleField(
         'Business impact modulations',
         [validators.Optional()],
-        choices=_listobjects_choices('businessimpactmodulation'),
+        choices=None,
         description='This variable is used to link with business_impact_modulations objects. It will allow such modulation to apply (for example if the host is a payd server, it will be important only in a specific timeperiod: near the payd day).'
     )
     business_rule_output_template = TextField(
@@ -1567,13 +1571,13 @@ class HostForm(Form):
     snapshot_command = SelectField(
         'Snapshot command',
         [validators.Optional()],
-        choices=_listobjects_choices('command', True),
+        choices=None,
         description='Command to launch when a snapshot launch occurs'
     )
     snapshot_period = SelectField(
         'Snapshot period',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='Timeperiod when the snapshot call is allowed'
     )
     snapshot_criteria = SelectMultipleField(
@@ -1622,13 +1626,34 @@ class HostForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('hosttemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(HostForm, self).__init__(*args, **kwargs)
+        self.parents.choices = _listobjects_choices('host')
+        self.hostgroups.choices = _listobjects_choices('hostgroup')
+        self.realm.choices = _listobjects_choices('realm', True)
+        self.service_excludes.choices = _listobjects_choices('service', False, 'service_description')
+        self.check_command.choices = _listobjects_choices('command', True)
+        self.check_period.choices = _listobjects_choices('timeperiod', True)
+        self.maintenance_period.choices = _listobjects_choices('timeperiod', True)
+        self.resultmodulations.choices = _listobjects_choices('resultmodulation')
+        self.event_handler.choices = _listobjects_choices('command', True)
+        self.contacts.choices = _listobjects_choices('contact')
+        self.contact_groups.choices = _listobjects_choices('contactgroup')
+        self.notification_period.choices = _listobjects_choices('timeperiod', True)
+        self.escalations.choices = _listobjects_choices('escalation')
+        self.business_impact_modulations.choices = _listobjects_choices('businessimpactmodulation')
+        self.snapshot_command.choices = _listobjects_choices('command', True)
+        self.snapshot_period.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('hosttemplate')
+        
     
 class HostGroupForm(Form):
     # Description
@@ -1660,19 +1685,19 @@ class HostGroupForm(Form):
     members = SelectMultipleField(
         'Members',
         [validators.Optional()],
-        choices=_listobjects_choices('host'),
+        choices=None,
         description='This is a list of the short names of hosts that should be included in this group.This directive may be used as an alternative to (or in addition to) the hostgroups directive in host definitions.'
     )
     hostgroup_members = SelectMultipleField(
         'Host groups',
         [validators.Optional()],
-        choices=_listobjects_choices('hostgroup'),
+        choices=None,
         description='This optional directive can be used to include hosts from other "sub" host groups in this host group.'
     )
     realm = SelectField(
         'Realm',
         [validators.Optional()],
-        choices=_listobjects_choices('realm', True),
+        choices=None,
         description='This directive is used to define in which realm all hosts of this hostgroup will be put into. If the host are already tagged by a realm (and not the same), the value taken into account will the the one of the host (and a warning will be raised). If no realm is defined, the default one will be take.'
     )
     # Templates
@@ -1684,13 +1709,20 @@ class HostGroupForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('hostgrouptemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(HostGroupForm, self).__init__(*args, **kwargs)
+        self.members.choices = _listobjects_choices('host')
+        self.hostgroup_members.choices = _listobjects_choices('hostgroup')
+        self.realm.choices = _listobjects_choices('realm', True)
+        self.use.choices = _listobjects_choices('hostgrouptemplate')
 
 class ServiceForm(Form):
     #Description
@@ -1727,7 +1759,7 @@ class ServiceForm(Form):
     # Structure
     host_name = SelectMultipleField(
         'Host',
-        choices=_listobjects_choices('host')
+        choices=None
     )
     # We cannot use the classic SelectMUltipleField for this field, because of the expression syntax available on this field that may get in the way
     hostgroup_name = TextField(
@@ -1743,20 +1775,20 @@ class ServiceForm(Form):
     servicegroups = SelectMultipleField(
         'Service groups',
         [validators.Optional()],
-        choices=_listobjects_choices('servicegroup'),
+        choices=None,
         description='This directive is used to identify the short name(s) of the servicegroup(s) that the service belongs to. Multiple servicegroups should be separated by commas. This directive may be used as an alternative to using the members directive in servicegroup definitions.'
     )
     service_dependencies = SelectMultipleField(
         'Service dependencies',
         [validators.Optional()],
-        choices=_listobjects_choices('service'),
+        choices=None,
         description='TODO advanced mode only?'
     )
 
     # Checking
     check_command = SelectField(
         'Check command',
-        choices=_listobjects_choices('command', True),
+        choices=None,
         description='This directive is used to specify the short name of the command that Shinken will run in order to check the status of the service. The maximum amount of time that the service check command can run is controlled by the service_check_timeout option. There is also a command with the reserved name "bp_rule". It is defined internally and has a special meaning. Unlike other commands it mustn\'t be registered in a command definition. It\'s purpose is not to execute a plugin but to represent a logical operation on the statuses of other services.'
     )
     initial_state = SelectField(
@@ -1794,13 +1826,13 @@ class ServiceForm(Form):
     )
     check_period = SelectField(
         'Check period',
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='This directive is used to specify the short name of the time period during which active checks of this service can be made.'
     )
     maintenance_period = SelectField(
         'Maintenance period',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='Shinken-specific variable to specify a recurring downtime period. This works like a scheduled downtime, so unlike a check_period with exclusions, checks will still be made (no "blackout" times).'
     )
     is_volatile = SelectField(
@@ -1834,7 +1866,7 @@ class ServiceForm(Form):
     event_handler = SelectField(
         'Event handler',
         [validators.Optional()],
-        choices=_listobjects_choices('command', True),
+        choices=None,
         description='This directive is used to specify the short name of the command that should be run whenever a change in the state of the service is detected (i.e. whenever it goes down or recovers).'
     )
     event_handler_enabled = SelectField(
@@ -1887,12 +1919,12 @@ class ServiceForm(Form):
     )
     contacts = SelectMultipleField(
         'Contacts',
-        choices=_listobjects_choices('contact'),
+        choices=None,
         description='This is a list of the short names of the contacts that should be notified whenever there are problems (or recoveries) with this service. Multiple contacts should be separated by commas. Useful if you want notifications to go to just a few people and don\'t want to configure contact groups. You must specify at least one contact or contact group in each service definition.'
     )
     contact_groups = SelectMultipleField(
         'Contact groups',
-        choices=_listobjects_choices('contactgroup'),
+        choices=None,
         description='This is a list of the short names of the contact groups that should be notified whenever there are problems (or recoveries) with this service. You must specify at least one contact or contact group in each service definition.'
     )
     notification_interval = IntegerField(
@@ -1908,7 +1940,7 @@ class ServiceForm(Form):
     notification_period = SelectField(
         'Notification period',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='This directive is used to specify the short name of the time period during which notifications of events for this service can be sent out to contacts. No service notifications will be sent out during times which is not covered by the time period.'
     )
     notification_options = SelectMultipleField(
@@ -1963,13 +1995,13 @@ class ServiceForm(Form):
     snapshot_command = SelectField(
         'Snapshot command',
         [validators.Optional()],
-        choices=_listobjects_choices('command', True),
+        choices=None,
         description='Command to launch when a snapshot launch occurs.'
     )
     snapshot_period = SelectField(
         'Snapshot period',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='Timeperiod when the snapshot call is allowed.'
     )
     snapshot_criteria = SelectMultipleField(
@@ -2023,13 +2055,29 @@ class ServiceForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('servicetemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(ServiceForm, self).__init__(*args, **kwargs)
+        self.host_name.choices = _listobjects_choices('host')
+        self.servicegroups.choices = _listobjects_choices('servicegroup')
+        self.service_dependencies.choices = _listobjects_choices('service')
+        self.check_command.choices = _listobjects_choices('command', True)
+        self.check_period.choices = _listobjects_choices('timeperiod', True)
+        self.maintenance_period.choices = _listobjects_choices('timeperiod', True)
+        self.event_handler.choices = _listobjects_choices('command', True)
+        self.contacts.choices = _listobjects_choices('contact')
+        self.contact_groups.choices = _listobjects_choices('contactgroup')
+        self.notification_period.choices = _listobjects_choices('timeperiod', True)
+        self.snapshot_command.choices = _listobjects_choices('command', True)
+        self.snapshot_period.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('servicetemplate')
 
 class ServiceGroupForm(Form):
     #Description
@@ -2044,13 +2092,13 @@ class ServiceGroupForm(Form):
     members = SelectMultipleField(
         'Services',
         [validators.Optional()],
-        choices=_listobjects_choices('services', True),
+        choices=None,
         description='This is a list of the descriptions of services (and the names of their corresponding hosts) that should be included in this group. This directive may be used as an alternative to the servicegroups directive in service definitions.'
     )
     servicegroup_members = SelectMultipleField(
         'Services',
         [validators.Optional()],
-        choices=_listobjects_choices('servicegroup', True),
+        choices=None,
         description='This optional directive can be used to include services from other "sub" service groups in this service group. Specify a comma-delimited list of short names of other service groups whose members should be included in this group.'
     )
     notes = TextField(
@@ -2078,7 +2126,7 @@ class ServiceGroupForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('servicegrouptemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
@@ -2086,6 +2134,11 @@ class ServiceGroupForm(Form):
         choices=_listboolean_choices()
     )
 
+    def __init__(self, *args, **kwargs):
+        super(ServiceGroupForm, self).__init__(*args, **kwargs)
+        self.members.choices = _listobjects_choices('services', True)
+        self.servicegroup_members.choices = _listobjects_choices('servicegroup', True)
+        self.use.choices = _listobjects_choices('servicegrouptemplate')
 
 class ContactForm(Form):
     #Description
@@ -2101,7 +2154,7 @@ class ContactForm(Form):
     contactgroups = SelectMultipleField(
         'Contact group',
         [validators.Optional()],
-        choices= _listobjects_choices('contactgroup', True),
+        choices= None,
         description='This directive is used to identify the short name(s) of the contactgroup(s) that the contact belongs to.'
     )
     host_notification_enabled = SelectField(
@@ -2116,12 +2169,12 @@ class ContactForm(Form):
     )
     host_notification_period = SelectField(
         'Host notification period',
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='This directive is used to specify the short name of the time period during which the contact can be notified about host problems or recoveries.'
     )
     service_notification_period = SelectField(
         'Service notification period',
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='This directive is used to specify the short name of the time period during which the contact can be notified about service problems or recoveries.'
     )
     host_notification_options = SelectMultipleField(
@@ -2196,13 +2249,20 @@ class ContactForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('contacttemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(ContactForm, self).__init__(*args, **kwargs)
+        self.contactgroups.choices = _listobjects_choices('contactgroup', True)
+        self.host_notification_period.choices = _listobjects_choices('timeperiod', True)
+        self.service_notification_period.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('contacttemplate')
     
 class ContactGroupForm(Form):
     #Description
@@ -2218,13 +2278,13 @@ class ContactGroupForm(Form):
     members = SelectMultipleField(
         'Members',
         [validators.Optional()],
-        choices=_listobjects_choices('contact', True),
+        choices=None,
         description='This directive is used to define a list of the short names of contacts that should be included in this group.'
     )
     contactgroup_members = SelectMultipleField(
         'Contact groups members',
         [validators.Optional()],
-        choices=_listobjects_choices('contactgroup', True),
+        choices=None,
         description='This optional directive can be used to include contacts from other "sub" contact groups in this contact group.'
     )
 
@@ -2237,13 +2297,19 @@ class ContactGroupForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('contactgrouptemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(ContactGroupForm, self).__init__(*args, **kwargs)
+        self.members.choices = _listobjects_choices('contact', True)
+        self.contactgroup_members.choices = _listobjects_choices('contactgroup', True)
+        self.use.choices = _listobjects_choices('contactgrouptemplate')
 
 class TimeperiodForm(Form):
     #Description
@@ -2258,7 +2324,7 @@ class TimeperiodForm(Form):
     exclude = SelectMultipleField(
         'Excluded timeperiods',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiod', True),
+        choices=None,
         description='This directive is used to specify the short names of other timeperiod definitions whose time ranges should be excluded from this timeperiod.'
     )
     #weekdays
@@ -2279,13 +2345,18 @@ class TimeperiodForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('timeperiodtemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(TimeperiodForm, self).__init__(*args, **kwargs)
+        self.exclude.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('timeperiodtemplate')
     
 class CommandForm(Form):
     #Description
@@ -2311,14 +2382,17 @@ class CommandForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('commandtemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-
+    
+    def __init__(self, *args, **kwargs):
+        super(CommandForm, self).__init__(*args, **kwargs)
+        self.use.choices = _listobjects_choices('commandtemplate')
 
 class ExpertForm(Form):
     field = TextAreaField(u'Content')
@@ -2327,25 +2401,25 @@ class HostDependencyForm(Form):
     #Description
     host_name = SelectMultipleField(
         'Host name',
-        choices = _listobjects_choices('host', True),
+        choices = None,
         description = ''' This directive is used to identify the short name(s) of the host(s) that is being depended upon (also referred to as the master host). '''
     )
     hostgroup_name = SelectMultipleField(
         'Hostgroup name',
         [validators.Optional()],
-        choices = _listobjects_choices('hostgroup', True),
+        choices = None,
         description = ''' This directive is used to identify the short name(s) of the hostgroup(s) that is being depended upon (also referred to as the master host). The hostgroup_name may be used instead of, or in addition to, the host_name directive. '''
     )
     #dependent
     dependent_host_name = SelectMultipleField(
         'Dependent host name',
-        choices = _listobjects_choices('host', True),
+        choices = None,
         description = ''' This directive is used to identify the short name(s) of the dependent host(s). '''
     )
     dependent_hostgroup_name = SelectMultipleField(
         'Dependent hostgroup name',
         [validators.Optional()],
-        choices = _listobjects_choices('hostgroup', True),
+        choices = None,
         description = ''' This directive is used to identify the short name(s) of the dependent hostgroup(s). The dependent_hostgroup_name may be used instead of, or in addition to, the dependent_host_name directive. '''
     )
     #options
@@ -2370,7 +2444,7 @@ class HostDependencyForm(Form):
     dependency_period = SelectField(
         'Dependency period',
         [validators.Optional()],
-        choices = _listobjects_choices('timeperiod', True),
+        choices = None,
         description = ''' This directive is used to specify the short name of the time period during which this dependency is valid. If this directive is not specified, the dependency is considered to be valid during all times. '''
     )
 
@@ -2383,7 +2457,7 @@ class HostDependencyForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('hostdependencytemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
@@ -2391,27 +2465,36 @@ class HostDependencyForm(Form):
         choices=_listboolean_choices()
     )
     
+    def __init__(self, *args, **kwargs):
+        super(HostDependencyForm, self).__init__(*args, **kwargs)
+        self.host_name.choices = _listobjects_choices('host', True)
+        self.hostgroup_name.choices = _listobjects_choices('hostgroup', True)
+        self.dependent_host_name.choices = _listobjects_choices('host', True)
+        self.dependent_hostgroup_name.choices = _listobjects_choices('hostgroup', True)
+        self.dependency_period.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('hostdependencytemplate')
+    
 class HostEscalationForm(Form):
     #Description
     host_name = SelectField(
         'Host name',
-        choices = _listobjects_choices('host', True),
+        choices = None,
         description = ''' This directive is used to identify the short name of the host that the escalation should apply to. '''
     )
     hostgroup_name = SelectMultipleField(
         'Hostgroup name',
         [validators.Optional()],
-        choices = _listobjects_choices('hostgroup', True),
+        choices = None,
         description = ''' This directive is used to identify the short name(s) of the hostgroup(s) that the escalation should apply to. Multiple hostgroups should be separated by commas. If this is used, the escalation will apply to all hosts that are members of the specified hostgroup(s). '''
     )
     contacts = SelectMultipleField(
         'Contacts',
-        choices = _listobjects_choices('contacts', True),
+        choices = None,
         description = ''' This is a list of the short names of the contacts that should be notified whenever there are problems (or recoveries) with this service. Multiple contacts should be separated by commas. Useful if you want notifications to go to just a few people and don't want to configure contact groups. You must specify at least one contact or contact group in each service escalation definition. '''
     )
     contact_groups = SelectMultipleField(
         'Contactgroups',
-        choices = _listobjects_choices('contact_groups', True),
+        choices = None,
         description = ''' This directive is used to identify the short name of the contact group that should be notified when the service notification is escalated. Multiple contact groups should be separated by commas. You must specify at least one contact or contact group in each service escalation definition. '''
     )
     first_notification = IntegerField(
@@ -2434,13 +2517,12 @@ class HostEscalationForm(Form):
     )
     notification_interval = IntegerField(
         'Notification interval',
-        description = ''' This directive is used to determine the interval at which notifications should be made while this escalation is valid. If you specify a value of 0 for the interval, Shinken will send the first notification when this escalation definition is valid, but will then prevent any more problem notifications from being sent out for the host. Notifications are sent out again until the host recovers. This is useful if you want to stop having notifications sent out after a certain amount of time. If multiple escalation entries for a host overlap for one or more notification ranges, the smallest notification interval from all escalation entries is used.
- '''
+        description = ''' This directive is used to determine the interval at which notifications should be made while this escalation is valid. If you specify a value of 0 for the interval, Shinken will send the first notification when this escalation definition is valid, but will then prevent any more problem notifications from being sent out for the host. Notifications are sent out again until the host recovers. This is useful if you want to stop having notifications sent out after a certain amount of time. If multiple escalation entries for a host overlap for one or more notification ranges, the smallest notification interval from all escalation entries is used.'''
     )
     escalation_period = SelectField(
         'Escalation period',
         [validators.Optional()],
-        choices = _listobjects_choices('timeperiod', True),
+        choices = None,
         description = ''' This directive is used to specify the short name of the time period during which this escalation is valid. If this directive is not specified, the escalation is considered to be valid during all times. '''
     )
     escalation_options = SelectMultipleField(
@@ -2459,47 +2541,56 @@ class HostEscalationForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('hostescalationtemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(HostEscalationForm, self).__init__(*args, **kwargs)
+        self.host_name.choices = _listobjects_choices('host', True)
+        self.hostgroup_name.choices = _listobjects_choices('hostgroup', True)
+        self.contacts.choices = _listobjects_choices('contacts', True)
+        self.contact_groups.choices = _listobjects_choices('contact_groups', True)
+        self.escalation_period.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('hostescalationtemplate')
 
 class ServiceDependencyForm(Form):
     #Description
     service_description = SelectField(
         'Service description',
-        choices = _listobjects_choices('service', True),
+        choices = None,
         description = ''' This directive is description of the service which the data is associated with. '''
     )
     host_name = SelectMultipleField(
         'Host name',
-        choices = _listobjects_choices('host', True),
+        choices = None,
         description = ''' This directive is used to identify the short name of the host that the service is associated with. '''
     )
     hostgroup_name = SelectMultipleField(
         'Hostgroup name',
         [validators.Optional()],
-        choices = _listobjects_choices('hostgroup', True),
+        choices = None,
         description = ''' This directive is used to specify the short name(s) of the hostgroup(s) that the service escalation should apply to or is associated with. The "hostgroup_name" may be used instead of, or in addition to, the "host_name" directive. '''
     )
     #dependent
     dependent_host_name = SelectMultipleField(
         'Dependent host name',
-        choices = _listobjects_choices('host', True),
+        choices = None,
         description = ''' This directive is used to identify the short name(s) of the host(s) that the dependent service "runs" on or is associated with. Multiple hosts should be separated by commas. Leaving this directive blank can be used to create "same host" dependencies. '''
     )
     dependent_hostgroup_name = SelectMultipleField(
         'Dependent hostgroup name',
         [validators.Optional()],
-        choices = _listobjects_choices('hostgroup', True),
+        choices = None,
         description = ''' This directive is used to specify the short name(s) of the hostgroup(s) that the dependent service "runs" on or is associated with. Multiple hostgroups should be separated by commas. The "dependent_hostgroup" may be used instead of, or in addition to, the "dependent_host" directive.  '''
     )
     dependent_service_description = SelectField(
         'Dependent service description',
-        choices = _listobjects_choices('service', True),
+        choices = None,
         description = ''' This directive is used to identify the description of the dependent service. '''
     )
     #options
@@ -2524,7 +2615,7 @@ class ServiceDependencyForm(Form):
     dependency_period = SelectField(
         'Dependency period',
         [validators.Optional()],
-        choices = _listobjects_choices('timeperiod', True),
+        choices = None,
         description = ''' This directive is used to specify the short name of the time period during which this dependency is valid. If this directive is not specified, the dependency is considered to be valid during all times. '''
     )
 
@@ -2537,40 +2628,51 @@ class ServiceDependencyForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('servicedependencytemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(ServiceDependencyForm, self).__init__(*args, **kwargs)
+        self.service_description.choices = _listobjects_choices('service', True)
+        self.host_name.choices = _listobjects_choices('host', True)
+        self.hostgroup_name.choices = _listobjects_choices('hostgroup', True)
+        self.dependent_host_name.choices = _listobjects_choices('host', True)
+        self.dependent_hostgroup_name.choices = _listobjects_choices('hostgroup', True)
+        self.dependent_service_description.choices = _listobjects_choices('service', True)
+        self.dependency_period.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('servicedependencytemplate')
 
 class ServiceEscalationForm(Form):
     #Description
     service_description = SelectField(
         'Service description',
-        choices = _listobjects_choices('service', True),
+        choices = None,
         description = ''' This directive is description of the service which the data is associated with. '''
     )
     host_name = SelectMultipleField(
         'Host name',
-        choices = _listobjects_choices('host', True),
+        choices = None,
         description = ''' This directive is used to identify the short name of the host that the service is associated with. '''
     )
     hostgroup_name = SelectMultipleField(
         'Hostgroup name',
         [validators.Optional()],
-        choices = _listobjects_choices('hostgroup', True),
+        choices = None,
         description = ''' This directive is used to specify the short name(s) of the hostgroup(s) that the service escalation should apply to or is associated with. The "hostgroup_name" may be used instead of, or in addition to, the "host_name" directive. '''
     )
     contacts = SelectMultipleField(
         'Contacts',
-        choices = _listobjects_choices('contacts', True),
+        choices = None,
         description = ''' This is a list of the short names of the contacts that should be notified whenever there are problems (or recoveries) with this service. Multiple contacts should be separated by commas. Useful if you want notifications to go to just a few people and don't want to configure contact groups. You must specify at least one contact or contact group in each service escalation definition. '''
     )
     contact_groups = SelectMultipleField(
         'Contactgroups',
-        choices = _listobjects_choices('contact_groups', True),
+        choices = None,
         description = ''' This directive is used to identify the short name of the contact group that should be notified when the service notification is escalated. Multiple contact groups should be separated by commas. You must specify at least one contact or contact group in each service escalation definition. '''
     )
     first_notification = IntegerField(
@@ -2599,7 +2701,7 @@ class ServiceEscalationForm(Form):
     escalation_period = SelectField(
         'Escalation period',
         [validators.Optional()],
-        choices = _listobjects_choices('timeperiod', True),
+        choices = None,
         description = ''' This directive is used to specify the short name of the time period during which this escalation is valid. If this directive is not specified, the escalation is considered to be valid during all times. '''
     )
     escalation_options = SelectMultipleField(
@@ -2618,13 +2720,23 @@ class ServiceEscalationForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('serviceescalationtemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(ServiceEscalationForm, self).__init__(*args, **kwargs)
+        self.service_description.choices = _listobjects_choices('service', True)
+        self.host_name.choices = _listobjects_choices('host', True)
+        self.hostgroup_name.choices = _listobjects_choices('hostgroup', True)
+        self.contacts.choices = _listobjects_choices('contacts', True)
+        self.contact_groups.choices = _listobjects_choices('contact_groups', True)
+        self.escalation_period.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('serviceescalationtemplate')
 
 class NotificationWayForm(Form):
     #Description
@@ -2634,12 +2746,12 @@ class NotificationWayForm(Form):
     )
     host_notification_period = SelectField(
         'Host notification period',
-        choices = _listobjects_choices('timeperiod', True),
+        choices = None,
         description = ''' This directive is used to specify the short name of the time period during which the contact can be notified about host problems or recoveries. You can think of this as an "on call" time for host notifications for the contact. Read the documentation on time periods for more information on how this works and potential problems that may result from improper use. '''
     )
     service_notification_period = SelectField(
         'Service notification period',
-        choices = _listobjects_choices('timeperiod', True),
+        choices = None,
         description = ''' This directive is used to specify the short name of the time period during which the contact can be notified about service problems or recoveries. You can think of this as an "on call" time for service notifications for the contact. Read the documentation on time periods for more information on how this works and potential problems that may result from improper use. '''
     )
     host_notification_options = SelectMultipleField(
@@ -2676,13 +2788,19 @@ class NotificationWayForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('notificationwaytemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(NotificationWayForm, self).__init__(*args, **kwargs)
+        self.host_notification_period.choices = _listobjects_choices('timeperiod', True)
+        self.service_notification_period.choices = _listobjects_choices('timeperiod', True)
+        self.use.choices = _listobjects_choices('notificationwaytemplate')
 
 class RealmForm(Form):
     #Description
@@ -2693,7 +2811,7 @@ class RealmForm(Form):
     realm_members = SelectField(
         'Realm members',
         [validators.Optional()],
-        choices=_listobjects_choices('realm', True),
+        choices=None, # Initialized in __init__
         description = ''' This directive is used to define the sub-realms of this realms. '''
     )
     default = SelectField(
@@ -2712,13 +2830,17 @@ class RealmForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('realmtemplate')
+        choices=None # Initialized in __init__
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    def __init__(self, *args, **kwargs):
+        super(RealmForm, self).__init__(*args, **kwargs)
+        self.realm_members.choices = _listobjects_choices('realm', True)
+        self.use.choices = _listobjects_choices('realmtemplate')
 
 
 class ArbiterForm(Form):
@@ -2788,13 +2910,17 @@ class ArbiterForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('arbitertemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(ArbiterForm, self).__init__(*args, **kwargs)
+        self.use.choices = _listobjects_choices('arbitertemplate')
 
 class ScheluderForm(Form):
     #Description
@@ -2880,7 +3006,7 @@ class ScheluderForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('scheludertemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
@@ -2888,6 +3014,9 @@ class ScheluderForm(Form):
         choices=_listboolean_choices()
     )
 
+    def __init__(self, *args, **kwargs):
+        super(ScheluderForm, self).__init__(*args, **kwargs)
+        self.use.choices = _listobjects_choices('scheludertemplate')
 
 class PollerForm(Form):
     #Description
@@ -2961,13 +3090,17 @@ class PollerForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('pollertemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(PollerForm, self).__init__(*args, **kwargs)
+        self.use.choices = _listobjects_choices('pollertemplate')
 
 class ReactionnerForm(Form):
     #Description
@@ -3057,13 +3190,17 @@ class ReactionnerForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('reactionnertemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
+    
+    def __init__(self, *args, **kwargs):
+        super(ReactionnerForm, self).__init__(*args, **kwargs)
+        self.use.choices = _listobjects_choices('reactionnertemplate')
 
 class BrokerForm(Form):
     #Description
@@ -3137,11 +3274,14 @@ class BrokerForm(Form):
     use = SelectMultipleField(
         'Template used',
         [validators.Optional()],
-        choices=_listobjects_choices('brokertemplate')
+        choices=None
     )
     register = SelectField(
         'Register',
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-
+    
+    def __init__(self, *args, **kwargs):
+        super(BrokerForm, self).__init__(*args, **kwargs)
+        self.use.choices = _listobjects_choices('brokertemplate')

@@ -238,7 +238,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
                     callback(this.metrics);
                 if(this.probesDoneLoadingCallbacks !== null) {
                     for(var i in this.probesDoneLoadingCallbacks) {
-                        this.probesDoneLoadingCallbacks(response);
+                        this.probesDoneLoadingCallbacks[i](response);
                     }
                     this.probesDoneLoadingCallbacks = null;
                 }
