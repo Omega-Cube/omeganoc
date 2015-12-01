@@ -216,9 +216,9 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
         if request.method == 'POST':
             if not _check_lock():
                 abort(403)
-            _set_lock()
             if form.validate():
                 # Save !
+                _set_lock()
                 _save_new(form, objtype)
                 return redirect('/config#'+objtype)
             else:
@@ -248,12 +248,12 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
         if request.method == 'POST':
             if not _check_lock():
                 abort(403)
-            _set_lock()
             #TODO : add values from template before validate
             #TODO : apply the same check for new form
 
             if _validatefullform(form,target):
                 # Save !
+                _set_lock()
                 _save_existing(conf, target, form, False)
         else: #GET
             # Fill the form with the data from the configuration file
