@@ -19,13 +19,15 @@
 
 """ Contains pages and web services used to manipulate shinken configuration files """
 
+import copy
 import os
 import os.path
+import re
 import shutil
+from subprocess import call, Popen
 
-from pynag.Parsers import config
 import pynag.Model
-
+from pynag.Parsers import config
 from flask import jsonify, render_template, abort, request, redirect
 from flask.ext.login import login_required, current_user
 from wtforms import Form, TextField, SelectField, SelectMultipleField, TextAreaField, SelectFieldBase, validators
@@ -35,15 +37,11 @@ from shinken.property import none_object
 import shinken.objects
 from shinken.objects.config import Config
 from shinken.property import BoolProp, PythonizeError
-from subprocess import call, Popen
-from werkzeug.contrib.cache import SimpleCache
-from user import User
-import copy
 import chardet
 
 from . import app, cache
+from user import User
 
-import re
 
 _typekeys = {
     'host': 'host_name',
@@ -61,7 +59,7 @@ _typekeys = {
     'notificationway': 'notificationway_name',
     'realm': 'realm_name',
     'arbiter': 'arbiter_name',
-    'scheluder': 'scheluder_name',
+    'scheduler': 'scheduler_name',
     'poller': 'poller_name',
     'reactionner': 'reactionner_name',
     'broker': 'broker_name'
@@ -218,9 +216,9 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
         if request.method == 'POST':
             if not _check_lock():
                 abort(403)
-            _set_lock()
             if form.validate():
                 # Save !
+                _set_lock()
                 _save_new(form, objtype)
                 return redirect('/config#'+objtype)
             else:
@@ -250,12 +248,12 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
         if request.method == 'POST':
             if not _check_lock():
                 abort(403)
-            _set_lock()
             #TODO : add values from template before validate
             #TODO : apply the same check for new form
 
             if _validatefullform(form,target):
                 # Save !
+                _set_lock()
                 _save_existing(conf, target, form, False)
         else: #GET
             # Fill the form with the data from the configuration file
@@ -1185,27 +1183,27 @@ def arbitertemplate_details(objid):
         abort(403)
     return _get_details('arbiter', True, objid, ArbiterForm)
 
-#scheluder
-@app.route('/config/scheluder/create', methods=['GET', 'POST'])
+#scheduler
+@app.route('/config/scheduler/create', methods=['GET', 'POST'])
 @login_required
-def scheluder_create():
+def scheduler_create():
     if not current_user.is_super_admin:
         abort(403)
-    return _get_details('scheluder', False, None, ScheluderForm)
+    return _get_details('scheduler', False, None, SchedulerForm)
 
-@app.route('/config/scheluder/<objid>', methods=['GET', 'POST'])
+@app.route('/config/scheduler/<objid>', methods=['GET', 'POST'])
 @login_required
-def scheluder_details(objid):
+def scheduler_details(objid):
     if not current_user.is_super_admin:
         abort(403)
-    return _get_details('scheluder', False, objid, ScheluderForm)
+    return _get_details('scheduler', False, objid, SchedulerForm)
 
-@app.route('/config/scheludertemplate/<objid>', methods=['GET', 'POST'])
+@app.route('/config/schedulertemplate/<objid>', methods=['GET', 'POST'])
 @login_required
-def scheludertemplate_details(objid):
+def schedulertemplate_details(objid):
     if not current_user.is_super_admin:
         abort(403)
-    return _get_details('scheluder', True, objid, ScheluderForm)
+    return _get_details('scheduler', True, objid, SchedulerForm)
 
 #poller
 @app.route('/config/poller/create', methods=['GET', 'POST'])
@@ -2926,11 +2924,11 @@ class ArbiterForm(Form):
         super(ArbiterForm, self).__init__(*args, **kwargs)
         self.use.choices = _listobjects_choices('arbitertemplate')
 
-class ScheluderForm(Form):
+class SchedulerForm(Form):
     #Description
-    scheluder_name = TextField(
-        'Scheluder name',
-        description = ''' This variable is used to identify the short name of the scheluder which the data is associated with. '''
+    scheduler_name = TextField(
+        'Scheduler name',
+        description = ''' This variable is used to identify the short name of the scheduler which the data is associated with. '''
     )
     address = TextField(
         'Address',
@@ -3019,8 +3017,8 @@ class ScheluderForm(Form):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ScheluderForm, self).__init__(*args, **kwargs)
-        self.use.choices = _listobjects_choices('scheludertemplate')
+        super(SchedulerForm, self).__init__(*args, **kwargs)
+        self.use.choices = _listobjects_choices('schedulertemplate')
 
 class PollerForm(Form):
     #Description
