@@ -20,6 +20,7 @@
 """ Contains pages and web services used to manipulate shinken configuration files """
 
 import os
+import os.path
 import shutil
 
 from pynag.Parsers import config
@@ -77,6 +78,9 @@ CONF_FILE = 'shinken.cfg'
 LAST_CHECK = '/tmp/hokuto_shinken_test_results'
 SIGNAL = '/tmp/shinken_update.signal'
 
+# Tell pynag's Model to go fetch the fake configuration path
+pynag.Model.cfg_file = os.path.join(TMP_DIR, CONF_FILE)
+
 #################################### FUNCTIONS ##########################################
 def _check_lock():
     ''' Check if the configuration is currently locked and if the user is the current owner '''
@@ -128,10 +132,6 @@ def _release_lock():
     return False
 
 def _getconf():
-    import traceback
-    app.logger.debug('calling _getConf from:')
-    app.logger.debug(traceback.format_stack())
-
     conf = cache.get('nag_conf')
     if conf is None:
         # No conf in cache; load it
@@ -143,7 +143,7 @@ def _getconf():
             p = Popen(['cp','-R','--preserve=timestamps',src,TMP_DIR])
             p.wait()
 
-        shinken_file = TMP_DIR + CONF_FILE
+        shinken_file = os.path.join(TMP_DIR, CONF_FILE)
         app.logger.debug('PyNag is loading configuration at: ' + shinken_file)
         conf = config(shinken_file) # Let pynag find out the configuration path by itself
         conf.parse()
@@ -160,8 +160,9 @@ def _getconf():
 
 def _checkConf():
     """ Check shinken configuration and write check results to LAST_CHECK """
+    conf_root = os.path.join(TMP_DIR, CONF_FILE)
     with open(LAST_CHECK,'w+') as checkfile:
-        check = call(['shinken-arbiter','--verify','-c',TMP_DIR + CONF_FILE], stdout=checkfile)
+        check = call(['shinken-arbiter','--verify','-c',conf_root], stdout=checkfile)
     return True if not check else False
 
 def _parsetype(type):
@@ -752,17 +753,20 @@ def delete_conf(typeid,objid):
     else:
         primkey = _typekeys[typeid]
 
-    targettype = getattr(pynag.Model,typeid.capitalize() + 's',False)
+    targettype = getattr(pynag.Model,typeid.capitalize(),False)
     if targettype:
         args = {}
         args[primkey] = objid
         for target in targettype.objects.filter(**args):
+            app.logger.debug('Removing pynag Model "{0}"'.format(args))
             target.delete()
+        app.logger.debug('Done removing with Model')
     else:
         conf = _getconf()
         typekey = 'all_'+typeid
         target = next((e for e in conf.data[typekey] if primkey in e and e[primkey] == objid), None)
         filename = target['meta']['filename'];
+        app.logger.debug('Removing file "{0}" because it contains object "{1}" of type "{2}"'.format(filename, objid, typeid))
         os.remove(filename)
 
     if is_template:
