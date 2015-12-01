@@ -144,13 +144,13 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
             'key': 'arbiter_name',
             'default_columns': ['arbiter_name']
         },
-        'scheluder': {
-            'id': 'scheluder',
-            'name': 'Scheluder',
-            'names': 'Scheluders',
+        'scheduler': {
+            'id': 'scheduler',
+            'name': 'Scheduler',
+            'names': 'Schedulers',
             'description': 'The Scheduler daemon is in charge of the scheduling checks, the analysis of results and follow up actions (like if a service is down, ask for a host check). They do not launch checks or notifications. They keep a queue of pending checks and notifications for other elements of the architecture (like pollers or reactionners). There can be many schedulers.',
-            'key': 'scheluder_name',
-            'default_columns': ['scheluder_name']
+            'key': 'scheduler_name',
+            'default_columns': ['scheduler_name']
         },
         'poller': {
             'id': 'poller',

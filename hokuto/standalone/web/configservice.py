@@ -61,7 +61,7 @@ _typekeys = {
     'notificationway': 'notificationway_name',
     'realm': 'realm_name',
     'arbiter': 'arbiter_name',
-    'scheluder': 'scheluder_name',
+    'scheduler': 'scheduler_name',
     'poller': 'poller_name',
     'reactionner': 'reactionner_name',
     'broker': 'broker_name'
@@ -1185,27 +1185,27 @@ def arbitertemplate_details(objid):
         abort(403)
     return _get_details('arbiter', True, objid, ArbiterForm)
 
-#scheluder
-@app.route('/config/scheluder/create', methods=['GET', 'POST'])
+#scheduler
+@app.route('/config/scheduler/create', methods=['GET', 'POST'])
 @login_required
-def scheluder_create():
+def scheduler_create():
     if not current_user.is_super_admin:
         abort(403)
-    return _get_details('scheluder', False, None, ScheluderForm)
+    return _get_details('scheduler', False, None, SchedulerForm)
 
-@app.route('/config/scheluder/<objid>', methods=['GET', 'POST'])
+@app.route('/config/scheduler/<objid>', methods=['GET', 'POST'])
 @login_required
-def scheluder_details(objid):
+def scheduler_details(objid):
     if not current_user.is_super_admin:
         abort(403)
-    return _get_details('scheluder', False, objid, ScheluderForm)
+    return _get_details('scheduler', False, objid, SchedulerForm)
 
-@app.route('/config/scheludertemplate/<objid>', methods=['GET', 'POST'])
+@app.route('/config/schedulertemplate/<objid>', methods=['GET', 'POST'])
 @login_required
-def scheludertemplate_details(objid):
+def schedulertemplate_details(objid):
     if not current_user.is_super_admin:
         abort(403)
-    return _get_details('scheluder', True, objid, ScheluderForm)
+    return _get_details('scheduler', True, objid, SchedulerForm)
 
 #poller
 @app.route('/config/poller/create', methods=['GET', 'POST'])
@@ -2926,11 +2926,11 @@ class ArbiterForm(Form):
         super(ArbiterForm, self).__init__(*args, **kwargs)
         self.use.choices = _listobjects_choices('arbitertemplate')
 
-class ScheluderForm(Form):
+class SchedulerForm(Form):
     #Description
-    scheluder_name = TextField(
-        'Scheluder name',
-        description = ''' This variable is used to identify the short name of the scheluder which the data is associated with. '''
+    scheduler_name = TextField(
+        'Scheduler name',
+        description = ''' This variable is used to identify the short name of the scheduler which the data is associated with. '''
     )
     address = TextField(
         'Address',
@@ -3019,8 +3019,8 @@ class ScheluderForm(Form):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ScheluderForm, self).__init__(*args, **kwargs)
-        self.use.choices = _listobjects_choices('scheludertemplate')
+        super(SchedulerForm, self).__init__(*args, **kwargs)
+        self.use.choices = _listobjects_choices('schedulertemplate')
 
 class PollerForm(Form):
     #Description
