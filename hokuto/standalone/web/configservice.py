@@ -38,10 +38,11 @@ import shinken.objects
 from shinken.objects.config import Config
 from shinken.property import BoolProp, PythonizeError
 import chardet
+from sqlalchemy import Table, select, exists, or_
 
-from . import app, cache
+from . import app, cache, db
 from user import User
-from demo import is_in_demo, create_demo_response, create_demo_redirect
+from demo import is_in_demo, create_demo_redirect
 
 _typekeys = {
     'host': 'host_name',
@@ -73,6 +74,8 @@ TMP_DIR = '/tmp/shinken/'
 WAIT_DIR = '/tmp/waiting/'
 WAIT_CONF_DIR = WAIT_DIR + 'shinken/'
 CONF_FILE = 'shinken.cfg'
+MIGRATE_FILE = 'migrate.txt'
+SERVICE_WARNING_FILE = '/tmp/service_changed.txt'
 LAST_CHECK = '/tmp/hokuto_shinken_test_results'
 SIGNAL = '/tmp/shinken_update.signal'
 
@@ -104,10 +107,10 @@ def _set_lock():
     ''' Set the lock '''
     if(not _check_lock()):
         return False
-    if is_in_demo():
-        return False
     if(os.path.isfile(LOCK_FILE)):
         return True
+    if is_in_demo():
+        return create_demo_redirect()
     user = current_user.id
     lockfile = open(LOCK_FILE,'w+')
     lockfile.write(str(user))
@@ -132,6 +135,7 @@ def _release_lock():
     return False
 
 def _getconf():
+    """ Return the conf from /tmp """
     conf = cache.get('nag_conf')
     if conf is None:
         # No conf in cache; load it
@@ -147,14 +151,14 @@ def _getconf():
         app.logger.debug('PyNag is loading configuration at: ' + shinken_file)
         conf = config(shinken_file) # Let pynag find out the configuration path by itself
         conf.parse()
-        
+
         # TODO : Improve error handling
-        # We remove the errors from the configuration as the error type 
+        # We remove the errors from the configuration as the error type
         # (ParserError) cannot be deserialized by the cache system
         for e in conf.errors:
             app.logger.warning('PyNag error: ' + str(e))
         conf.errors = []
-        
+
         cache.set('nag_conf', conf, timeout=CACHE_TIMEOUT) #TODO : Configure cache timeout
     return conf
 
@@ -252,15 +256,15 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
         if request.method == 'POST':
             if not _check_lock():
                 abort(403)
-            #TODO : add values from template before validate
-            #TODO : apply the same check for new form
+            if is_in_demo():
+                return create_demo_redirect()
+            _set_lock()
 
             if _validatefullform(form,target):
-                if is_in_demo():
-                    return create_demo_redirect()
                 # Save !
                 _set_lock()
                 _save_existing(conf, target, form, False)
+                return redirect('/config#'+objtype)
         else: #GET
             # Fill the form with the data from the configuration file
             _fillform(form, target)
@@ -387,6 +391,7 @@ def _save_existing(conf, data, form, form_is_comprehensive):
     # Extract filled fields from the form
     fdata = {k.name:k.data for k in form}
     did_change = False
+    changed_id = (False,False,False)
 
     # Turn arrays into strings ['a','b','c'] => 'a,b,c'
     for k, v in fdata.iteritems():
@@ -409,6 +414,13 @@ def _save_existing(conf, data, form, form_is_comprehensive):
 
         elif _normalizestrings(fdata[i]) != _normalizestrings(attr[i]):
             # Edit
+            if(i == 'host_name' or i == 'service_description'):
+               if(i == 'host_name'):
+                  changed_id = ('host','/opt/graphite/storage/whisper/',fdata[i],attr[i])
+               elif(i == 'service_description'):
+                   #Set the description warning flag on
+                   _set_service_change(attr[i],fdata[i])
+
             currentval = _normalizestrings(fdata[i])
             data[i] = currentval
             did_change = True
@@ -431,10 +443,53 @@ def _save_existing(conf, data, form, form_is_comprehensive):
                 data[d] = data[d] + "\t; " + data['meta']['descriptions'][d]
 
         conf.commit()
+        if changed_id[0]:
+            _populate_migration_list(*changed_id)
         #delete conf cache
         cache.delete('nag_conf')
 
     return did_change
+
+def _set_service_change(old,new):
+    """ Set the service flag on """
+    flag = open(SERVICE_WARNING_FILE,'w+')
+    flag.write(str(old) + '|' + str(new))
+    flag.close()
+
+def _populate_migration_list(objtype,path,new,old):
+    """ Add a new entry to the migration list, every host or service in it are marked for migrating their data after an identifer change """
+    with open(TMP_DIR + MIGRATE_FILE,'a+') as f:
+        f.write(objtype + '|' + path + '|' + old + '|' + new + "\n")
+
+def _migrate_data():
+    """ Migrate host or service data when updating their identifer name"""
+    if not os.path.isfile(WAIT_CONF_DIR + MIGRATE_FILE):
+        return
+    with open(WAIT_CONF_DIR + MIGRATE_FILE,'r') as f:
+        for line in f:
+            migrate = line.rstrip().split('|')
+            objtype = migrate[0]
+            old = migrate[2]
+            new = migrate[3]
+            app.logger.info('Need to migrate ' + objtype + ' : ' + old + ' to ' + new)
+            #Update any reference in the dashboard, sla and graph databases
+            from dashboard import partsConfTable
+            from sla import Sla
+            from grapher import graphTokenTable
+            for row in db.engine.execute(select([partsConfTable.c.key]).where(partsConfTable.c.key.startswith('probe|'+old))):
+                old_key = row[0]
+                new_key = old_key.replace('probe|'+old,'probe|'+new)
+                db.session.execute(partsConfTable.update().where(partsConfTable.c.key == old_key), {'key': new_key})
+
+            for row in db.engine.execute(select([graphTokenTable.c.key]).where(graphTokenTable.c.key.startswith(old+':'))):
+                old_key = row[0]
+                new_key = old_key.replace(old+':',new+':')
+                db.session.execute(graphTokenTable.update().where(graphTokenTable.c.key == old_key), {'key': new_key})
+
+            for row in Sla.query.filter_by(host_name=old).all():
+                row.host_name = new
+
+            db.session.commit()
 
 
 # #########################################################################################################
@@ -625,7 +680,7 @@ def conf_getdatalist(type):
     """ Returns a JSON object containing all the data for objects of the specified type """
     if not current_user.is_super_admin:
         abort(403)
-    
+
     (type, istemplate) = _parsetype(type)
 
     if type not in _typekeys:
@@ -683,12 +738,18 @@ def applyConf():
     #if there is no active lock then this mean that there is nothing to apply
     if not os.path.isfile(LOCK_FILE):
         abort(404)
-        
+
     if not os.path.exists(TMP_DIR):
         return jsonify({'success':0, 'error': 'No changes to apply'})
+
+    service_changed = False
+    if(os.path.isfile(SERVICE_WARNING_FILE)):
+        """ Display the service rename warning """
+        service_changed = True
+
     if _checkConf():
         #Set the flag to apply new conf and restart shinken
-        output = '';
+        output = ''
         pcode = call(['mkdir','-p',WAIT_DIR])
         if pcode:
             return jsonify({'success':0, 'error': "Unable to create "+WAIT_DIR+"."})
@@ -698,9 +759,11 @@ def applyConf():
         open(SIGNAL,'a').close()
         #delete conf cache
         cache.delete('nag_conf')
-        return jsonify({'success': 1})
+        _migrate_data()
+        os.remove(SERVICE_WARNING_FILE)
+        return jsonify({'success': 1, 'service_changed': service_changed})
     with open(LAST_CHECK,'r') as filehandler:
-        message = '';
+        message = ''
         message = [message + line[18:-4] for line in filehandler if line.find('ERROR') != -1]
         return jsonify({'success': 0, 'error': message})
 
@@ -722,6 +785,8 @@ def resetConf():
     if pcode:
         return jsonify({'success': False, 'message': "Can't remove "+TMP_DIR})
     cache.delete('nag_conf')
+    if os.path.isfile(TMP_DIR + MIGRATE_FILE):
+        open(TMP_DIR + MIGRATE_FILE, 'w').close()
     return jsonify({'success': True})
 
 @app.route('/config/logs',methods=['GET'])
@@ -744,6 +809,7 @@ def delete_conf(typeid,objid):
     """ Delete a configuration file """
     if not current_user.is_super_admin:
         abort(403)
+
     if not _check_lock():
         abort(403)
     if is_in_demo():
@@ -818,7 +884,7 @@ def expert_mode(typeid,objid):
         f = open(filename,'w')
         fdata = {k.name:k.data for k in form}
         f.write(fdata['field'])
-    
+
         #delete conf cache
         cache.delete('nag_conf')
         if is_template:
@@ -1646,7 +1712,7 @@ class HostForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(HostForm, self).__init__(*args, **kwargs)
         self.parents.choices = _listobjects_choices('host')
@@ -1666,8 +1732,7 @@ class HostForm(Form):
         self.snapshot_command.choices = _listobjects_choices('command', True)
         self.snapshot_period.choices = _listobjects_choices('timeperiod', True)
         self.use.choices = _listobjects_choices('hosttemplate')
-        
-    
+
 class HostGroupForm(Form):
     # Description
     hostgroup_name = TextField(
@@ -1729,7 +1794,7 @@ class HostGroupForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(HostGroupForm, self).__init__(*args, **kwargs)
         self.members.choices = _listobjects_choices('host')
@@ -2058,7 +2123,7 @@ class ServiceForm(Form):
         [validators.Optional()],
         description='This options define the trigger that will be executed after a check result (passive or active). This file trigger_name.trig has to exist in the trigger directory or sub-directories.'
     )
-    
+
     # Templates
     name = TextField(
         'Template name',
@@ -2075,7 +2140,7 @@ class ServiceForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(ServiceForm, self).__init__(*args, **kwargs)
         self.host_name.choices = _listobjects_choices('host')
@@ -2129,7 +2194,7 @@ class ServiceGroupForm(Form):
         [validators.Optional()],
         description='This directive is used to define an optional URL that can be used to provide more actions to be performed on the service group.'
     )
-    
+
     # Templates
     name = TextField(
         'Template name',
@@ -2269,14 +2334,14 @@ class ContactForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(ContactForm, self).__init__(*args, **kwargs)
         self.contactgroups.choices = _listobjects_choices('contactgroup', True)
         self.host_notification_period.choices = _listobjects_choices('timeperiod', True)
         self.service_notification_period.choices = _listobjects_choices('timeperiod', True)
         self.use.choices = _listobjects_choices('contacttemplate')
-    
+
 class ContactGroupForm(Form):
     #Description
     contactgroup_name = TextField(
@@ -2317,7 +2382,7 @@ class ContactGroupForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(ContactGroupForm, self).__init__(*args, **kwargs)
         self.members.choices = _listobjects_choices('contact', True)
@@ -2365,12 +2430,12 @@ class TimeperiodForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(TimeperiodForm, self).__init__(*args, **kwargs)
         self.exclude.choices = _listobjects_choices('timeperiod', True)
         self.use.choices = _listobjects_choices('timeperiodtemplate')
-    
+
 class CommandForm(Form):
     #Description
     command_name = TextField(
@@ -2402,7 +2467,7 @@ class CommandForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(CommandForm, self).__init__(*args, **kwargs)
         self.use.choices = _listobjects_choices('commandtemplate')
@@ -2477,7 +2542,7 @@ class HostDependencyForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(HostDependencyForm, self).__init__(*args, **kwargs)
         self.host_name.choices = _listobjects_choices('host', True)
@@ -2486,7 +2551,7 @@ class HostDependencyForm(Form):
         self.dependent_hostgroup_name.choices = _listobjects_choices('hostgroup', True)
         self.dependency_period.choices = _listobjects_choices('timeperiod', True)
         self.use.choices = _listobjects_choices('hostdependencytemplate')
-    
+
 class HostEscalationForm(Form):
     #Description
     host_name = SelectField(
@@ -2561,7 +2626,7 @@ class HostEscalationForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(HostEscalationForm, self).__init__(*args, **kwargs)
         self.host_name.choices = _listobjects_choices('host', True)
@@ -2648,7 +2713,7 @@ class ServiceDependencyForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(ServiceDependencyForm, self).__init__(*args, **kwargs)
         self.service_description.choices = _listobjects_choices('service', True)
@@ -2740,7 +2805,7 @@ class ServiceEscalationForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(ServiceEscalationForm, self).__init__(*args, **kwargs)
         self.service_description.choices = _listobjects_choices('service', True)
@@ -2808,7 +2873,7 @@ class NotificationWayForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(NotificationWayForm, self).__init__(*args, **kwargs)
         self.host_notification_period.choices = _listobjects_choices('timeperiod', True)
@@ -2913,7 +2978,7 @@ class ArbiterForm(Form):
         choices=_listboolean_choices(),
         description = ''' If this is enabled, the scheduler will accept passive check results for unconfigured hosts and will generate unknown host/service check result broks. '''
     )
-    
+
     # Templates
     name = TextField(
         'Template name',
@@ -2930,7 +2995,7 @@ class ArbiterForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(ArbiterForm, self).__init__(*args, **kwargs)
         self.use.choices = _listobjects_choices('arbitertemplate')
@@ -3110,7 +3175,7 @@ class PollerForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(PollerForm, self).__init__(*args, **kwargs)
         self.use.choices = _listobjects_choices('pollertemplate')
@@ -3210,7 +3275,7 @@ class ReactionnerForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(ReactionnerForm, self).__init__(*args, **kwargs)
         self.use.choices = _listobjects_choices('reactionnertemplate')
@@ -3294,7 +3359,7 @@ class BrokerForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-    
+
     def __init__(self, *args, **kwargs):
         super(BrokerForm, self).__init__(*args, **kwargs)
         self.use.choices = _listobjects_choices('brokertemplate')

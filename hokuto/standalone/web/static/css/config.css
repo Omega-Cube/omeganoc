@@ -167,6 +167,13 @@ p.intro {
     float: right;
 }
 
+.configlist-content .legend{
+    font-weight: bold;
+    font-size: 1.05em;
+    background-color: #393939;
+    line-height: 2em;
+}
+
 #config_create{
     background-color: #019875;
     padding: 3px 10px;

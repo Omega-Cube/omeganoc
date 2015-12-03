@@ -43,7 +43,7 @@
       <p><button class="button disabled" data-tooltip="There is errors in your configuration, please check logs and fix them.">Apply</button></p>
       {% endif %}
       <p>
-        <a href="/config/logs" class="button info" data-tooltip="Show last configuration check results">View logs</a>
+        <a href="/config/logs" class="button info" data-tooltip="Show last configuration check results" target="_blank">View logs</a>
       </p>
       <p><button id="conf-reset-changes" class="button info" data-tooltip="Undo all changes made and unlock configuration">Rollback</button></p>
     </div>
@@ -176,7 +176,10 @@
         <span class="description"></span>
       </p>
     </div>
-    <ul class="configlist-content"></ul>
+    <ul class="configlist-content">
+      <li class="legend"></li>
+    </ul>
+    </div>
   </section>
 </div>
 
