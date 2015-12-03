@@ -238,9 +238,9 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
     }
 
     function _fillTable(results){
-        listcontent.empty();
+        listcontent.find('.item').remove();
         for(var i in results){
-            var li = $('<li></li>');
+            var li = $('<li class="item"></li>');
             for(var k in struct.default_columns){
                 li.append('<span class="cell">'+results[i][struct.default_columns[k]]+'</span>');
             }
@@ -264,7 +264,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
             }
 
             if(!ONOC.conf_is_locked){
-                var span = jQuery('<span></span>');
+                var span = jQuery('<span class="cell"></span>');
                 span.append('<a href="'+url+'" class="button">Edit</a>');
                 span.append('<a href="'+urladv+'" class="button" data-tooltip="For experts only, edit config file directly.">Advanced</a>');
                 li.append(span);
@@ -275,6 +275,15 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
             listcontent.append(li);
         }
     }
+
+    function _fillLegend(legend){
+        var legendContainer = $('.legend').empty();
+        for(var l in legend){
+            $('.legend').append('<span class="cell">'+legend[l]+'</span>');
+        }
+        $('.legend').append('<span class="cell">Edit</span>');
+        $('.legend').append('<span class="cell">Remove</span>');
+    }
     
     function _applyHash(hash) {
         if(!hash){
@@ -283,7 +292,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
         }
 
         //flush
-        listcontent.empty();
+        listcontent.find('.item').remove();
         listtitle.empty();
         jQuery(".configlist-title .search").val('');
 
@@ -320,8 +329,10 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
                 listtitle.text(title);
                 listdescription.text(struct.description);
 
-                //TODO: add pagination and search bar
-                
+                //TODO: legend
+                var legend = struct.default_columns;
+                _fillLegend(legend);
+                console.log(legend);
 
                 //fill list
                 if(_data.length){
