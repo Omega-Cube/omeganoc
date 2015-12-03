@@ -252,12 +252,7 @@ def _get_details(objtype, istemplate, objid, formtype, targetfinder = None):
         if request.method == 'POST':
             if not _check_lock():
                 abort(403)
-<<<<<<< HEAD
-            #TODO : add values from template before validate
-            #TODO : apply the same check for new form
-=======
             _set_lock()
->>>>>>> [CONFIG] Add hosts data migration when changing their host name, also service_description changes is not yet supported but a warning will be displayed to warn the user that he will need to move his data if he want to keep theme.
 
             if _validatefullform(form,target):
                 # Save !
@@ -1705,7 +1700,6 @@ class HostForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-<<<<<<< HEAD
 
     def __init__(self, *args, **kwargs):
         super(HostForm, self).__init__(*args, **kwargs)
@@ -1727,10 +1721,6 @@ class HostForm(Form):
         self.snapshot_period.choices = _listobjects_choices('timeperiod', True)
         self.use.choices = _listobjects_choices('hosttemplate')
 
-
-=======
-
->>>>>>> [CONFIG] Add hosts data migration when changing their host name, also service_description changes is not yet supported but a warning will be displayed to warn the user that he will need to move his data if he want to keep theme.
 class HostGroupForm(Form):
     # Description
     hostgroup_name = TextField(
@@ -2332,7 +2322,6 @@ class ContactForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-<<<<<<< HEAD
 
     def __init__(self, *args, **kwargs):
         super(ContactForm, self).__init__(*args, **kwargs)
@@ -2341,9 +2330,6 @@ class ContactForm(Form):
         self.service_notification_period.choices = _listobjects_choices('timeperiod', True)
         self.use.choices = _listobjects_choices('contacttemplate')
 
-=======
-
->>>>>>> [CONFIG] Add hosts data migration when changing their host name, also service_description changes is not yet supported but a warning will be displayed to warn the user that he will need to move his data if he want to keep theme.
 class ContactGroupForm(Form):
     #Description
     contactgroup_name = TextField(
@@ -2432,16 +2418,12 @@ class TimeperiodForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-<<<<<<< HEAD
 
     def __init__(self, *args, **kwargs):
         super(TimeperiodForm, self).__init__(*args, **kwargs)
         self.exclude.choices = _listobjects_choices('timeperiod', True)
         self.use.choices = _listobjects_choices('timeperiodtemplate')
 
-=======
-
->>>>>>> [CONFIG] Add hosts data migration when changing their host name, also service_description changes is not yet supported but a warning will be displayed to warn the user that he will need to move his data if he want to keep theme.
 class CommandForm(Form):
     #Description
     command_name = TextField(
@@ -2548,7 +2530,6 @@ class HostDependencyForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-<<<<<<< HEAD
 
     def __init__(self, *args, **kwargs):
         super(HostDependencyForm, self).__init__(*args, **kwargs)
@@ -2559,9 +2540,6 @@ class HostDependencyForm(Form):
         self.dependency_period.choices = _listobjects_choices('timeperiod', True)
         self.use.choices = _listobjects_choices('hostdependencytemplate')
 
-=======
-
->>>>>>> [CONFIG] Add hosts data migration when changing their host name, also service_description changes is not yet supported but a warning will be displayed to warn the user that he will need to move his data if he want to keep theme.
 class HostEscalationForm(Form):
     #Description
     host_name = SelectField(
@@ -3369,10 +3347,7 @@ class BrokerForm(Form):
         [validators.Optional()],
         choices=_listboolean_choices()
     )
-<<<<<<< HEAD
 
     def __init__(self, *args, **kwargs):
         super(BrokerForm, self).__init__(*args, **kwargs)
         self.use.choices = _listobjects_choices('brokertemplate')
-=======
->>>>>>> [CONFIG] Add hosts data migration when changing their host name, also service_description changes is not yet supported but a warning will be displayed to warn the user that he will need to move his data if he want to keep theme.
