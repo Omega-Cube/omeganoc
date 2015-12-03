@@ -113,7 +113,9 @@ define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.
          */
         readDashboardNameFromUrl: function () {
             if (window.location.hash) {
-                return window.location.hash.slice(1);
+                var result = window.location.hash.slice(1);
+                // Make sure that the result does not contain any URL-encoded characters
+                return decodeURIComponent(result);
             }
             else {
                 return "";
