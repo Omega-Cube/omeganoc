@@ -45,7 +45,7 @@ from utils import try_int, generate_salt
 @login_manager.user_loader
 def load_user(userid):
     """ Flask-Login user loading helper """
-    if is_in_demo():
+    if is_in_demo(False):
         flush_old_demo_data()
     user = User.query.filter(User.username == userid).first()
     if user is not None:

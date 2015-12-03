@@ -54,6 +54,9 @@ _demo_shinken_user = 'drgkill'
 # A super secret server token for the captcha generator!
 _captcha_server_token = None
 
+# The name of one user that will be able to make changes, even with demo mode active
+_demo_admin_user = 'admin'
+
 @app.route('/demo-landing')
 def demo_landing():
     """ This page tells the user that he tried to use a feature that is not available in demo mode """
@@ -91,8 +94,12 @@ def demo_create():
             return abort(500)
     return render_template('demo-create.html', username=login, password=passwd, verified=verified, captcha_error=captcha_error)
     
-def is_in_demo():
+def is_in_demo(check_admin=True):
     """ Returns True if the demo mode is enabled, False otherwise """
+    global _demo_admin_user
+    # No demo restrictions for the admin
+    if(check_admin and not current_user.is_anonymous() and current_user.username == _demo_admin_user):
+        return False
     return app.config.get('DEMO', False) == True
 
 def create_demo_response():
