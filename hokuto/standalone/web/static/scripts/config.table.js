@@ -239,6 +239,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
 
     function _fillTable(results){
         listcontent.find('.item').remove();
+        listcontent.find('.empty').remove();
         for(var i in results){
             var li = $('<li class="item"></li>');
 
@@ -295,6 +296,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
 
         //flush
         listcontent.find('.item').remove();
+        listcontent.find('.empty').remove();
         listtitle.empty();
         jQuery(".configlist-title .search").val('');
 
