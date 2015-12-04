@@ -29,7 +29,7 @@ from wtforms import Form, TextField, IntegerField, SelectField, validators
 from wtforms.validators import DataRequired
 from utils import try_int
 
-from ajax import jsondump
+from ajax import jsondump, request_is_ajax
 
 class Unit(db.Model):
     """ Units data model """
@@ -79,6 +79,7 @@ def add_unit():
         abort(403)
 
     form= AddUnitForm(request.form)
+    isajax = request_is_ajax()
 
     if request.method == 'POST':
         if Unit.query.filter_by(name= form.name.data).first():
@@ -97,47 +98,25 @@ def add_unit():
             un = Unit(name, symbol, factor, magnitudes)
             db.session.add(un)
             db.session.commit()
-            return jsonify({
-                'name': name,
-                'symbol': symbol,
-                'factor': factor,
-                'magnitudes': magnitudes
-            }),201
+            if(isajax):
+                return jsonify({
+                    'name': name,
+                    'symbol': symbol,
+                    'factor': factor,
+                    'magnitudes': magnitudes
+                }),201
+            else:
+                return redirect(url_for('manage_units'))
 
-        return jsonify(form.errors),400
+        if(isajax):
+            return jsonify(form.errors),400
+        else:
+            return render_template('create-unit.html', form=form)
 
-    return render_template('partials/unit_form.html', form=form)
-
-@app.route('/units/create', methods=['GET','POST'])
-@login_required
-def create_unit():
-    """ Save a new unit to the database from the manager """
-    if not current_user.is_super_admin:
-        abort(403)
-
-    form= AddUnitForm(request.form)
-
-    if request.method == 'POST':
-        if Unit.query.filter_by(name= form.name.data).first():
-            # we call form.validate to build up all errors from the form
-            form.validate()
-            if not 'name' in form.errors:
-                form.errors['name'] = []
-            form.errors['name'].append("Name "+form.name.data+" already taken")
-
-        elif form.validate():
-            name = request.form.get('name')
-            symbol = request.form.get('symbol')
-            factor = request.form.get('factor') if request.form.get('factor') else None
-            magnitudes = ['','k','M','G','T'] if request.form.get('factor') else None
-
-            un = Unit(name, symbol, factor, magnitudes)
-            db.session.add(un)
-            db.session.commit()
-            return redirect(url_for('manage_units'))
-
-    return render_template('create-unit.html', form=form)
-
+    if(isajax):
+        return render_template('partials/unit_form.html', form=form)
+    else:
+        return render_template('create-unit.html', form=form)
 
 @app.route('/units/edit/<unitid>',methods=['GET','POST'])
 @login_required
