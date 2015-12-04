@@ -334,7 +334,6 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
                 //TODO: legend
                 var legend = (isTemplate) ? ['name']: struct.default_columns;
                 _fillLegend(legend);
-                console.log(legend);
 
                 //fill list
                 if(_data.length){

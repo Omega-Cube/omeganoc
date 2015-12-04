@@ -752,7 +752,8 @@ def applyConf():
         #delete conf cache
         cache.delete('nag_conf')
         _migrate_data()
-        os.remove(SERVICE_WARNING_FILE)
+        if(os.path.isfile(SERVICE_WARNING_FILE)):
+            os.remove(SERVICE_WARNING_FILE)
         return jsonify({'success': 1, 'service_changed': service_changed})
     with open(LAST_CHECK,'r') as filehandler:
         message = ''
