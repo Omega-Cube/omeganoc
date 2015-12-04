@@ -22,6 +22,7 @@ p.intro {
     padding: 0.5em 0.25em;
     margin: 1em 0;
     overflow: auto;
+    transition: background 0.25s;
 }
 
 #mainContent .infobox.alert{
@@ -30,6 +31,10 @@ p.intro {
 
 #mainContent .infobox.info{
     background-color: #2e75b6;
+}
+
+#mainContent .infobox.success{
+    background-color: #019875;
 }
 
 #mainContent .infobox h2{

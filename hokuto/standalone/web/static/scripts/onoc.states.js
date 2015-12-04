@@ -59,8 +59,14 @@ define(['jquery','onoc.createurl'],function(jQuery,createUrl){
                 }else{
                     jQuery('#menu-admin-list').parent().removeClass('alert warning');
                     jQuery('#menu-admin-list .config').removeClass('alert warning');
+                    if(jQuery('.infobox.alert').length){
+                        var container = jQuery('.infobox.alert');
+                        container.empty();
+                        container.removeClass('alert').addClass('success');
+                        container.append('<h2>Configuration have been successfully applied</h2>');
+                    }
                 }
-                
+
 		var tmp = response.results;
 		for(var h in tmp){
 		    tmp[h]['last_time_up'] *= 1000;
@@ -79,8 +85,9 @@ define(['jquery','onoc.createurl'],function(jQuery,createUrl){
 		$(document).trigger('updated.states.onoc');
 		setTimeout(this.fetchCurrentStates.bind(this), 30000);
 	    }.bind(this)).error(function(jqxhr,message){
-		console.error(message);
-	    });
+		console.error("States request failed, maybe shinken or hokuto is down.");
+                setTimeout(this.fetchCurrentStates.bind(this), 30000);
+	    }.bind(this));
 	},
 
 	/**
