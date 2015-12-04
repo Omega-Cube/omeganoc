@@ -48,9 +48,6 @@ _activity_timeout = 1800 #60*30
 # The ID of the user the dashboard and graph settings will be copied from
 _reference_user_id = 1
 
-# The name of the shinken contact used for demo users
-_demo_shinken_user = 'drgkill'
-
 # A super secret server token for the captcha generator!
 _captcha_server_token = None
 
@@ -137,7 +134,7 @@ def flush_old_demo_data():
 _characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 def create_demo_user():
     from user import User, remove_user
-    global _characters, _demo_shinken_user
+    global _characters
     #generate a random name and password
     suffix_size = int(random() * 4 + 4)
     name = 'user_' + ''.join([choice(_characters) for i in range(suffix_size)])
@@ -148,7 +145,7 @@ def create_demo_user():
         
     # Create a new user
     user = User(name, password, True)
-    user.shinken_contact = _demo_shinken_user
+    user.shinken_contact = app.config.get('DEMO_USER', 'admin')
     db.session.add(user)
     db.session.commit()
     create_default_graph(user.id)
