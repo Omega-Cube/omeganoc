@@ -241,8 +241,10 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
         listcontent.find('.item').remove();
         for(var i in results){
             var li = $('<li class="item"></li>');
-            for(var k in struct.default_columns){
-                li.append('<span class="cell">'+results[i][struct.default_columns[k]]+'</span>');
+
+            var columns = (isTemplate) ? ['name'] : struct.default_columns;
+            for(var k in columns){
+                li.append('<span class="cell">'+results[i][columns[k]]+'</span>');
             }
 
             //add actions
@@ -330,7 +332,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
                 listdescription.text(struct.description);
 
                 //TODO: legend
-                var legend = struct.default_columns;
+                var legend = (isTemplate) ? ['name']: struct.default_columns;
                 _fillLegend(legend);
                 console.log(legend);
 
