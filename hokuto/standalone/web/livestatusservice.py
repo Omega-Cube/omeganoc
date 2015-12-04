@@ -24,7 +24,7 @@ import json
 import on_reader.livestatus as livestatus
 import time
 
-from flask import render_template,request,jsonify
+from flask import render_template,request,jsonify,abort
 from flask.ext.login import login_required, current_user
 
 from . import app, utils
