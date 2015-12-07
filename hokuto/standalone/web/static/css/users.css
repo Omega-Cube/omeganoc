@@ -102,6 +102,7 @@
 
 #edit_userScreen .button.cancel{
     background-color:#d9534f;
+    line-height: 1.25em;
 }
 
 #edit_userScreen .errors{
