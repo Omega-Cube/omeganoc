@@ -144,6 +144,16 @@
       {% endif %}
       {% endblock %}
     </header>
+    {% if current_user.shinken_contact == 'None' %}
+    <div id="flash_alert">
+      <p>You currently have no shinken contact assigned to for your profile, you will not be allowed to access any data until you got one.</p>
+      {% if current_user.is_super_admin %}
+      <p>Go to <a href="{{ url_for('edit_user', userid=current_user.id) }}">your profile</a> to define your shinken contact.</p>
+      {% else %}
+      <p>You lack the permission to assign a shinken contact yourself, please contact an administrator to do so.</p>
+      {% endif %}
+    </div>
+    {% endif %}
     <div id="content">
       {% block content %}
       {% endblock %}
@@ -157,5 +167,6 @@
   <script type="text/javascript">
     window.ONOC = window.ONOC || {};
     window.ONOC.is_admin = ('{{ current_user.is_super_admin }}' === 'True') ? true : false;
+    window.ONOC.shinken_contact = '{{current_user.shinken_contact}}'
   </script>
 </html>
