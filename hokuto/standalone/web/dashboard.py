@@ -161,6 +161,12 @@ def global_dashboards_list():
     else:
         return dict()
 
+@app.context_processor
+def global_dashboards_list():
+    """ This context inject current separator used for host/services """
+    return dict(separator=app.config['GRAPHITE_SEP'])
+
+    
 # DATA ACCESS
 def get_list_dashboards():
     """ Returns a list of dashboard names available to the currently connected user """
