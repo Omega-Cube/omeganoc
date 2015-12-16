@@ -167,6 +167,7 @@
   <script type="text/javascript">
     window.ONOC = window.ONOC || {};
     window.ONOC.is_admin = ('{{ current_user.is_super_admin }}' === 'True') ? true : false;
-    window.ONOC.shinken_contact = '{{current_user.shinken_contact}}'
+    window.ONOC.shinken_contact = '{{current_user.shinken_contact}}';
+    window.ONOC.separator = '{{separator}}';
   </script>
 </html>

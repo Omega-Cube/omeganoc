@@ -37,7 +37,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
          * @param {String} probe - The probe identifer following the format [server]_[service]
          */
         addProbe: function(probe){
-            var query = probe.split('.');
+            var query = probe.split(ONOC.separator);
             var interval = States.getServicesStates(query[0],query[1]).check_interval || 1;
             this.worker.postMessage([2,[probe,interval]]);
             if(!this.probes[probe])
@@ -121,7 +121,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
         getMetrics: function(query){
             if(!query)
                 return this.metrics;
-            var splited = query.split('.');
+            var splited = query.split(ONOC.separator);
             if(splited.length === 1)
                 return query;
             var metrics = this.metrics;
@@ -176,17 +176,19 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
          * @return the host name
          */
         extractHost: function(probe){
-            var metrics = this.metrics;
-            var split = probe.split('.');
+            var host = probe.split(ONOC.separator)[0];
+            return host;
+            /*var metrics = this.metrics;
+            var split = probe.split(ONOC.separator);
             while(split.length){
                 split.pop();
-                var host = split.join('.');
+                var host = split.join(ONOC.separator);
                 for(var i in metrics){
                     if(host === i){
                         return host;
                     }
                 }
-            }
+            }*/
         },
 
         /**
@@ -195,11 +197,13 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
          * @return the service description name
          */
         extractService: function(probe){
-            var metrics = this.metrics;
-            var split = probe.split('.');
+            var service = probe.split(ONOC.separator)[1];
+            return service;
+            /*var metrics = this.metrics;
+            var split = probe.split(ONOC.separator);
             while(split.length){
                 split.pop();
-                var service = split.join('.');
+                var service = split.join(ONOC.separator);
                 for(var host in metrics){
                     for(var i in metrics[host]){
                         if(service === host + '.' +i){
@@ -207,7 +211,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
                         }
                     }
                 }
-            }
+            }*/
         },
 
         /**
@@ -354,7 +358,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
         }
     };
     //setup the BASE_URL for worker's requests
-    DashboardProbes.worker.postMessage([1,$SCRIPT_ROOT]);
+    DashboardProbes.worker.postMessage([1,[$SCRIPT_ROOT,ONOC.separator]]);
 
     //TODO: GRUICK!
     DashboardProbes._requestMetrics();

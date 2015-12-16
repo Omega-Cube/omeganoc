@@ -27,7 +27,7 @@ import os
 import sys
 import logging
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask.ext.login import LoginManager, login_required
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.babel import Babel, gettext
