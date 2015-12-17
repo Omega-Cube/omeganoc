@@ -3175,7 +3175,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 var unit = scale.unit;
 
                 var probeContainer = $('<p class="editContent"></p>');
-                probeContainer.append('<label style="display: table-cell;text-shadow: -2px 2px black;">'+groups[g][p]+'</label>');
+                probeContainer.append('<label style="display: table-cell;text-shadow: -2px 2px black;">'+groups[g][p].split(ONOC.separator).join('.')+'</label>');
                 probeContainer.append(form.colorBox.call(this,probe.color, groups[g][p]));
                 probeContainer.append(form.orientSelect.call(this,scale.orient, groups[g][p]));
                 probeContainer.append(form.directionSelect.call(this,scale.reversed, groups[g][p]));

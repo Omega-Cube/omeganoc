@@ -67,18 +67,18 @@ def get_metrics_list():
     reg = re.compile(r'\W')
     tmp = {}
     for m in metrics:
-        metric = next((i for i in permissions['hosts'] if reg.sub('_',i) == m), False)
+        metric = next((i for i in permissions['hosts'] if i == m), False)
         if metric:
             if isinstance(metrics[m],dict):
                 for s in metrics[m]:
                     if('__HOST__' == s and metric not in permissions['hosts_with_services']):
                         service = '__HOST__'
                     else:
-                        service = next((i for i in permissions['services'] if reg.sub('_',i) == s), False)
+                        service = next((i for i in permissions['services'] if i == s), False)
                     if service:
                         if metric not in tmp:
                             tmp[metric] = {}
-                            tmp[metric][service] = metrics[m][s]
+                        tmp[metric][service] = metrics[m][s]
 
             else:
                 tmp[metric] = metrics[m]
