@@ -52,7 +52,7 @@ def get_forecast():
         return jsonify({})
     for probe in probes:
         try:
-            results[probe] = reader.forecast(probe)
+            results[probe] = reader.forecast('.'.join(probe.split(app.config['GRAPHITE_SEP'])))
         except Exception as ex:
             app.logger.warning('An error occured while trying to read forecast results for probe {0} !'.format(probe))
             app.logger.warning(ex)

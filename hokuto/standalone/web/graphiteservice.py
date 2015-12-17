@@ -78,7 +78,7 @@ def get_metrics_list():
                     if service:
                         if metric not in tmp:
                             tmp[metric] = {}
-                        tmp[metric][service] = metrics[m][s]
+                            tmp[metric][service] = metrics[m][s]
 
             else:
                 tmp[metric] = metrics[m]
@@ -93,18 +93,18 @@ def data_get():
 
     shinken_contact = current_user.shinken_contact
     permissions= utils.get_contact_permissions(shinken_contact)
-    reg= re.compile(r'\W')
     probes = json.loads(request.args.get('probes'))
     start = request.args.get('from') or time() - 3600 * 24 * 28
     end = request.args.get('until') or time()
     start = int(start)
     end = int(end)
     data = {}
+    separator = app.config['GRAPHITE_SEP']
     for probe in probes:
         #check if the current user is allowed to retreive probe's data
-        tmp= probe.split('.')
-        checkHost= next((i for i in permissions['hosts'] if reg.sub('_',i) == tmp[0]), False)
-        checkService= next((i for i in permissions['services'] if reg.sub('_',i) == tmp[1]), False)
+        tmp= probe.split(separator)
+        checkHost= next((i for i in permissions['hosts'] if i == tmp[0]), False)
+        checkService= next((i for i in permissions['services'] if i == tmp[1]), False)
         if('__HOST__' == tmp[1]):
             if tmp[0] not in permissions['hosts_with_services']:
                 checkService = '__HOST__'
@@ -115,7 +115,7 @@ def data_get():
             }
             continue
 
-        results= query.query(**{'target': probe, 'from': _format_time(start), 'until': _format_time(end)})
+        results= query.query(**{'target': '.'.join(tmp), 'from': _format_time(start), 'until': _format_time(end)})
         if(len(results)):
             data[probe] = _parse_query_result(results[0])
         else:

@@ -23,7 +23,9 @@
  * @prop {String} BASE_URL - URL to be used on each request by @._request
  */
 var BASE_URL = false;
-
+var ONOC = {
+    'separator': '[SEP]'
+};
 /**
  * AJAX request handler
  * @function
@@ -226,6 +228,7 @@ Probe.prototype.setRequestedDate = function(start,end){
  * @param {Object} data - Object returned by the server (without formating)
  */
 Probe.prototype.setPredicted = function(data){
+    if(!data) return;
     if(!!data.values){
         var formated = {};
         var values = [];
@@ -533,7 +536,7 @@ var Data = {
         if(!this.probes[probe]){
             this.probes[probe] = new Probe();
             this.probes[probe].setInterval(interval);
-            var d = probe.split('.');
+            var d = probe.split(ONOC.separator);
             if(d.length > 1){
                 var h = d[0], s = d[1];
                 this.logs[h] = this.logs[h] || {};
@@ -766,7 +769,7 @@ var Data = {
         var results = {};
         var h,s,d;
         for(var p in probes){
-            d= p.split('.'), h=d[0], s=d[1];
+            d= p.split(ONOC.separator), h=d[0], s=d[1];
             if(!s || !h) continue;
             var logs = this.logs[h][s].getLogs(data['start'],data['end']);
             if(!logs.length)
@@ -844,7 +847,7 @@ var Data = {
                 end = q['end'];
             if(start || end)
                 this.probes[probes[i]].setRequestedDate(start,end);
-            details = probes[i].split('.');
+            details = probes[i].split(ONOC.separator);
 
             if(!!this.logs[details[0]] && !!this.logs[details[0]][details[1]])
                 this.fetchLog(details[0],details[1], signature, start, end);
@@ -940,7 +943,7 @@ var Data = {
             var step = response[d].step;
             var tmp = [];
             var start = true;
-            var query = d.split('.');
+            var query = d.split(ONOC.separator);
             var interval = Math.round((this.probes[d].getInterval() * 60000) / step) || 1;
             var firstKnownValue = false;
 
@@ -974,7 +977,7 @@ onmessage = function(m){
         return false;
     }
     if(typeof m.data !== 'object' || (!m.length && m.length < 2)){
-        consxole.log('Passed object must be an array of two or more values!');
+        console.log('Passed object must be an array of two or more values!');
         return false;
     }
 
@@ -995,7 +998,8 @@ onmessage = function(m){
     */
     switch(m.data[0]){
     case 1:
-        BASE_URL = data;
+        BASE_URL = data[0];
+        ONOC.separator = data[1];
         break;
     case 2:
         Data.addProbe(data);

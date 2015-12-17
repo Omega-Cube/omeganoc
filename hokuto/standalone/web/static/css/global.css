@@ -122,9 +122,9 @@ header
 #content
 {
     /* Height is 100% - header height - footer height */
-    height: -moz-calc(100% - 82px);
-    height: -webkit-calc(100% - 82px);
-    height: calc(100% - 82px);
+    height: -moz-calc(100% - 114px);
+    height: -webkit-calc(100% - 114px);
+    height: calc(100% - 114px);
 }
 
 /* FORMS */
@@ -657,6 +657,13 @@ header > .alerts{
     display: table-cell;
     padding: 0.2em;
     vertical-align: middle;
+}
+
+#flash_alert{
+    margin: 0.25em;
+    text-align: center;
+    color: #E63C3E;
+    font-weight: bold;
 }
 
 /* Misc tools */

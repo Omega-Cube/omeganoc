@@ -239,6 +239,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
 
     function _fillTable(results){
         listcontent.find('.item').remove();
+        listcontent.find('.empty').remove();
         for(var i in results){
             var li = $('<li class="item"></li>');
 
@@ -279,12 +280,12 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
     }
 
     function _fillLegend(legend){
-        var legendContainer = $('.legend').empty();
+        var legendContainer = $('.listlegend').empty();
         for(var l in legend){
-            $('.legend').append('<span class="cell">'+legend[l]+'</span>');
+            $('.listlegend').append('<span class="cell">'+legend[l]+'</span>');
         }
-        $('.legend').append('<span class="cell">Edit</span>');
-        $('.legend').append('<span class="cell">Remove</span>');
+        $('.listlegend').append('<span class="cell">Edit</span>');
+        $('.listlegend').append('<span class="cell">Remove</span>');
     }
     
     function _applyHash(hash) {
@@ -295,6 +296,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
 
         //flush
         listcontent.find('.item').remove();
+        listcontent.find('.empty').remove();
         listtitle.empty();
         jQuery(".configlist-title .search").val('');
 
@@ -331,7 +333,6 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
                 listtitle.text(title);
                 listdescription.text(struct.description);
 
-                //TODO: legend
                 var legend = (isTemplate) ? ['name']: struct.default_columns;
                 _fillLegend(legend);
 

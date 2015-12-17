@@ -110,7 +110,7 @@ define(['d3','dashboards.probes'],function(d3,DashboardProbes){
             .attr('fill',data.color)
             .attr('font-size',12)
             .attr('style','cursor:pointer;')
-            .text(service);
+            .text(service.split(ONOC.separator).join('.'));
 
         var legendValue = container.append('g')
             .attr('transform','translate(0,1)');

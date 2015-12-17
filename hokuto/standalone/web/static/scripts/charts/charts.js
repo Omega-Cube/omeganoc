@@ -1624,7 +1624,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         var data = [];
         for(var p in this.probes) data.push({
             'order': Number(this.probes[p].order),
-            'name': 'chart_'+p.split('.').join('_')
+            'name': 'chart_'+p.split(ONOC.separator).join('_')
         });
         this.container.focus.selectAll('.ordered').data(data,function(d,e){
             return  d ? d.name : this.id;
@@ -1911,7 +1911,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         var g = this.container.focus.insert("g",":first-child")
             .attr("clip-path", clippath)
             .attr("class","chart ordered focus_"+probe)
-            .attr("id","chart_"+probe.split('.').join('_'));
+            .attr("id","chart_"+probe.split(ONOC.separator).join('_'));
 
         var g2 = this.container.context.insert("g",":first-child")
             .attr("class","chart context_"+probe);
@@ -1957,7 +1957,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         var dots =  this.container.focus.append("g")
             .attr("clip-path", clippath)
             .attr("class","chart dots focus_"+probe)
-            .attr("id","dots_"+probe.split('.').join('_'));
+            .attr("id","dots_"+probe.split(ONOC.separator).join('_'));
 
         dots.selectAll(".dots")
             .data(data)
@@ -2050,7 +2050,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         var g = this.container.focus.insert("g",":first-child")
             .attr("clip-path", clippath)
             .attr("class","chart ordered line focus_"+probe)
-            .attr("id","chart_"+probe.split('.').join('_'));
+            .attr("id","chart_"+probe.split(ONOC.separator).join('_'));
 
         var g2 = this.container.context.insert("g",":first-child")
             .attr("class","chart line context_"+probe);
@@ -2058,7 +2058,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         var dots =  this.container.focus.append("g")
             .attr("clip-path", clippath)
             .attr("class","chart dots focus_"+probe)
-            .attr("id","dots_"+probe.split('.').join('_'));
+            .attr("id","dots_"+probe.split(ONOC.separator).join('_'));
 
         var paths = this._getPathList(data);
 
@@ -2175,8 +2175,8 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         if(!predict[0].length) return;
 
         var x= this.axis.x;
-        var g = this.container.focus.select('#chart_'+probe.split(".").join("_"));
-        var gDots = this.container.focus.select('#dots_'+probe.split(".").join("_"));
+        var g = this.container.focus.select('#chart_'+probe.split(ONOC.separator).join("_"));
+        var gDots = this.container.focus.select('#dots_'+probe.split(ONOC.separator).join("_"));
 
         //link with the last available value
         var len = data.length;
@@ -2321,14 +2321,14 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         var focusGroup = this.container.focus.insert('g',":first-child")
             .attr('class','columns ordered')
             .attr('clip-path',clippath)
-            .attr("id","chart_"+probe.split('.').join('_'));;
+            .attr("id","chart_"+probe.split(ONOC.separator).join('_'));;
         var contextGroup = this.container.context.insert('g',":first-child")
             .attr('class','columns')
             .attr('clip-path','url(#clip_'+this.id+')');
         var dots = this.container.focus.append('g')
             .attr('class','chart dots focus_'+probe)
             .attr('clip-path',clippath)
-            .attr("id","dots_"+probe.split('.').join('_'));
+            .attr("id","dots_"+probe.split(ONOC.separator).join('_'));
 
         dots.selectAll(".dots")
             .data(data)
@@ -2980,7 +2980,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 query = form.server.value;
             else{
                 for(var i=0, len = form['server'].length; i<len; i++){
-                    if(i) query = query.concat('.');
+                    if(i) query = query.concat(ONOC.separator);
                     query = query.concat(form[i].value);
                 }
             }
@@ -3068,7 +3068,7 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
                 query = form.server.value;
             else{
                 for(var i=0, len = form['server'].length; i<len; i++){
-                    if(i) query = query.concat('.');
+                    if(i) query = query.concat(ONOC.separator);
                     query = query.concat(form[i].value);
                 }
             }
