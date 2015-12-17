@@ -164,7 +164,7 @@ def global_dashboards_list():
 @app.context_processor
 def global_dashboards_list():
     """ This context inject current separator used for host/services """
-    return dict(separator=app.config['GRAPHITE_SEP'])
+    return dict(separator=getattr(app.config,'GRAPHITE_SEP','[SEP]'))
 
     
 # DATA ACCESS
