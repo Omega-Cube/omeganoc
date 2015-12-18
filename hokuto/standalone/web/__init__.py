@@ -149,7 +149,10 @@ def init(config):
     login_manager = LoginManager()
     login_manager.init_app(app, add_context_processor=True)
     login_manager.login_message = gettext('Please log in to access this page')
-    login_manager.login_view = 'login'
+    if(app.config.get('DEMO', False) == True):
+        login_manager.login_view = 'demo_create'
+    else:
+        login_manager.login_view = 'login'
 
     # A useful route converter that filters a URL using a regular expression
     # It can be used like this in a rule : blah/<regex([a-z]):data>
