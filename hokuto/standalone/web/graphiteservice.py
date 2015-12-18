@@ -64,17 +64,18 @@ def get_metrics_list():
     # Remove forbidden hosts and services from the request
     permissions= utils.get_contact_permissions(current_user.shinken_contact)
 
+    # Graphite replace all special characters by underscores
     reg = re.compile(r'\W')
     tmp = {}
     for m in metrics:
-        metric = next((i for i in permissions['hosts'] if i == m), False)
+        metric = next((i for i in permissions['hosts'] if reg.sub('_',i) == m), False)
         if metric:
             if isinstance(metrics[m],dict):
                 for s in metrics[m]:
                     if('__HOST__' == s and metric not in permissions['hosts_with_services']):
                         service = '__HOST__'
                     else:
-                        service = next((i for i in permissions['services'] if i == s), False)
+                        service = next((i for i in permissions['services'] if reg.sub('_',i) == s), False)
                     if service:
                         if metric not in tmp:
                             tmp[metric] = {}
@@ -115,6 +116,8 @@ def data_get():
             }
             continue
 
+        reg = re.compile(r'\W')
+        tmp = [reg.sub('_',t) for t in tmp]
         results= query.query(**{'target': '.'.join(tmp), 'from': _format_time(start), 'until': _format_time(end)})
         if(len(results)):
             data[probe] = _parse_query_result(results[0])

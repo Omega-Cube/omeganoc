@@ -11,7 +11,7 @@ import os
 import subprocess
 import time
 import sys
-
+import re
 import sqlite3
 
 from mplock import monitor_lock, FLockManager
@@ -26,6 +26,7 @@ service_migration_file = '/tmp/service_migration_list.txt'
 livestatus_log_dir = '/var/log/shinken/archives'
 
 _logging_configured = False
+_r = re.compile(r'\W')
 
 def main():
     # This lock manager will prevent other processes from doing
@@ -56,16 +57,16 @@ def main():
                     #Migrate host probe data
                     mainLogger = getLogger()
                     for h in migrate_hosts:
-                        mainLogger.info("Moving "+h[0]+" to "+h[1])
-                        pcode = subprocess.call(['mv', h[0], h[1]])
+                        mainLogger.info("Moving "+h[0]+" to "+r.sub('_',h[1]))
+                        pcode = subprocess.call(['mv', h[0], r.sub('_',h[1])])
                         if pcode:
-                            mainLogger.error("Can't move "+(h[0])+' to '+(h[1]))
+                            mainLogger.error("Can't move "+(h[0])+' to '+(r.sub('_',h[1])))
                     #Migrate service data
                     for h in migrate_services:
-                        mainLogger.info("Moving "+h[0]+" to "+h[1])
-                        pcode = subprocess.call(['mv', h[0], h[1]])
+                        mainLogger.info("Moving "+r.sub('_',h[0])+" to "+r.sub('_',h[1]))
+                        pcode = subprocess.call(['mv', r.sub('_',h[0]), r.sub('_',h[1])])
                         if pcode:
-                            mainLogger.error("Can't move "+(h[0])+' to '+(h[1]))
+                            mainLogger.error("Can't move "+(r.sub('_',h[0]))+' to '+(r.sub('_',h[1])))
                 except Exception, er:
                     e = sys.exc_info()
                     mainLogger.error("[WATCHER] Oops, something bad happened while migrating data\n"+str(e))
