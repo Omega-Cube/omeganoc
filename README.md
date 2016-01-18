@@ -14,9 +14,9 @@ Dependencies:
 There is currently an installer for three OS : CentOS (7+), Debian and Ubuntu.
 If you are runing one of this you can directly run one of this command :
 
-   make debian
-   make ubuntu
-   make centos
+    make debian
+    make ubuntu
+    make centos
 
 This installers have been tested on : Centos 7.0, Debian 8.1 and Ubuntu 14.04.
 And move directly to STEP 5.
@@ -147,7 +147,7 @@ For more informations about shinken setings see [shinken settings and configurat
 TROUBLESHOOTING
 ===============
 
-* I can't see any host/probe
+### I can't see any host/probe
 
 By default all users are created with the shinken contact 'None', which
 prevents the user to get information from any host. This is because a user can
@@ -161,7 +161,7 @@ Another reason can be that carbon daemon is not running, which prevents Shinken
 from sending data to the metrics database (see *STEP 5: Start or restart daemons*
 in the installation procedure above).
 
-* SLA tools don't take events prior to my installation into acount
+### SLA tools don't take events prior to my installation into acount
 
 Retrieving SLA informations from livestatus was very ressource consuming, so
 OmegaNoc use his own database to process such data.
@@ -172,12 +172,12 @@ that command from the installation folder:
 
     make import-sla
 
-* Dashboard's widget are very slow to load / the spinner never goe away
+### Dashboard's widget are very slow to load / the spinner never goe away
 
 This may be caused by performance issues with Livestatus. Try enabling
 use_aggressive_sql in logstore-sqlite's configuration.
 
-* I just installed shinken but the default configuration seems wrong / I do not any data
+### I just installed shinken but the default configuration seems wrong / I do not any data
 
 Shinken is provided with a prebuild config which monitors localhost. If you
 want to use it, you'll have to install the Nagios standard plugins (you can
