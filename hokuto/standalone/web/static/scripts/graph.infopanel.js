@@ -17,11 +17,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'onoc.createurl', 'dataservice', 'console'], function (jQuery, createUrl, DataService, Console) {
+define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], function (jQuery, createUrl, states, DataService, Console) {
     var _currentPanel = false; // Tells us if there's a panel currently displayed. When not false contains the name of the displayed element
     var _container = null; // The jQuery object containing the container
-    var _hostIconUrl = createUrl('static/images/elements/server.png');
-    var _serviceIconUrl = createUrl('static/images/elements/brick.png');
 
     // Create a property table containing the names and values of the provided dictionary
     // It will create something like :
@@ -37,12 +35,14 @@ define(['jquery', 'onoc.createurl', 'dataservice', 'console'], function (jQuery,
             var t = jQuery('<span></span>').text(name + ': ');
             t = jQuery('<p></p>').append(t);
             if (jQuery.isPlainObject(value)) {
-                if (value.noEscaping) {
-                    t.append(jQuery('<span></span>').append(value.value));
-                }
-                else {
-                    t.append(jQuery('<span></span>').text(value));
-                }
+                var newSpan = jQuery('<span></span>');
+                if (value.class)
+                    newSpan.attr('class', value.class);
+                if (value.noEscaping)
+                    newSpan.append(value.value);
+                else
+                    newSpan.text(value.value);
+                t.append(newSpan);
             }
             else {
                 t.append(jQuery('<span></span>').text(value));
@@ -71,8 +71,8 @@ define(['jquery', 'onoc.createurl', 'dataservice', 'console'], function (jQuery,
 
     function createRedStars(activeCount) {
         // Unicode chars used :
-        // - ? Black Star &#9733;
-        // - ? Star &#9734;
+        // - ★ Black Star &#9733;
+        // - ☆ Star &#9734;
 
         var text = '';
         for(var i = 0; i < 5; ++i) {
@@ -110,7 +110,36 @@ define(['jquery', 'onoc.createurl', 'dataservice', 'console'], function (jQuery,
             if (notes)
                 panel.append(notes);
             
+            /*
+                Note: for hosts, Livestatus states are:
+                0 - UP
+                1 - DOWN
+                2 - UNREACHABLE
+            */
+            
+            var statusText = 'Unknown', statusClass = 'status-unknown';
+            switch(states.getHostState(hostName).state) {
+                case 0:
+                    statusText = 'Up';
+                    statusClass = 'status-ok';
+                    break;
+                    
+                case 1:
+                    statusText = 'Down';
+                    statusClass = 'status-ko';
+                    break;
+                    
+                case 2:
+                    statusText = 'Unreachable';
+                    statusClass = 'status-unknown';
+                    break;
+            }
+            
             panel.append(createPropertyTable({
+                'Status': {
+                    'value': statusText,
+                    'class': statusClass,
+                },
                 'Services': host.num_services,
                 'Address': host.address,
                 'Business impact': { 
@@ -149,7 +178,42 @@ define(['jquery', 'onoc.createurl', 'dataservice', 'console'], function (jQuery,
             if (notes)
                 panel.append(notes);
 
+            /*
+                Note: for services, Livestatus states are:
+                0 - OK
+                1 - WARN
+                2 - CRIT
+                3 - UNKNOWN
+            */
+
+            var statusText = 'Unknown', statusClass = 'state-unknown';
+            switch(states.getServicesStates(hostName, serviceName).state) {
+                case 0:
+                    statusText = 'Ok',
+                    statusClass = 'status-ok';
+                    break;
+                    
+                case 1:
+                    statusText = 'Warning';
+                    statusClass = 'status-warning';
+                    break;
+                    
+                case 2:
+                    statusText = 'Critical';
+                    statusClass = 'status-ko';
+                    break;
+                
+                case 3:
+                    statusText = 'Unknown';
+                    statusClass = 'status-unknown';
+                    break;
+            }
+
             panel.append(createPropertyTable({
+                'Status': {
+                    'value': statusText,
+                    'class': statusClass,
+                },
                 'Business impact': {
                     'value': createRedStars(service.business_impact),
                     'noEscaping': true

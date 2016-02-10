@@ -222,3 +222,28 @@ a.graphIconLink {
     padding-left: 20px;
     background: url(../images/elements/brick.png) no-repeat left center;
 }
+
+/* Status indicators in the info panel */
+.status-ok {
+    padding-left: 18px;
+    background: url(../images/status-ok.png) no-repeat left center;
+    color: #44AD6E;
+}
+
+.status-warning {
+    padding-left: 18px;
+    background: url(../images/status-warning.png) no-repeat left center;
+    color: orange;
+}
+
+.status-ko {
+    padding-left: 18px;
+    background: url(../images/status-ko.png) no-repeat left center;
+    color: #a24040;
+}
+
+.status-unknown {
+    padding-left: 18px;
+    background: url(../images/status-unknown.png) no-repeat left center;
+    color: #969696;
+}

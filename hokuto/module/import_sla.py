@@ -24,9 +24,17 @@ from os import listdir
 from os.path import isfile, join
 
 import sqlite3
+import ConfigParser
+
+parser = ConfigParser.ConfigParser()
+parser.readfp(open('/etc/hokuto.cfg'))
+conf = parser.items('config')
+userconfig = {}
+for c in conf:
+    userconfig[c[0].upper().rstrip()] = c[1]
 
 ARCHIVES_DIRECTORY='/var/log/shinken/archives'
-TARGET_DB='/var/lib/shinken/hokuto.db'
+TARGET_DB=userconfig['DB_PATH']
 CURRENT_DB='/var/log/shinken/livelogs.db'
 ARCHIVES_DB=sorted([ f for f in listdir(ARCHIVES_DIRECTORY) if isfile(join(ARCHIVES_DIRECTORY,f)) \
               and f.split('.')[-1] == 'db' \
