@@ -103,7 +103,10 @@ def init(config):
         conf = parser.items('config')
         userconfig = {}
         for c in conf:
-            userconfig[c[0].upper().rstrip()] = c[1]
+            val = c[1]
+            if(c[1] == 'True' or c[1] == 'False'):
+                val = bool(val)
+            userconfig[c[0].upper().rstrip()] = val
         app.config.update(userconfig)
     else:
         for key in config:
