@@ -155,6 +155,12 @@ g.node > .command-icon {
     cursor: pointer;
 }
 
+.edge-commander > .comm-middle-cross {
+    stroke: #957a77;
+    stroke-width: 2px;
+    cursor: pointer;
+}
+
 .select-rect {
     stroke: #9999FF;
     fill: none;

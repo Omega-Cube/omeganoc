@@ -180,9 +180,9 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
         this._onEllipseMouseOver = function (e) {
             // Do not display the tooltip during user manipulations
-            var node = this.parent.dataNode;
+            var node = this.set.dataNode;
             if (selfRef.currentMouseOperation === Bubbles.MOUSE_OPERATION_NONE) {
-                selfRef._showTooltip(this instanceof SVG.Ellipse ? this.parent : this, node.label);
+                selfRef._showTooltip(this instanceof SVG.Ellipse ? this.set : this, node.label);
 
                 // Show the command menu if the node is currently selected
                 if (node.selected) {
@@ -247,7 +247,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         };
 
         this._onEllipseMouseDown = function (e) {
-            var node = this.parent.dataNode;
+            var node = this.set.dataNode;
 
             if (e.ctrlKey) {
                 selfRef._updateNodeSelection(node, !node.selected);
@@ -290,7 +290,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         this._onGroupMouseDown = function (e) {
             e = jQuery.event.fix(e);
             // Select all the nodes inside that group
-            var group = this.parent.group;
+            var group = this.set.group;
             if (e.ctrlKey) {
                 selfRef._updateGroupSelection(group, !group.selected);
                 selfRef._onSelectionChanged();
@@ -694,6 +694,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             group.shape.group = group;
             group.miniShape.group = group;
+            ellipse.set = shape;
             ellipse.mousedown(this._onGroupMouseDown);
 
             this._updateGroupPosition(group, false, true);
@@ -1309,7 +1310,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             edge.connection.attr({ 'class': 'edge' + selectionClasses });
             edge.miniConnection.attr({ 'class': 'edge mini' + selectionClasses });
 
-            this._createEdgeCommander(edge);
+            if(this.graphType.onEdgeCommand)
+                this._createEdgeCommander(edge);
         },
 
         // Selects all the edges coming from the specified node
@@ -1334,7 +1336,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         },
 
         _showTooltip: function (target, content) {
-            var bb = target.bbox();
+            var bb = target.rbox();
             var coords = this.getDocumentCoords(bb.x, bb.y);
             Tooltip.show(coords[0], coords[1] - 10, bb.width, bb.height, content);
         },
@@ -1421,7 +1423,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         },
 
         rectangleSelectionOfNodes: function () {
-            var bounds = this.selectionRectangle.bbox();
+            var bounds = this.selectionRectangle.rbox();
 
             var node;
 
@@ -1429,7 +1431,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                 node = this.graph.nodes[i];
                 // No test needed if the node is already selected
                 if (!node.selected) {
-                    var nodeBounds = node.shape.bbox();
+                    var nodeBounds = node.shape.rbox();
                     // Collision test
                     if (!(bounds.x2 <= nodeBounds.x || bounds.x >= nodeBounds.x2 || bounds.y >= nodeBounds.y2 || bounds.y2 <= nodeBounds.y)) {
                         this._updateNodeSelection(node, true);
@@ -1886,50 +1888,25 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             if (edge._commanderUi)
                 return;
 
-            var width = 52;
             var height = 22;
-            var hWidth = width / 2;
             var hHeight = height / 2;
             var middleRadius = hHeight - 3;
             var set = this.svg.group()
                 .attr({ 'class': 'edge-commander' })
                 .mousedown(this._onEdgeCommanderMouseDown);
             set._edge = edge;
+            set.element('title').words('Click to remove this link');
 
-//            var background = set.rect(width, height).attr({
-//                'x': -hWidth,
-//                'y': -hHeight,
-//                'rx': hHeight,
-//                'ry': hHeight,
-//                'class': 'comm-bg'
-//            });
-
-//            var leftArrowHitbox = set.rect(hWidth, hHeight).attr({
-//                'x': -hWidth,
-//                'y': -hHeight,
-//                'radius': hHeight,
-//                'class': 'comm-arrow-bg left'
-//            }).click(this._onEdgeCommanderLeftClick);
-//
-//            var rightArrowHitbox = set.rect(hWidth, hHeight).attr({
-//                'x': 0,
-//                'y': -hHeight,
-//                'radius': hHeight,
-//                'class': 'comm-arrow-bg right'
-//            }).click(this._onEdgeCommanderRightClick);
-
-//            var leftArrow = set.path('M' + (middleRadius + 2) + ',' + (middleRadius - 2) + 'L' + (hWidth - 5) + ',0L' + (middleRadius + 2) + ',' + -(middleRadius - 2)).attr({
-//                'class': 'comm-arrow'
-//            }).click(this._onEdgeCommanderLeftClick);
-//
-//            var rightArrow = set.path('M' + -(middleRadius + 2) + ',' + (middleRadius - 2) + 'L' + -(hWidth - 5) + ',0L' + -(middleRadius + 2) + ',' + -(middleRadius - 2)).attr({
-//                'class': 'comm-arrow'
-//            }).click(this._onEdgeCommanderRightClick);
-
-            var middleButton = set.ellipse(middleRadius * 2, middleRadius * 2).attr({
+            set.ellipse(middleRadius * 2, middleRadius * 2).attr({
                 'class': 'comm-middle',
                 'cx': 0,
                 'cy': 0,
+            }).click(this._onEdgeCommanderCenterClicked);
+            set.line(-5, -5, 5, 5).attr({
+                'class': 'comm-middle-cross'
+            }).click(this._onEdgeCommanderCenterClicked);
+            set.line(5, -5, -5, 5).attr({
+                'class': 'comm-middle-cross'
             }).click(this._onEdgeCommanderCenterClicked);
 
             edge._commanderUi = set;
@@ -1945,6 +1922,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             edge._commanderUi._x = (edge.source.renderX + edge.target.renderX) / 2;
             edge._commanderUi._y = (edge.source.renderY + edge.target.renderY) / 2;
+            // Hide the commander if the edge isn't long enough
             edge._commanderUi._visible = Math.abs(edge.source.renderX - edge.target.renderX) > 30 || Math.abs(edge.source.renderY - edge.target.renderY) > 30;
         },
 
@@ -1977,12 +1955,20 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             if (!edge._commanderUi)
                 return;
             edge._commanderUi.transform({
-                'rotation': edge._commanderUi._r,
                 'x': edge._commanderUi._x,
+                'cx': edge._commanderUi._x,
                 'y': edge._commanderUi._y,
+                'cy': edge._commanderUi._y,
+                'rotate': edge._commanderUi._r
             }).style({
                 'display': edge._commanderUi._visible ? '' : 'none'
             });
+            // edge._commanderUi.rotate(edge._commanderUi._r)
+            //                  .x(edge._commanderUi._x)
+            //                  .y(edge._commanderUi._y)
+            //                  .style({
+            //                     'display': edge._commanderUi._visible ? '' : 'none'
+            //                  });
 
         },
 
