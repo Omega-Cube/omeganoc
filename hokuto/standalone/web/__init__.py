@@ -26,6 +26,7 @@ the Omega Noc monitoring system.
 import os
 import sys
 import logging
+import ConfigParser
 
 from flask import Flask, render_template, request
 from flask.ext.login import LoginManager, login_required
@@ -39,7 +40,7 @@ from on_reader.livestatus import livestatus
 
 # Global objects
 app = None
-db = None
+b = None
 babel = None
 login_manager = None
 cache = None
@@ -97,7 +98,13 @@ def init(config):
     # Main application object
     app = Flask(__name__)
     if config is None:
-        app.config.from_pyfile('/etc/hokuto.cfg')
+        parser = ConfigParser.ConfigParser()
+        parser.readfp(open('/etc/hokuto.cfg'))
+        conf = parser.items('config')
+        userconfig = {}
+        for c in conf:
+            userconfig[c[0].upper().rstrip()] = c[1]
+        app.config.update(userconfig)
     else:
         for key in config:
             app.config[key] = config[key]
