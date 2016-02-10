@@ -19,11 +19,11 @@
 
 """ Helper script that can be used to launch the website during the development process """ 
 
-import module.web
+import standalone.web
 
 # There's a bug in Werkzeug that make it deadlock when a browser
 # makes 2 requests at the same time (IE does that for example)
 # Use threaded=True to avoid that bug
 # Use threaded=False (default) for a better debugging experience
-module.web.init(None)
-module.web.app.run(host='0.0.0.0', debug=True, threaded=True)
+standalone.web.init(None)
+standalone.web.app.run(host='0.0.0.0', debug=True, threaded=True)
