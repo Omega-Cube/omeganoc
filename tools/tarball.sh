@@ -18,7 +18,8 @@
 #
 # Build a new tarball with minified ressources.
 
-VERSION="v0.93"
+. ../hokuto/etc/hokuto.cfg
+VERSION=$(echo $VERSION | tr -d '\r^M')
 BUILDNAME="omeganoc_"$VERSION
 
 echo Building $BUILDNAME archive...;
@@ -34,8 +35,8 @@ r.js -o build.js dir=$BUILDNAME/hokuto/module/web/static
 
 # build the tarball
 echo Compress the archive
-tar -czvf $BUILDNAME.tar.gz $BUILDNAME --exclude=\.* --exclude=*.pyc --exclude=*.log --exclude=*.db --exclude=*~ --exclude=#* --exclude=Vagrantfile \
-    --exclude=vagrant_provision --exclude=mock --exclude=tools --exclude=omeganoc.tar.gz --exclude=lib/on_reader/build;
+tar -czvf $BUILDNAME.tar.gz $BUILDNAME --exclude=*.tar.gz --exclude=\.* --exclude=*.pyc --exclude=*.log --exclude=*.db --exclude=*~ --exclude=#* \
+    --exclude=Vagrantfile  --exclude=vagrant_provision --exclude=mock --exclude=tools --exclude=omeganoc.tar.gz --exclude=lib/on_reader/build;
 mv $BUILDNAME.tar.gz ../;
 echo Removing temp directory
 rm -Rf $BUILDNAME;
