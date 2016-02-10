@@ -41,7 +41,7 @@ with open(CUR_VERSION_FILE, 'r') as o:
     CUR_VERSION = o.read() or '0.0'
     CUR_VERSION = float(CUR_VERSION)
 
-print "Current version is "+CUR_VERSION
+print "Current version is " + str(CUR_VERSION)
 print "Looking for update operations..."
 #check if current version != installed
 if(float(CUR_VERSION) < 0.95):
