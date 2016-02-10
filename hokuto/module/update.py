@@ -24,20 +24,24 @@ import sqlite3
 import os
 import ConfigParser
 
-VERSION_FILE = '/usr/local/hokuto/VERSION'
+NEW_VERSION_FILE = os.path.dirname(__file__) + '/../standalone/VERSION'
+CUR_VERSION_FILE = '/usr/local/hokuto/VERSION'
 
 #load config
 config = ConfigParser.ConfigParser()
 config.readfp(open('/etc/hokuto.cfg'))
 conf = dict(config.items('config'))
-INSTALLED_VERSION = float(conf['version'])
+
+with open(NEW_VERSION_FILE,'r') as o:
+    NEW_VERSION = float(o.read())
 
 #touch the file if not exist
-open(VERSION_FILE,'a').close()
-with open(VERSION_FILE, 'r') as o:
+open(CUR_VERSION_FILE,'a').close()
+with open(CUR_VERSION_FILE, 'r') as o:
     CUR_VERSION = o.read() or '0.0'
     CUR_VERSION = float(CUR_VERSION)
 
+print "Current version is "+CUR_VERSION
 print "Looking for update operations..."
 #check if current version != installed
 if(float(CUR_VERSION) < 0.95):
@@ -57,6 +61,4 @@ if(float(CUR_VERSION) < 0.95):
     c.close()
 
 #update cur_version -> installed version
-print "Update done, installed version is now " + str(INSTALLED_VERSION)
-with open(VERSION_FILE,'w+') as o:
-    o.write(str(INSTALLED_VERSION))
+print "Update done, installed version is now " + str(NEW_VERSION)
