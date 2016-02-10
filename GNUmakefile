@@ -131,6 +131,10 @@ check-dependencies:
 clean: on-reader-clean
 
 #tools
+#update script
+update: sudoer hokuto
+	@python hokuto/module/update.py
+
 import-sla: sudoer
 	@sqlite3 /var/lib/shinken/hokuto.db "CREATE TABLE IF NOT EXISTS sla (id INTEGER NOT NULL, host_name VARCHAR(128) NOT NULL, service_description VARCHAR(32), time INTEGER NOT NULL, state INTEGER, PRIMARY KEY (id));"
 	@python hokuto/module/import_sla.py
