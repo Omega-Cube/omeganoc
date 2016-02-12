@@ -76,7 +76,6 @@ def demo_create():
     captcha_error = False
     login = ''
     passwd = ''
-    app.logger.debug('form values: ')
     # Do we have a captcha result ?
     if 'g-recaptcha-response' in request.form:
         usertoken = request.form['g-recaptcha-response']
