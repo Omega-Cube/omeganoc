@@ -19,7 +19,7 @@
 # Build a new tarball with minified ressources.
 
 . ../hokuto/etc/hokuto.cfg
-VERSION=$(echo $VERSION | tr -d '\r^M')
+VERSION=$(cat ../hokuto/standalone/VERSION | tr -d '\r^M')
 BUILDNAME="omeganoc_"$VERSION
 
 echo Building $BUILDNAME archive...;
