@@ -26,7 +26,7 @@ def get_new_metrics_list():
     result = {}
     client = _create_connection()
     tagdata = client.query('show tag values with key in ("host_name", "service_description")')
-    separator = getattr(app.config,'GRAPHITE_SEP','[SEP]')
+    separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
     measurements = list(_get_numeric_measurements(client))
     #print 'measurements : ' + str(measurements)
 
@@ -64,7 +64,7 @@ def get_metric_values():
     probes = request.args.get('probes') # An array of strings, in the form "host/service/probe"
     start = request.args.get('start') or '-28d' # Retrieve the last 28 days by default
     end = request.args.get('end') or 'now'
-    separator = getattr(app.config,'GRAPHITE_SEP','[SEP]')
+    separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
 
     parsed_probes = []
     results = {}

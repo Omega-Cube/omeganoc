@@ -100,7 +100,7 @@ def data_get():
     start = int(start)
     end = int(end)
     data = {}
-    separator = getattr(app.config,'GRAPHITE_SEP','[SEP]')
+    separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
     for probe in probes:
         #check if the current user is allowed to retreive probe's data
         tmp= probe.split(separator)
