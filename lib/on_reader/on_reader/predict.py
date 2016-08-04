@@ -61,7 +61,7 @@ class PredictReader(object):
         """
         Returns the predicted evolution of a value over the next few hours
         
-        The target argument should contain the name of a Graphite complnent
+        The target argument should contain the name of a Graphite component
         
         If this function returns None, it means that this probe was never checked by the prediction engine (or does not exist)
         Otherwise, it returns a dict containing a date (for the time at which the prediction algorithm was run for the last time) 

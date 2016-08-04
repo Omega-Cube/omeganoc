@@ -180,7 +180,6 @@ def init(config):
     import dashboard # Dashboard page
     import widgetsloader # Dashboard widgets tools
     import structureservice
-    import graphiteservice # Graphites services
     import livestatusservice # Livestatus services
     import predictservice # predictation tools
     import reports # logs screens

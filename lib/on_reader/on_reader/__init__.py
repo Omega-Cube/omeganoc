@@ -12,18 +12,3 @@
    host goes down or goes back up)
  * Past events (access the history of all previously triggered events)
 """
-import sys
-
-# MetroLogic
-
-class MetroLogic(object):
-    def eval_qs(self, query_string):
-        from graphite.query import eval_qs
-        return eval_qs(query_string)
-
-    def query(self, params):
-        from graphite.query import query
-        return query(params)
-
-
-metrologic = MetroLogic()
