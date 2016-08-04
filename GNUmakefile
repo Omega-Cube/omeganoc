@@ -1,4 +1,4 @@
-# Copyright Omega Noc (C) 2014 Omega Cube and contributors
+# Copyright Omega Noc (C) 2016 Omega Cube and contributors
 # Nicolas Lantoing, nicolas@omegacube.fr
 # Xavier Roger-Machart, xrm@omegacube.fr
 #
@@ -20,7 +20,7 @@ WHOAMI = $(shell whoami)
 
 #clear out the suffix list
 .SUFFIXES:
-.IGNORE: check-dependencies graphite-prebuild shinken-prebuild
+.IGNORE: check-dependencies shinken-prebuild
 
 #prevent up-to-date return
 .PHONY: mock help default install debian centos clean test
@@ -37,7 +37,7 @@ sudoer:
 		exit 1; \
 	fi
 
-install: dependencies sudoer graphite shinken on-reader hokuto clean
+install: dependencies sudoer shinken on-reader hokuto clean
 
 shinken-init: sudoer shinken-install
 	shinken --init
@@ -60,16 +60,13 @@ debian-prebuild: sudoer
 
 init-daemons: sudoer
 	@echo "Cleaning debian specific files"
-	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
+	sed -i "s/modules.*/modules	influxdb, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
 	sed -i "s/modules.*/modules	named-pipe, PickleRetentionArbiter/g" /etc/shinken/arbiters/arbiter-master.cfg
-	cp vendor/scripts/carbon-cache-init.sh /etc/init.d/carbon-cache
 	cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
 	cp nanto/etc/init.d/nanto /etc/init.d/nanto
-	update-rc.d carbon-cache defaults
 	update-rc.d hokuto defaults
 	update-rc.d nanto defaults
 	update-rc.d shinken defaults
-	/etc/init.d/carbon-cache start
 	/etc/init.d/shinken start
 	/etc/init.d/nanto start
 	/etc/init.d/hokuto start
@@ -92,11 +89,8 @@ centos-prebuild: sudoer
 
 systemd-daemons:
 	@echo "Cleaning centos install"
-	sed -i "s/modules.*/modules	graphite, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
+	sed -i "s/modules.*/modules	influxdb, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
 	sed -i "s/modules.*/modules	named-pipe, PickleRetentionArbiter/g" /etc/shinken/arbiters/arbiter-master.cfg
-	cp vendor/scripts/carbon-cache-systemd.service /etc/systemd/system/carbon-cache.service
-	cp vendor/scripts/carbon-cache-systemd.sh /usr/bin/carbon-cache.sh
-	chmod +x /usr/bin/carbon-cache.sh
 	cp vendor/scripts/shinken-systemd.service /etc/systemd/system/shinken.service
 	cp hokuto/etc/systemd/system/hokuto.service /etc/systemd/system/hokuto.service
 	cp hokuto/etc/systemd/system/hokuto.sh /usr/bin/hokuto.sh
@@ -104,12 +98,10 @@ systemd-daemons:
 	cp nanto/etc/systemd/system/nanto.service /etc/systemd/system/nanto.service
 	cp nanto/etc/systemd/system/nanto.sh /usr/bin/nanto.sh
 	chmod +x /usr/bin/nanto.sh
-	systemctl enable carbon-cache.service
 	systemctl enable shinken.service
 	systemctl enable hokuto.service
 	systemctl enable nanto.service
 	systemctl start hokuto.service
-	systemctl start carbon-cache.service
 	systemctl start shinken.service
 	systemctl start nanto.service
 
@@ -119,7 +111,7 @@ systemd-daemons:
 	chown shinken:shinken /var/log/shinken/arbiterd.log
 
 
-dependencies: shinken-dependencies graphite-dependencies
+dependencies: shinken-dependencies influxdb-dependencies
 
 check-dependencies:
 	@echo "Checking global dependencies..."
@@ -142,12 +134,12 @@ import-sla: sudoer
 	@python hokuto/module/import_sla.py
 
 
-#graphite
-graphite-dependencies:
+# InfluxDB
+influxdb-dependencies:
 	@command -v pip 2>&1 || { echo >&2 "Missing pip."; exit 1;}
 
-graphite: graphite-prebuild graphite-dependencies sudoer
-	pip install 'graphite-query==0.11.3'
+influxdb: influxdb-prebuild influxdb-dependencies sudoer
+	pip install 'influxdb==3.0.0'
 
 #shinken
 shinken-dependencies:
@@ -157,15 +149,14 @@ shinken-dependencies:
 
 shinken-install-dependencies: sudoer
 	@echo -n "\033]0;Installing shinken plugins dependencies\007"
-	pip install pycurl 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' carbon 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'graphite-query==0.11.3' 'python-mk-livestatus==0.4' 'gunicorn==19.3.0' pynag chardet
+	pip install pycurl 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'python-mk-livestatus==0.4' 'gunicorn==19.3.0' pynag chardet
 
 shinken-install-plugins: sudoer vendors
 	@mkdir -p /var/lib/shinken/share && chown shinken:shinken /var/lib/shinken/share
-	-useradd --user-group graphite
 	@echo -n "\033]0;Installing shinken - livestatus plugin\007"
 	shinken install --local vendor/livestatus
-	@echo -n "\033]0;Installing shinken - graphite plugin\007"
-	shinken install graphite
+	@echo -n "\033]0;Installing shinken - InfluxDB plugin\007"
+	shinken install influxdb
 	@echo -n "\033]0;Installing shinken - logstore-sqlite plugin\007"
 	shinken install --local vendor/logstore-sqlite
 	@echo -n "\033]0;Installing shinken - hokuto plugin\007"
@@ -175,18 +166,9 @@ shinken-install-plugins: sudoer vendors
 	@echo -n "\033]0;Installing shinken - pickle retention\007"
 	shinken install pickle-retention-file-generic
 
-shinken-plugins-config: sudoer watcher
-	@echo -n "\033]0;Initialize livestatus config files\007"
-	@if ! ls /opt/graphite/conf/carbon.conf >/dev/null 2>&1; then\
-		cp /opt/graphite/conf/carbon.conf.example /opt/graphite/conf/carbon.conf; \
-	fi
-	@if ! ls /opt/graphite/conf/storage-schemas.conf >/dev/null 2>&1; then\
-		cp /opt/graphite/conf/storage-schemas.conf.example /opt/graphite/conf/storage-schemas.conf; \
-	fi
-
-shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins shinken-plugins-config
+shinken: shinken-prebuild shinken-install-dependencies shinken-install-plugins
 	@echo Omeganoc have been succefully installed
-	@echo Add "'modules graphite, livestatus, hokuto'" to your broker-master.cfg file
+	@echo Add "'modules influxdb, livestatus, hokuto'" to your broker-master.cfg file
 	@echo Add modules named-pipe, PickleRetentionArbiter to your arbiter-master.cfg file
 	@echo Add modules logstore-sqlite to livestatus.cfg.
 
@@ -236,8 +218,8 @@ on-reader-clean: sudoer
 	@rm -rf lib/on_reader/build
 
 #prebuilds messages
-graphite-prebuild:
-	@echo -n "\033]0;Installing graphite python API/\007"
+influxdb-prebuild:
+	@echo -n "\033]0;Installing InfluxDB python API/\007"
 shinken-prebuild:
 	@echo -n "\033]0;Configuring shinken\007"
 
