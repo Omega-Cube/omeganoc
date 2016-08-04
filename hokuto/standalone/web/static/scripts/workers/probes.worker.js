@@ -36,13 +36,19 @@ var ONOC = {
 var _request = function(service,data,callback){
     var xhr = new XMLHttpRequest();
     if(data && typeof data !== 'string'){
-        if(data instanceof Object){
-            var tmp = [];
-            for(var d in data)
-                tmp.push(d+'='+JSON.stringify(data[d]));
-            data = tmp.join('&');
-        }else if(data)
-            data = JSON.stringify(data);
+        var queryStringParts = []
+        for(var key in data) {
+            var val = data[key];
+            if(Array.isArray(val)) {
+                for(var i in val) {
+                    queryStringParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(val[i]));
+                }
+            }
+            else {
+                queryStringParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(val));
+            }
+        }
+        data = queryStringParts.join('&');
     }
     if(data)
         xhr.open('GET',BASE_URL.concat(service,'?',data),true);
@@ -855,11 +861,11 @@ var Data = {
 
         var query = {'probes': probes };
         if(!!q && q['start'])
-            query['from'] = Math.floor(q['start'] / 1000);
+            query['start'] = Math.floor(q['start'] / 1000);
         if(!!q && q['end'])
-            query['until'] = Math.floor(q['end'] / 1000);
+            query['start'] = Math.floor(q['end'] / 1000);
 
-        _request('/services/data/get/', query, function(data){
+        _request('/services/metrics/values', query, function(data){
             if(data){
                 postMessage([1,data,signature]);
                 this._parseResponseData(data);
@@ -920,7 +926,7 @@ var Data = {
     fetchPredicts: function(probes,sig){
         //TODO check if predict data already fetched to prevent useless requests
         var url = '/services/predict/forecast';
-        var query = { 'probes': probes};
+        var query = { 'probes': probes };
         _request(url, query, function(data){
             postMessage([11,data,sig]);
             for(var p in data)
@@ -932,6 +938,7 @@ var Data = {
      * Handle the response object by converting timestamp to ms and construct the data object.
      */
     _parseResponseData: function(response){
+        /* Original parsing logic (used with graphite), to be kept for reference
         for(var d in response){
             //TODO: should handle errors messages and code
             if(!response[d].values) continue;
@@ -940,6 +947,7 @@ var Data = {
             response[d].step *= 1000;
 
             var time = response[d].start;
+            // Distance between each Graphite point, in ms
             var step = response[d].step;
             var tmp = [];
             var start = true;
@@ -964,6 +972,58 @@ var Data = {
             response[d].values = tmp;
             if(!firstKnownValue) firstKnownValue = Date.now();
             this.probes[d].update(response[d].values, firstKnownValue, response[d].end, step * interval);
+        }
+        */
+
+        // New parsing logic, used with Influx
+        // The objective here is not to create somethink efficient, but rather something that
+        // will get the closest possible result when compared to the original Graphite implementation
+        // Optimizations will come later, with a more general reorganization
+        var interval = 0;
+        var current, host, service, metric;
+        var lastFilledSlot, firstFilledSlot, currentSlot, point, points, pointTime;
+        for(var id in response) {
+            interval = (this.probes[id].getInterval() * 60) || 60;
+            current = response[id];
+            host = current.host;
+            service = current.service;
+            metric = current.metric;
+
+            firstFilledSlot = 0;
+            lastFilledSlot = 0;
+            points = [];
+            for(var i = 0, imax = current.values.length; i < imax; ++i) {
+                point = current.values[i];
+                currentSlot = point.time - (point.time % interval);
+                if(firstFilledSlot === 0) {
+                    firstFilledSlot = currentSlot;
+                }
+                if(currentSlot > lastFilledSlot) {
+                    // Take the current value for the current slot.
+                    // That means that if there are several values in the same slot,
+                    // only the last one will be used. (that should happen fairely 
+                    // rarely though)
+
+                    if(lastFilledSlot > 0) {
+                        // Make sure that there are no empty slots between this value and the previous one
+                        // If so, fill them with null values
+                        for(var emptySlot = lastFilledSlot + interval; emptySlot < currentSlot; emptySlot += interval) {
+                            points.push(null);
+                        }
+                    }
+
+                    points.push(point.value);
+                    lastFilledSlot = currentSlot;
+                }
+            }
+
+            // If there was no data at all
+            if(firstFilledSlot === 0) {
+                firstFilledSlot = Date.now();
+            } 
+
+            // the update function expects times in ms, so we have to multiply all the timestamps here
+            this.probes[id].update(points, firstFilledSlot * 1000, lastFilledSlot * 1000 + interval * 1000 - 1, interval * 1000);
         }
     }
 };

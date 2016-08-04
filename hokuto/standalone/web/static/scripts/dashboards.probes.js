@@ -236,7 +236,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
          * @param {Function} callback
          */
         _requestMetrics: function(callback){
-            jQuery.getJSON(createUrl('/services/data/get/metrics/'),function(response){
+            jQuery.getJSON(createUrl('/services/metrics'),function(response){
                 this.metrics = response;
                 if(callback && typeof callback === 'function')
                     callback(this.metrics);

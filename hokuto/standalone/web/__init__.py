@@ -185,6 +185,7 @@ def init(config):
     import predictservice # predictation tools
     import reports # logs screens
     import configservice # Shinken configuration web services
+    import metroservice # Metrology service using InfluxDB
     
     #Starting point
     @app.route('/')
