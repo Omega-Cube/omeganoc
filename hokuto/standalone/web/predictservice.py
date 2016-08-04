@@ -42,7 +42,7 @@ def get_forecast():
     Return trending forecasting from given probe
     If the user have no predict table will return 403
     """
-    probes= json.loads(request.args.get('probes'))
+    probes = request.args.getlist('probes')
     if len(probes) == 0:
         return jsonify({})
     results= {}
