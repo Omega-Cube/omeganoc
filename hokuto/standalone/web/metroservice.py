@@ -3,10 +3,10 @@
 import re
 
 from flask import jsonify, request
-from flask.ext.login import login_required
+from flask.ext.login import login_required, current_user
 from influxdb import InfluxDBClient
 
-from . import app
+from . import app, utils
 
 def _create_connection():
     return InfluxDBClient(host='localhost', port=8086, database='shinken', username='shinken', password='shinken_test')
@@ -19,6 +19,14 @@ def _get_numeric_measurements(client):
                 yield m[0]
                 break    
 
+_flatten_expr = None
+def _flatten_name(name):
+    """ Removes any non-alphanumeric character from a string, by replacing them by underscores """
+    global _flatten_expr
+    if _flatten_expr is None:
+        _flatten_expr = re.compile(r'[^\w-]');
+    return _flatten_expr.sub('_', name)
+
 @app.route('/services/metrics')
 @login_required
 def get_new_metrics_list():
@@ -28,7 +36,11 @@ def get_new_metrics_list():
     tagdata = client.query('show tag values with key in ("host_name", "service_description")')
     separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
     measurements = list(_get_numeric_measurements(client))
-    #print 'measurements : ' + str(measurements)
+
+    permissions = utils.get_contact_permissions(current_user.shinken_contact)
+    app.logger.debug('== ALLOWED SERVICES : ' + str(permissions['services']))
+    app.logger.debug('== ALLOWED HOSTS : ' + str(permissions['hosts']))
+    app.logger.debug('== ALLOWED HOSTS W/ SERVICES: ' + str(permissions['hosts_with_services']))
 
     for m in tagdata.items():
         # Do not use non-numeric metrics
@@ -42,7 +54,19 @@ def get_new_metrics_list():
                 host_names.append(pair[u'value'])
             if pair[u'key'] == u'service_description':
                 service_description = pair[u'value']
+
+        is_host_service = service_description.upper() == '__HOST__'
+
+        # Skip the service if it's not available to the user (except for __HOST__, which is handled by the authorized hosts list)
+        if not is_host_service and service_description not in permissions['services']:
+            continue # This service is not available to this user; skip it
+
         for host_name in host_names:
+            # If this is the host service, exclude it if that host is only allowed because of its contained services
+            if is_host_service and (host_name in permissions['hosts_with_services'] or host_name not in permissions['hosts']):
+                app.logger.debug('rejected host: ' + host_name + '/' + service_description + '/' + m[0][0])
+                continue
+
             # check if the host is already in the results
             if host_name not in result:
                 result[host_name] = {}
@@ -65,35 +89,36 @@ def get_metric_values():
     start = request.args.get('start') or '-28d' # Retrieve the last 28 days by default
     end = request.args.get('end') or 'now'
     separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
-
-    parsed_probes = []
     results = {}
-    influx = _create_connection()
-    if isinstance(probes, basestring):
-        probes = [probes]
-    for pstring in  probes:
-        parts = pstring.split(separator)
-        if len(parts) != 3:
-            app.logger.warning('Data was requested for invalid probe ID "{}"'.format(parts))
-            continue
-        parsed_host = parts[0]
-        parsed_service = parts[1]
-        parsed_metric = parts[2]
 
-        query = 'select time, value from {} where host_name={} and service_description={} and time >= {} and time <= {}'.format(
-            _secure_query_token('metric_' + parsed_metric), 
-            _secure_query_string(parsed_host), 
-            _secure_query_string(parsed_service), 
-            _secure_query_date(start), 
-            _secure_query_date(end))
-        app.logger.debug('influx query: ' + query)
-        data = influx.query(query, epoch='s')
-        results[pstring] = {
-            'host': parsed_host,
-            'service': parsed_service,
-            'metric': parsed_metric,
-            'values': list(data.get_points())
-        }
+    if probes is not None:
+        parsed_probes = []
+        influx = _create_connection()
+        if isinstance(probes, basestring):
+            probes = [probes]
+        for pstring in  probes:
+            parts = pstring.split(separator)
+            if len(parts) != 3:
+                app.logger.warning('Data was requested for invalid probe ID "{}"'.format(parts))
+                continue
+            parsed_host = parts[0]
+            parsed_service = parts[1]
+            parsed_metric = parts[2]
+
+            query = 'select time, value from {} where host_name={} and service_description={} and time >= {} and time <= {}'.format(
+                _secure_query_token('metric_' + parsed_metric), 
+                _secure_query_string(parsed_host), 
+                _secure_query_string(parsed_service), 
+                _secure_query_date(start), 
+                _secure_query_date(end))
+            app.logger.debug('influx query: ' + query)
+            data = influx.query(query, epoch='s')
+            results[pstring] = {
+                'host': parsed_host,
+                'service': parsed_service,
+                'metric': parsed_metric,
+                'values': list(data.get_points())
+            }
 #select time, value from metric_mem_free where host_name='courtois' and service_description='RAM' and time >= now() - 7d and time <= now()
 
     return jsonify(results)

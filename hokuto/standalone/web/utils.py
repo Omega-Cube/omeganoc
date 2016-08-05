@@ -57,7 +57,7 @@ def generate_salt(len):
         salt += random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789')
     return salt
 
-def get_contact_permissions(shinken_contact):
+def get_contact_permissions(shinken_contact, flatten_names = False):
     """ Return the list of hosts and services the current user is allowed to see. """
 
     services_permissions = livestatus.livestatus.services._query
@@ -84,6 +84,10 @@ def get_contact_permissions(shinken_contact):
     servicegroups_permissions = servicegroups_permissions.columns(*('name','members'))
     servicegroups_permissions = [n['name'] for n in servicegroups_permissions.call() if len([m for m in n['members'] if m in services_permissions])]
 
-    results = {'hosts': hosts_permissions , 'services': services_permissions, 'hostgroups': hostgroups_permissions, 'servicegroups': servicegroups_permissions, 'hosts_with_services': hosts_with_services}
-
-    return results
+    return {
+        'hosts': hosts_permissions, # Authorized host names (hosts that has the user as a contact OR that contains a service that has the user as a contact)
+        'services': services_permissions, # Authorized service names
+        'hostgroups': hostgroups_permissions, # Authorized host group names
+        'servicegroups': servicegroups_permissions, # Authorized service group names
+        'hosts_with_services': hosts_with_services # Names of hosts that are not directly authorized, but that contains autorized services
+    }
