@@ -38,14 +38,10 @@ def get_new_metrics_list():
     measurements = list(_get_numeric_measurements(client))
 
     permissions = utils.get_contact_permissions(current_user.shinken_contact)
-    app.logger.debug('== ALLOWED SERVICES : ' + str(permissions['services']))
-    app.logger.debug('== ALLOWED HOSTS : ' + str(permissions['hosts']))
-    app.logger.debug('== ALLOWED HOSTS W/ SERVICES: ' + str(permissions['hosts_with_services']))
 
     for m in tagdata.items():
         # Do not use non-numeric metrics
         if m[0] not in measurements:
-            print '-- not in measurements: SKIPPED!'
             continue
         # Extract host and service names
         host_names = []
@@ -64,7 +60,6 @@ def get_new_metrics_list():
         for host_name in host_names:
             # If this is the host service, exclude it if that host is only allowed because of its contained services
             if is_host_service and (host_name in permissions['hosts_with_services'] or host_name not in permissions['hosts']):
-                app.logger.debug('rejected host: ' + host_name + '/' + service_description + '/' + m[0][0])
                 continue
 
             # check if the host is already in the results
