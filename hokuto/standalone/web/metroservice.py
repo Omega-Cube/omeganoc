@@ -8,8 +8,40 @@ from influxdb import InfluxDBClient
 
 from . import app, utils
 
+class InfluxConfigurationException(Exception):
+    """ An exceptoin raised when the InfluxDB configuration has a problem """
+    def __init__(self, message):
+        self.message = message
+    def __str__(self):
+        return self.message
+
 def _create_connection():
-    return InfluxDBClient(host='localhost', port=8086, database='shinken', username='shinken', password='shinken_test')
+    host = app.config.get('INFLUX_HOST')
+    port = app.config.get('INFLUX_PORT')
+    db = app.config.get('INFLUX_DATABASE')
+    user = app.config.get('INFLUX_USERNAME')
+    password = app.config.get('INFLUX_PASSWORD')
+
+    missing = []
+    if host is None:
+        missing.append('INFLUX_HOST')
+    if port is None:
+        missing.append('INFLUX_PORT')
+    if db is None:
+        missing.append('INFLUX_DATABASE')
+    if user is None:
+        missing.append('INFLUX_USERNAME')
+    if password is None:
+        missing.append('INFLUX_PASSWORD')
+    if len(missing) > 0:
+        raise InfluxConfigurationException('Missing InfluxDB configuration directives: ' + ', '.join(missing))
+
+    try:
+        port = int(port)
+    except ValueError:
+        raise InfluxConfigurationException('The current configuration value for INFLUX_PORT ("{}") is not a valid number'.format(port))
+
+    return InfluxDBClient(host=host, port=port, database=db, username=user, password=password)
 
 def _get_numeric_measurements(client):
     fielddata = client.query('show field keys');
