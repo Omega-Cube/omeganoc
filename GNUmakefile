@@ -52,14 +52,21 @@ ubuntu-prebuild:
 	apt-get update
 	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt11-dev libgnutls-dev libreadline-dev r-base r-base-dev
 	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
+	# Install InfluxDB
+	wget -O /tmp/influxdb_0.13.0_amd64.deb https://dl.influxdata.com/influxdb/releases/influxdb_0.13.0_amd64.deb
+	dpkg -i /tmp/influxdb_0.13.0_amd64.deb
+	rm /tmp/influxdb_0.13.0_amd64.deb
 
 debian-prebuild: sudoer
-	@echo "Installing debian build"
+	@echo "Installing debian requirements"
 	apt-get install python-pip python-pycurl sqlite3 graphviz graphviz-dev pkg-config python-dev libxml2-dev libcurl4-gnutls-dev libgcrypt20-dev gnutls-dev libreadline-dev r-base r-base-dev
 	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
+	# Install InfluxDB
+	wget -O /tmp/influxdb_0.13.0_amd64.deb https://dl.influxdata.com/influxdb/releases/influxdb_0.13.0_amd64.deb
+	dpkg -i /tmp/influxdb_0.13.0_amd64.deb
+	rm /tmp/influxdb_0.13.0_amd64.deb
 
 init-daemons: sudoer
-	@echo "Cleaning debian specific files"
 	sed -i "s/modules.*/modules	influxdb, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
 	sed -i "s/modules.*/modules	named-pipe, PickleRetentionArbiter/g" /etc/shinken/arbiters/arbiter-master.cfg
 	cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
@@ -86,6 +93,8 @@ centos-prebuild: sudoer
 	yum update
 	yum install sqlite graphviz graphviz-devel gcc gcc-c++ python-devel libxml2-devel readline-devel R
 	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
+	curl -o /tmp/influxdb_0.13.0_amd64.deb https://dl.influxdata.com/influxdb/releases/influxdb-0.13.0.x86_64.rpm
+	yup localinstall /tmp/influxdb_0.13.0_amd64.deb
 
 systemd-daemons:
 	@echo "Cleaning centos install"
@@ -110,6 +119,10 @@ systemd-daemons:
 	chown -R shinken:shinken /tmp/shinken
 	chown shinken:shinken /var/log/shinken/arbiterd.log
 
+configure-influx:
+	influx -execute "CREATE DATABASE shinken"
+	influx -execute "CREATE USER shinken WITH PASSWORD 'shinken'"
+	influx -execute "GRANT ALL ON shinken TO shinken"
 
 dependencies: shinken-dependencies influxdb-dependencies
 
@@ -157,6 +170,8 @@ shinken-install-plugins: sudoer vendors
 	shinken install --local vendor/livestatus
 	@echo -n "\033]0;Installing shinken - InfluxDB plugin\007"
 	shinken install influxdb
+	sed -i "s/user.*/user            shinken/g" /etc/shinken/modules/influxdb.cfg
+	sed -i "s/password.*/password        shinken/g" /etc/shinken/modules/influxdb.cfg
 	@echo -n "\033]0;Installing shinken - logstore-sqlite plugin\007"
 	shinken install --local vendor/logstore-sqlite
 	@echo -n "\033]0;Installing shinken - hokuto plugin\007"

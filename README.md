@@ -3,23 +3,25 @@ INSTALL
 
 Dependencies:
 ------------
-* shinken >= 2.0
-* sqlite3
-* graphviz
+* shinken >= 2.0 (http://shinken-monitoring.org/)
+* sqlite3 (https://www.sqlite.org/)
+* graphviz (http://graphviz.org/)
 * graphviz-devel
 * python >= 2.6
 * python-devel
 * libxml2-devel
+* InfluxDB (https://influxdata.com/time-series-platform/influxdb/)
 
-There is currently an installer for three OS : CentOS (7+), Debian and Ubuntu.
-If you are runing one of this you can directly run one of this command :
+You can either install these by yourself, or use our automated installer 
+that can do the work for you on CentOS (7+), Debian or Ubuntu platforms.
+To use the automated installer, run one of these commands:
 
     make debian
     make ubuntu
     make centos
 
 This installers have been tested on : Centos 7.0, Debian 8.1 and Ubuntu 14.04.
-And move directly to STEP 5.
+After using them, you can go directly to step 5!
 Note: if you are installing from the git repository you still have to do the submodule step (0) before.
 
 STEP 0 : FETCH GIT SUBMODULES
@@ -107,7 +109,7 @@ After the first launch some files have the wrong permission settings, you have t
 STEP 5 : CONFIGURE
 ------------------
 
-To change settings, like address and port for omeganoc interface, edit the file /etc/hokuto.cfg.
+To change settings, like the address and port to access the web interface, edit the file /etc/hokuto.cfg.
 
 Don't forget to restart the service after any change:
 
@@ -116,6 +118,11 @@ Don't forget to restart the service after any change:
       systemctl restart hokuto.service
 
 You now should be able to load the interface from the address and port defined in hokuto.cfg : http://<host>:<port>
+
+Another thing you should change after the automated install is the default InfluxDB password :
+* In InfluxDB (with the command `SET PASSWORD FOR shinken = 'some new password'`)
+* In hokuto.cfg
+* In the Shinken configuration (the file is /etc/shinken/modules/influxdb.cfg)
 
 STEP 6 : SET ADMIN USER PASSWORD
 --------------------------------
