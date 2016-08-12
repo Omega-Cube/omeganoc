@@ -42,6 +42,7 @@ Install and initialize shinken (requiere root privileges).
      cd <omeganoc>/<directory>
      make shinken-install
      shinken --init
+
 Just run `make shinken-install` if shinken have already ben installed.
 
 STEP 2 : INSTALL SHINKEN PLUGINS
@@ -85,19 +86,19 @@ Run this from the installation directory to install it:
     cp hokuto/etc/init.d/hokuto /etc/init.d/hokuto
     update-rc.d hokuto defaults
 
-Or if your are using systemd you can try our script :
+Or if your are using systemd you can try our script:
    cp hokuto/etc/systemd/system/hokuto.service /etc/systemd/system/hokuto.service
    systemctl enable hokuto.service
 
 After the install Shinken and Hokuto needs to be (re)started:
 
     /etc/init.d/shinken [re]start
-If you have installed the debian start script :
+If you have installed the debian start script:
     /etc/init.d/hokuto [re]start
-On others distribution you have to launch the gunicorn daemon manually :
+On others distribution you have to launch the gunicorn daemon manually:
     /usr/local/hokuto/gunicorn_launcher.py
 
-You also have to restart the cron daemon :
+You also have to restart the cron daemon:
     /etc/init.d/cron restart
     #or
     crond restart
@@ -117,9 +118,9 @@ Don't forget to restart the service after any change:
       #or
       systemctl restart hokuto.service
 
-You now should be able to load the interface from the address and port defined in hokuto.cfg : http://<host>:<port>
+You now should be able to load the interface from the address and port defined in hokuto.cfg.
 
-Another thing you should change after the automated install is the default InfluxDB password :
+Another thing you should change after the automated install is the default InfluxDB password:
 * In InfluxDB (with the command `SET PASSWORD FOR shinken = 'some new password'`)
 * In hokuto.cfg
 * In the Shinken configuration (the file is /etc/shinken/modules/influxdb.cfg)
@@ -127,12 +128,12 @@ Another thing you should change after the automated install is the default Influ
 STEP 6 : SET ADMIN USER PASSWORD
 --------------------------------
 
-At this stage you should be able to access Omega Noc at http://<host>:<port>
+At this stage you should be able to access Omega Noc at http://myserver:5555
 (or whatever address / port you configured in step 4).
 Omega Noc default user credentials are:
 
-         username : admin
-         password : admin
+         username: admin
+         password: admin
 
 Don't forget to login and change this for a more secure password.
 
