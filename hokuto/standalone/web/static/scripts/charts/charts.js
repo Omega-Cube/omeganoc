@@ -179,8 +179,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this.buildContainers(container);
         this._buildCommands();
         this.fetchUnits(function(data){
-            if(!Object.keys(this.probes).length)
+            // Once the units are available, show the "add" form 
+            // if this widget does not contain any data source yet
+            if(!Object.keys(options.conf.probes).length) {
                 this.toogleAddPanel();
+            }
         }.bind(this));
         this.buildPanel();
 
