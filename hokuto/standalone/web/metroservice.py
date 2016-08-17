@@ -81,11 +81,10 @@ def _flatten_name(name):
 
 @app.route('/services/metrics')
 @login_required
-def get_new_metrics_list():
+def get_metrics_list():
     result = {}
     client = _create_connection()
     tagdata = client.query('show tag values with key in ("host_name", "service_description")')
-    separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
     measurements = list(_get_numeric_measurements(client))
 
     permissions = utils.get_contact_permissions(current_user.shinken_contact)
@@ -175,17 +174,12 @@ def _secure_query_string(value):
     """
     return "'" + value.replace("'", "\\'") + "'"
 
-_secure_query_token_expr = None
 def _secure_query_token(value):
     """
     Secures a string so it can be used as a VarRef in a InfluxDB query
     (like a column or table name for exemple)
     """
-    global _secure_query_token_expr
-    if not _secure_query_token_expr:
-        # Matches any character that is not alphanumeric, nor _
-        _secure_query_token_expr = re.compile('[\W]+', re.UNICODE)
-    return _secure_query_token_expr.sub('', value)
+    return '"' + value.replace('"', '') + '"'
 
 _secure_query_date_expr = None
 def _secure_query_date(value):
