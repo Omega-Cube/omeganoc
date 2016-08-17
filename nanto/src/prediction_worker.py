@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 
 # This file is part of Omega Noc
-# Copyright Omega Noc (C) 2014 Omega Cube and contributors
+# Copyright Omega Noc (C) 2016 Omega Cube and contributors
 # Xavier Roger-Machart, xrm@omegacube.fr
 #
 # This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ import traceback
 
 from multiprocessing import Process, Value, Queue
 
-from graphitequery import storage, query
+from influxdb import InfluxDBClient
 
 from on_reader.livestatus import livestatus, get_all_hosts
 
@@ -59,14 +59,14 @@ class PredictionWorker(Process):
         self.data_version = data_version
         self.run_exception = None # This member will be filled with any unmanaged exception that is cought in the run method
         self.last_execution_time = Value('d', 0.0)
-        
+
         # Shared
         self.messages = Queue()
         
         # Worker process state
         self.__cancel_requested = False
         
-    def initialize(self, previous_worker, db_path):
+    def initialize(self, previous_worker, db_path, influx_info):
         """
         Called by the module just before it's ready to use this instance.
         The previous_worker parameter may contain the worker instance that was 
@@ -74,6 +74,7 @@ class PredictionWorker(Process):
         consecutive runs.
         """
         self.database_file = db_path
+        self.influx_info = influx_info
         pass
 
     def start(self):
@@ -296,31 +297,48 @@ class PredictionWorker(Process):
         """
         raise Exception("Not implemented")
 
-    # GRAPHITE TOOLS for use by child classes
-    @staticmethod
-    def get_graphite_metrics():
-        """Returns a list of metrics on which we will can get data from Graphite"""
-        result = []
-        PredictionWorker.__parseMetrics('*', storage.Store(), result)
+    # METROLOGY DATA TOOLS for use by child classes
+    def get_metrics_structure(self):
+        """
+        Returns a list of metrics available in the metrics database.
+        """
+        client = self.__get_influx_client()
+        result = {}
+        tagdata = client.query('show tag values with key in ("host_name", "service_description")')
+        measurements = list(PredictionWorker.__get_numeric_measurements(client))
+
+        for m in tagdata.items():
+            # Do not use non-numeric metrics
+            if m[0] not in measurements:
+                continue
+            # Extract host and service names
+            host_names = []
+            for pair in m[1]:
+                if pair[u'key'] == u'host_name':
+                    host_names.append(pair[u'value'])
+                if pair[u'key'] == u'service_description':
+                    service_description = pair[u'value']
+
+            for host_name in host_names:
+                # check if the host is already in the results
+                if host_name not in result:
+                    result[host_name] = {}
+                # Add the service into the host
+                if service_description not in result[host_name]:
+                    result[host_name][service_description] = []
+                # Add the probe
+                metric_name = m[0][0]
+                if metric_name.startswith('metric_'):
+                    metric_name = metric_name[7:]
+                result[host_name][service_description].append(metric_name)
         return result
 
-    @staticmethod
-    def __parseMetrics(query, store, results):
-        metrics= store.find(query)
-        for m in metrics:
-            if m.is_leaf:
-                results.append(m.path)
-            else:
-                PredictionWorker.__parseMetrics(m.path + '.*', store, results)
-        return results
-
-    @staticmethod
-    def get_graphite_data(metric_name, from_hours, remove_nones = True, expand = False):
+    def get_metrics_data(self, hostname, servicename, probename, from_hours, remove_nones = True, expand = False):
         """ 
-        Returns the data stored in graphite for the period between now and N hours ago
+        Returns the data stored in the metrics database for the period between now and N hours ago
 
         If expand is True, then the function will add None values to fill areas of time that 
-        are required but not returned by Graphite
+        are required but not returned by the database
 
         If remove_nones is True, the all None values in the series will be replaced by the previous value.
         If the first value is None, it will be set to zero.
@@ -331,59 +349,118 @@ class PredictionWorker(Process):
         If no data was found, the step will be 0 and the values will be an empty list
 
         """
-        now = time.time()
+        logging.debug('Data requested for host "{}", service "{}", metric "{}" on {} hours'.format(
+            hostname, servicename, probename, from_hours))
+        client = self.__get_influx_client()
+        query = "select time, value from \"{}\" where host_name='{}' and service_description='{}' and time >= now() - {}h".format(
+            'metric_' + probename,
+            hostname,
+            servicename,
+            from_hours)
+        logging.debug('InfluxDB query : ' + query)
+        raw = client.query(query, epoch='s')
 
-        results = query.query(target=metric_name, from_time='-' + str(from_hours) + 'h')
+        normalized_data = []
+        # For interval detection, we will assume there are a lot of points (otherwise
+        # we would not have any good prediction anyway). That way we can be confident
+        # that the most encountered interval is the actual one
+        intervals = {}
+        previous_point = 0
 
-        if len(results):
-            data = results[0].getInfo()['values']
-            step = results[0].step
-            end_data = results[0].end
-            start_data = results[0].start   
-        else:
-            # TODO : No data found for this target... What do ?
-            data = []
-            step = 0
-            end_data = 0
-            start_data = 0
+        for row in raw.get_points():
+            r = row['time'] % 60
+            if r > 30:
+                current_point = row['time'] - r + 60
+            else:
+                current_point = row['time'] - r
+            
+            normalized_data.append({'time': current_point, 'value': row['value']})
 
-        if len(data) > 0 and expand:
-            end_ts = now
-            start_ts = now - (from_hours * 3600)
-
-            start_diff = start_data - start_ts
-            end_diff = end_ts - end_data
-
-            start_diff = int(start_diff / step)
-            end_diff = int(end_diff / step)
-
-            if start_diff > 0:
-                data = [None for i in xrange(start_diff)] + data
-                start_data -= (start_diff * step)
-
-            if end_diff > 0:
-                data = data  + [None for i in xrange(end_diff)]
-                end_data += (end_diff * step)
-
-        if remove_nones:
-            # So we have to get sure that no unknown value is left in the data
-            # TODO : Make sure that the array returned enough values to cover the entire requested period
-            last_state = 0
-            for i in xrange(len(data)):
-                if data[i] is None:
-                    data[i] = last_state
+            if previous_point != 0:
+                interval = current_point - previous_point
+                if interval in intervals:
+                    intervals[interval] += 1
                 else:
-                    last_state = data[i]
+                    intervals[interval] = 1
+        
+        if len(normalized_data) == 0:
+            # No data
+            return (0, 0, 0, [])
 
-        return (start_data, end_data, step, data)
+        # Get the actual interval
+        interval_max_count = 0
+        interval = 300 # Default : 5 minutes (basically this will be kept if there's only one point)
+        for i in intervals:
+            if intervals[i] > interval_max_count:
+                interval_max_count = intervals[i]
+                interval = i
+        logging.debug('Detected interval: {}'.format(interval))
+        
+        # Generate the data array with one value every interval
+        final_data = [normalized_data[0]['value']]
+        start_time = normalized_data[0]['time']
+        end_time = 0
+        previous_point = start_time
+        previous_value = normalized_data[0]['value']
+        for point in normalized_data[1:]:
+            next_point = previous_point + interval
+            if point['time'] < previous_point:
+                continue # Current point is in an already filled interval; skip it
+            while point['time'] >= next_point:
+                # An empty point !
+                if remove_nones:
+                    final_data.append(previous_value)
+                else:
+                    final_data.append(None)
+                next_point += interval
+            final_data.append(point['value'])
+            previous_value = point['value']
+            previous_point = next_point
+            end_time = next_point
+
+        # Expand ?
+        if expand:
+            # Expand before known data
+            expanded_bound = time.time() - from_hours * 3600
+            # Round to the next interval 
+            expanded_bound -= (expanded_bound % interval) + interval
+            if remove_nones:
+                while start_time >= expanded_bound:
+                    final_data.insert(0, 0)
+                    start_time -= interval
+            else:
+                while start_time >= expanded_bound:
+                    final_data.insert(0, None)
+                    start_time -= interval
+            
+            # Expand after known data
+            expanded_bound = time.time()
+            expanded_bound -= expanded_bound % interval
+            if remove_nones:
+                while end_time <= expanded_bound:
+                    final_data.append(previous_value)
+                    end_time += interval
+            else:
+                while end_time <= expanded_bound:
+                    final_data.append(None)
+                    end_time += interval
+        return (start_time, end_time, interval, final_data)
+
+    def __get_influx_client(self):
+        return InfluxDBClient(host=self.influx_info['host'], 
+                              port=self.influx_info['port'],
+                              database=self.influx_info['database'],
+                              username=self.influx_info['username'],
+                              password=self.influx_info['password'])
 
     @staticmethod
-    def change_graphite_name_to_livestatus(metric_name):
-        """
-        Converts a component name from graphite conventions to livestatus conventions
-        """
-        parts = metric_name.split('.')
-        return (parts[0], parts[1])
+    def __get_numeric_measurements(client):
+        fielddata = client.query('show field keys');
+        for m in fielddata.items():
+            for f in m[1]:
+                if f[u'fieldKey'] == u'value':
+                    yield m[0]
+                    break    
 
     # LIVESTATUS TOOLS for use by child classes
     @staticmethod
