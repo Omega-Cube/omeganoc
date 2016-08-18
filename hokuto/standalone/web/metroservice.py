@@ -130,7 +130,7 @@ def get_metrics_list():
 def get_metric_values():
     # TODO : Add security checks
     # Read query string arguments
-    probes = request.args.get('probes') # An array of strings, in the form "host/service/probe"
+    probes = request.args.getlist('probes') # An array of strings, in the form "host/service/probe"
     start = request.args.get('start') or '-28d' # Retrieve the last 28 days by default
     end = request.args.get('end') or 'now'
     separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
@@ -140,8 +140,6 @@ def get_metric_values():
     if probes is not None:
         parsed_probes = []
         influx = _create_connection()
-        if isinstance(probes, basestring):
-            probes = [probes]
         for pstring in  probes:
             parts = pstring.split(separator)
             if len(parts) != 3:
@@ -154,8 +152,10 @@ def get_metric_values():
             # Check that we are allowed to access that probe
             if parsed_service.upper() == '__HOST__':
                 if parsed_host in permissions['hosts_with_services'] or parsed_host not in permissions['hosts']:
+                    app.logger.info('No permissions to send data for service "{}" to user "{}"'.format(pstring, current_user))
                     continue
             elif parsed_service not in permissions['services']:
+                app.logger.info('No permissions to send data for service "{}" to user "{}"'.format(pstring, current_user))
                 continue
 
             query = 'select time, value from {} where host_name={} and service_description={} and time >= {} and time <= {}'.format(
