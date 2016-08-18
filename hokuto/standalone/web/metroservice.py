@@ -135,6 +135,7 @@ def get_metric_values():
     end = request.args.get('end') or 'now'
     separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
     results = {}
+    permissions = utils.get_contact_permissions(current_user.shinken_contact)
 
     if probes is not None:
         parsed_probes = []
@@ -149,6 +150,13 @@ def get_metric_values():
             parsed_host = parts[0]
             parsed_service = parts[1]
             parsed_metric = parts[2]
+
+            # Check that we are allowed to access that probe
+            if parsed_service.upper() == '__HOST__':
+                if parsed_host in permissions['hosts_with_services'] or parsed_host not in permissions['hosts']:
+                    continue
+            elif parsed_service not in permissions['services']:
+                continue
 
             query = 'select time, value from {} where host_name={} and service_description={} and time >= {} and time <= {}'.format(
                 _secure_query_token('metric_' + parsed_metric), 
