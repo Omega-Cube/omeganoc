@@ -169,7 +169,7 @@ shinken-install-plugins: sudoer vendors
 	@echo -n "\033]0;Installing shinken - livestatus plugin\007"
 	shinken install --local vendor/livestatus
 	@echo -n "\033]0;Installing shinken - InfluxDB plugin\007"
-	shinken install influxdb
+	shinken install mod-influxdb
 	sed -i "s/user.*/user            shinken/g" /etc/shinken/modules/influxdb.cfg
 	sed -i "s/password.*/password        shinken/g" /etc/shinken/modules/influxdb.cfg
 	@echo -n "\033]0;Installing shinken - logstore-sqlite plugin\007"
