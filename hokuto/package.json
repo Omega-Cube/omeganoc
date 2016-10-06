@@ -27,7 +27,7 @@
     "dependencies": {
         "shinken": ">=1.4",
         "livestatus": ">=1.0",
-        "graphite": ">=2.0",
+        "influxdb": ">=3.0.0",
         "logstore-sqlite": ">=1.4",
         "sqlite3":">=3.7",
         "python-igraph":">=0.7",

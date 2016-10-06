@@ -42,7 +42,7 @@ def get_forecast():
     Return trending forecasting from given probe
     If the user have no predict table will return 403
     """
-    probes= json.loads(request.args.get('probes'))
+    probes = request.args.getlist('probes')
     if len(probes) == 0:
         return jsonify({})
     results= {}
@@ -52,7 +52,7 @@ def get_forecast():
         return jsonify({})
     for probe in probes:
         try:
-            results[probe] = reader.forecast('.'.join(probe.split(getattr(app.config,'GRAPHITE_SEP','[SEP]'))))
+            results[probe] = reader.forecast('.'.join(probe.split(getattr(app.config,'PROBENAME_SEP','[SEP]'))))
         except Exception as ex:
             app.logger.warning('An error occured while trying to read forecast results for probe {0} !'.format(probe))
             app.logger.warning(ex)

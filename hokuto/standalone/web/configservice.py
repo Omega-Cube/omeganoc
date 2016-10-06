@@ -410,7 +410,8 @@ def _save_existing(conf, data, form, form_is_comprehensive):
             # Edit
             if(i == 'host_name' or i == 'service_description'):
                if(i == 'host_name'):
-                  changed_id = ('host','/opt/graphite/storage/whisper/',fdata[i],attr[i])
+                  changed_id = ('host',fdata[i],attr[i])
+                  app.logger.debug('Created a host tuple')
                elif(i == 'service_description'):
                    #Set the description warning flag on
                    _set_service_change(attr[i],fdata[i])
@@ -450,10 +451,11 @@ def _set_service_change(old,new):
     flag.write(str(old) + '|' + str(new))
     flag.close()
 
-def _populate_migration_list(objtype,path,new,old):
+def _populate_migration_list(objtype, new, old):
     """ Add a new entry to the migration list, every host or service in it are marked for migrating their data after an identifer change """
+    app.logger.info('Adding a new migration entry: {} {}=>{}'.format(objtype, old, new))
     with open(TMP_DIR + MIGRATE_FILE,'a+') as f:
-        f.write(objtype + '|' + path + '|' + old + '|' + new + "\n")
+        f.write(objtype + '|' + old + '|' + new + "\n")
 
 def _migrate_data():
     """ Migrate host or service data when updating their identifer name"""
@@ -463,8 +465,8 @@ def _migrate_data():
         for line in f:
             migrate = line.rstrip().split('|')
             objtype = migrate[0]
-            old = migrate[2]
-            new = migrate[3]
+            old = migrate[1]
+            new = migrate[2]
             app.logger.info('Need to migrate ' + objtype + ' : ' + old + ' to ' + new)
             #Update any reference in the dashboard, sla and graph databases
             from dashboard import partsConfTable
@@ -778,6 +780,7 @@ def resetConf():
     if pcode:
         return jsonify({'success': False, 'message': "Can't remove "+TMP_DIR})
     cache.delete('nag_conf')
+    app.logger.info('Clearing migrations file')
     if os.path.isfile(TMP_DIR + MIGRATE_FILE):
         open(TMP_DIR + MIGRATE_FILE, 'w').close()
     return jsonify({'success': True})
