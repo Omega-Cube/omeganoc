@@ -56,6 +56,7 @@ ubuntu-prebuild:
 	wget -O /tmp/influxdb_0.13.0_amd64.deb https://dl.influxdata.com/influxdb/releases/influxdb_0.13.0_amd64.deb
 	dpkg -i /tmp/influxdb_0.13.0_amd64.deb
 	rm /tmp/influxdb_0.13.0_amd64.deb
+	service influxdb start
 
 debian-prebuild: sudoer
 	@echo "Installing debian requirements"
@@ -65,6 +66,7 @@ debian-prebuild: sudoer
 	wget -O /tmp/influxdb_0.13.0_amd64.deb https://dl.influxdata.com/influxdb/releases/influxdb_0.13.0_amd64.deb
 	dpkg -i /tmp/influxdb_0.13.0_amd64.deb
 	rm /tmp/influxdb_0.13.0_amd64.deb
+	service influxdb start
 
 init-daemons: sudoer
 	sed -i "s/modules.*/modules	influxdb, livestatus, hokuto/g" /etc/shinken/brokers/broker-master.cfg
@@ -95,6 +97,7 @@ centos-prebuild: sudoer
 	useradd --user-group shinken || echo "User shinken already exist" > /dev/null;
 	curl -o /tmp/influxdb_0.13.0_amd64.deb https://dl.influxdata.com/influxdb/releases/influxdb-0.13.0.x86_64.rpm
 	yup localinstall /tmp/influxdb_0.13.0_amd64.deb
+	systemctl start influxdb
 
 systemd-daemons:
 	@echo "Cleaning centos install"
@@ -107,9 +110,11 @@ systemd-daemons:
 	cp nanto/etc/systemd/system/nanto.service /etc/systemd/system/nanto.service
 	cp nanto/etc/systemd/system/nanto.sh /usr/bin/nanto.sh
 	chmod +x /usr/bin/nanto.sh
+	systemctl enable influxdb.service
 	systemctl enable shinken.service
 	systemctl enable hokuto.service
 	systemctl enable nanto.service
+	systemctl start influxdb.service
 	systemctl start hokuto.service
 	systemctl start shinken.service
 	systemctl start nanto.service
@@ -160,11 +165,11 @@ shinken-dependencies:
 	@command -v python 2>&1 || { echo >&2 "Missing python"; exit 1;}
 	@command -v shinken 2>&1 || { echo >&2 "Missing shinken"; exit 1;}
 
-shinken-install-dependencies: sudoer
+shinken-install-dependencies: influxdb sudoer
 	@echo -n "\033]0;Installing shinken plugins dependencies\007"
 	pip install pycurl 'flask==0.10.1' 'flask-login==0.2.11' 'flask-sqlalchemy==2.0' 'flask-babel==0.9' 'python-igraph==0.7' wtforms 'flask-assets==0.10' 'whisper==0.9.13' 'Twisted<12.0' 'networkx==1.10rc2' 'graphviz==0.4.5' 'pygraphviz==1.3rc2' 'python-mk-livestatus==0.4' 'gunicorn==19.3.0' pynag chardet
 
-shinken-install-plugins: sudoer vendors
+shinken-install-plugins: sudoer configure-influx vendors
 	@mkdir -p /var/lib/shinken/share && chown shinken:shinken /var/lib/shinken/share
 	@echo -n "\033]0;Installing shinken - livestatus plugin\007"
 	shinken install --local vendor/livestatus
