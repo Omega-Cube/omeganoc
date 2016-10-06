@@ -3,6 +3,10 @@
 export DEBIAN_FRONTEND=noninteractive
 export PERL_MM_USE_DEFAULT=true
 
+# Install HTTPS support for APT before it freaks out
+aptitude -q update
+aptitude -y -q install apt-transport-https
+
 # Add repositories for R
 sed -i '$ a\deb http://cran.univ-lyon1.fr/bin/linux/debian jessie-cran3/' /etc/apt/sources.list
 apt-key adv --keyserver keys.gnupg.net --recv-key 381BA480
@@ -37,6 +41,12 @@ cp /vagrant/vagrant_provision/broker-master.cfg.template /etc/shinken/brokers/br
 cp /vagrant/vagrant_provision/localhost.cfg.template /etc/shinken/hosts/localhost.cfg
 cp /vagrant/vagrant_provision/livestatus.cfg.template /etc/shinken/modules/livestatus.cfg
 
+# Install InfluxDB
+wget -O /tmp/influxdb_0.13.0_amd64.deb https://dl.influxdata.com/influxdb/releases/influxdb_0.13.0_amd64.deb
+dpkg -i /tmp/influxdb_0.13.0_amd64.deb
+rm /tmp/influxdb_0.13.0_amd64.deb
+service influxdb start
+
 # Launch the installer
 # We do not use the "install" target because we we to create symlinks to the development files
 # instead of copies to facilitate development.
@@ -46,18 +56,19 @@ make shinken on-reader nanto-libs clean
 #TODO : Remove files before replacing with the links
 rm -rf /usr/local/hokuto
 ln -s /vagrant/hokuto/standalone /usr/local/hokuto
-rm /etc/hokuto.cfg
-ln -s /vagrant/hokuto/etc/hokuto.cfg /etc/hokuto.cfg
+#rm /etc/hokuto.cfg
+cp /vagrant/hokuto/etc/hokuto.cfg /etc/hokuto.cfg
+#Commented the init script bcuz I'll launch hokuto manually to debug it
 #ln -s /vagrant/hokuto/etc/init.d/hokuto /etc/init.d/hokuto
 #update-rc.d hokuto defaults
 
 # Create symbolic links for Nanto
 rm -rf /usr/local/nanto
 ln -s /vagrant/nanto/src /usr/local/nanto
-rm /etc/nanto.cfg
+#rm /etc/nanto.cfg
 cp /vagrant/nanto/etc/nanto.cfg /etc/nanto.cfg
-#ln -s /vagrant/nanto/etc/init.d/nanto /etc/init.d/nanto
-#update-rc.d nanto defaults
+ln -s /vagrant/nanto/etc/init.d/nanto /etc/init.d/nanto
+update-rc.d nanto defaults
 
 # Make the lib folder available globally for the shinken and vagrant users
 #mkdir -p /home/shinken/.local/lib/python2.7/site-packages
@@ -71,5 +82,5 @@ cp /vagrant/nanto/etc/nanto.cfg /etc/nanto.cfg
 #
 # Start things up
 service shinken restart
-service hokuto start
+#service hokuto start
 service nanto start
