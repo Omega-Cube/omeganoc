@@ -40,6 +40,13 @@ lock_file_path = '/var/run/nanto.pid'
 current_app = None # Will contain the currently running app instance
 current_context = None
     
+class InfluxConfigurationException(Exception):
+    """ An exception raised when the InfluxDB configuration has a problem """
+    def __init__(self, message):
+        self.message = message
+    def __str__(self):
+        return self.message
+
 class Nanto(object):
     """ 
     This class implements the prediction module that runs statistical analysis on 
@@ -60,6 +67,17 @@ class Nanto(object):
         # Folder in which we'll store all the data
         self.storage = modconf.get('database_file', '/var/log/shinken/nanto.db')
         logging.debug('storage is {0}'.format(self.storage))
+        #InfluxDB connection information
+        self.influx_info = {
+            'host': modconf.get('influx_host', None),
+            'port': modconf.get('influx_port', None),
+            'database': modconf.get('influx_database', None),
+            'username': modconf.get('influx_username', None),
+            'password': modconf.get('influx_password', None)
+        }
+        logging.debug('influx_host is {0}'.format(self.influx_info['host']))
+        logging.debug('influx_port is {0}'.format(self.influx_info['port']))
+        logging.debug('influx_database is {0}'.format(self.influx_info['database']))
 
         # Parse the workers list
         self.workers = modconf.get('workers', '')
@@ -70,6 +88,7 @@ class Nanto(object):
 
     def main(self):
         logging.info('Starting nanto')
+        self.__validate_influx_config()
         self.__register_default_prediction_systems()
         
         logging.debug('[nanto] Starting with {0} workers registered. The time is {1}'.format(len(self.worker_containers), time.time()))
@@ -110,6 +129,30 @@ class Nanto(object):
             
             self.worker_containers.append(PredictionWorkerContainer(type, self))
         
+    def __validate_influx_config(self):
+        """
+        Throws an error if an elements of the InfluxDB configuration is missing or invalid
+        """
+        missing = []
+        if self.influx_info['host'] is None:
+            missing.append('INFLUX_HOST')
+        if self.influx_info['port'] is None:
+            missing.append('INFLUX_PORT')
+        if self.influx_info['database'] is None:
+            missing.append('INFLUX_DATABASE')
+        if self.influx_info['username'] is None:
+            missing.append('INFLUX_USERNAME')
+        if self.influx_info['password'] is None:
+            missing.append('INFLUX_PASSWORD')
+        if len(missing) > 0:
+            raise InfluxConfigurationException('Missing InfluxDB configuration directives: ' + ', '.join(missing))
+
+        try:
+            self.influx_info['port'] = int(self.influx_info['port'])
+        except ValueError:
+            raise InfluxConfigurationException('The current configuration value for INFLUX_PORT ("{}") is not a valid number'.format(port))
+        logging.debug('InfluxDB configuration is valid')
+
     def stop(self):
         logging.info('Stopping Nanto')
         self.run = False
@@ -138,9 +181,8 @@ class PredictionWorkerContainer(object):
             logging.debug('[nanto] previous time ' + str(previous_worker.last_execution_time.value))
             previous_time = previous_worker.last_execution_time.value
 
-
         self.worker_instance = self.worker_class()
-        self.worker_instance.initialize(previous_worker, self.container.storage)
+        self.worker_instance.initialize(previous_worker, self.container.storage, self.container.influx_info)
 
         if previous_worker is not None and previous_worker.run_exception is not None:
             # Previous run ended up on an error.

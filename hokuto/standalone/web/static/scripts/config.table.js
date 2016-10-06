@@ -172,7 +172,7 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
             'id': 'broker',
             'name': 'Broker',
             'names': 'Brokers',
-            'description': 'The Broker daemon provides access to Shinken internal data. Its role is to get data from schedulers (like status and logs) and manage them. The management is done by modules. Many different modules exists : export to graphite, export to syslog, export into ndo database (MySQL and Oracle backend), service-perfdata export, couchdb export and more. To configure modules, consult the broker module definitions.',
+            'description': 'The Broker daemon provides access to Shinken internal data. Its role is to get data from schedulers (like status and logs) and manage them. The management is done by modules. Many different modules exists : export to InfluxDB, export to syslog, export into ndo database (MySQL and Oracle backend), service-perfdata export, couchdb export and more. To configure modules, consult the broker module definitions.',
             'key': 'broker_name',
             'default_columns': ['broker_name']
         }
@@ -358,8 +358,12 @@ define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQ
                 if(!response.success){
                     alert(response.error);
                 }else{
-                    if(response.service_changed) alert("Shinken will restart with the new configuration in less than one minute.\nBeware that you have changed some services names, if you don't want to lose their data you have to move theme manually from /opt/graphite/storage/whisper.");
-                    else alert("Shinken will restart with the new configuration in less than one minute.");
+                    if(response.service_changed) {
+                        alert("Shinken will restart with the new configuration in less than one minute.\nBe aware that you have changed some services names, if you don't want to lose their data you have to move them manually from /opt/graphite/storage/whisper.");
+                    }
+                    else {
+                        alert("Shinken will restart with the new configuration in less than one minute.");
+                    }
                 }
             }).error(function(response){
                 console.log(response);

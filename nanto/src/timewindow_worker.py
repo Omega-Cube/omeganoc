@@ -39,34 +39,41 @@ class TimewindowWorker(PredictionWorker):
         self.predicted_points = 6
 
     def internal_run(self):
-        components = PredictionWorker.get_graphite_metrics()
-        logging.debug('[nanto:timewindow] About to run timewindow prediction on {0} components'.format(len(components)))
+        components = self.get_metrics_structure()
+        logging.debug('[nanto:timewindow] About to run timewindow prediction on {0} hosts'.format(len(components)))
         logging.debug('[nanto:timewindow] On process {0}'.format(os.getpid()))
         t0 = time.time()
-        for c in components:
-            if self.should_cancel():
-                logging.info('[nanto:timewindow] Cancelling')
-                return
-            success = False
-            checkinterval = 3600 # For now we'll only consider one value/hour
-            now = time.time()
-            try:
-                success = self.__go(c, checkinterval)
-            except Exception, ex:
-                logging.warning('[nanto:timewindow]  An exception occured while computing the timewindow predictions for component {0}: {1}'.format(c, ex.message))
-                logging.debug('[nanto:timewindow]  Exception details: ' + traceback.format_exc())
-            if not success:
-                # There is no available data at all... Set the prediction value to NULL
-                with self.get_database() as con:
-                    con.execute('INSERT OR REPLACE INTO timewindow (probe, update_time, start_time, step, mean, lower_80, lower_95, upper_80, upper_95) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                                (c, time.time(), None, None, None, None, None, None, None))
+        entries_count = 0
+        for h in components:
+            host = components[h]
+            for s in host:
+                service = host[s]
+                for metric in service:
+                    if self.should_cancel():
+                        logging.info('[nanto:timewindow] Cancelling')
+                        return
+                    entries_count += 1
+                    success = False
+                    checkinterval = 3600 # For now we'll only consider one value/hour
+                    now = time.time()
+                    try:
+                        success = self.__go(h, s, metric, checkinterval)
+                    except Exception, ex:
+                        logging.warning('[nanto:timewindow]  An exception occured while computing the timewindow predictions for host "{1}", service "{2}", metric "{3}": {0}'.format(ex.message, h, s, metric))
+                        logging.debug('[nanto:timewindow]  Exception details: ' + traceback.format_exc())
+                    if not success:
+                        # There is no available data at all... Set the prediction value to NULL
+                        with self.get_database() as con:
+                            con.execute('INSERT OR REPLACE INTO timewindow (probe, update_time, start_time, step, mean, lower_80, lower_95, upper_80, upper_95) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                                        ('{}.{}.{}'.format(h, s, metric), time.time(), None, None, None, None, None, None, None))
         t1 = time.time()
         ttl = t1 - t0
-        logging.debug('[nanto:timewindow] Entire timewindow ({0} entries) in {1}s ({2}s / entry)'.format(len(components), ttl, ttl / len(components)))
+        logging.debug('[nanto:timewindow] Entire timewindow ({0} entries) in {1}s ({2}s / entry)'.format(entries_count, ttl, ttl / entries_count))
         
-    def __go(self, target, checkinterval):
+    def __go(self, host, service, metric, checkinterval):
         now = time.time()
-        (start, end, step, values) = PredictionWorker.get_graphite_data(target, checkinterval * self.history_points_count / 3600, False, True)
+        target = '{}.{}.{}'.format(host, service, metric)
+        (start, end, step, values) = self.get_metrics_data(host, service, metric, checkinterval * self.history_points_count / 3600, False, True)
 
         # Change the time series granularity so that we have the one required by the R script
         normalized_values = []
@@ -80,12 +87,15 @@ class TimewindowWorker(PredictionWorker):
                 normalized_values.append(lastval)
                 dstpos += 1
 
-        logging.debug('[nanto:timewindow] Found {0} data points for node {1}'.format(len(normalized_values), target))
+        logging.debug('[nanto:timewindow] Found {0} data points for host "{1}", service "{2}", metric "{3}"'.format(
+            len(normalized_values), host, service, metric))
         # Check that we actually have enough data
         if len(normalized_values) < 300:
-            logging.info('[nanto:timewindow]  Skipped time series on {0}: not enough data ({1} points)'.format(target, len(normalized_values)))
-            save_error(target, "There is not enough data to have make accurate predictions")
+            logging.info('[nanto:timewindow]  Skipped time series on {1}.{2}.{3}: not enough data ({0} points)'.format(
+                len(normalized_values), host, service, metric))
+            self.save_error(target, "There is not enough data to have make accurate predictions")
             return False
+
 
         # Send the values to R
         inputs = {'iData': PredictionValue('float', normalized_values),
@@ -108,12 +118,13 @@ class TimewindowWorker(PredictionWorker):
 
             return True
         else:
-            save_error(target, "This node could not be processed");
+            self.save_error(target, "This node could not be processed");
             return False
         
-    def save_error(target, message):
+    def save_error(self, target, message):
         """ Saves an error to the database, and clear and existing results """
         with self.get_database() as con:
+            logging.debug('Saving error message "{}" for target "{}"'.format(message, target))
             con.execute('INSERT OR REPLACE INTO timewindow (probe, update_time, error_desc, start_time, step, mean, lower_80, lower_95, upper_80, upper_95) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         (target, time.time(), message, None, None, None, None, None, None, None))
         

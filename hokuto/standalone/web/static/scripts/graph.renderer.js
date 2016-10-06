@@ -280,7 +280,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         this._onEdgeCommanderCenterClicked = function (e) {
             e.stopPropagation();
             if (selfRef.graphType.onEdgeCommand)
-                selfRef.graphType.onEdgeCommand(this.parent._edge, selfRef)
+                selfRef.graphType.onEdgeCommand(this.parent()._edge, selfRef)
         };
 
         this._onEdgeCommanderMouseDown = function (e) {

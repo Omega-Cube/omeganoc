@@ -49,29 +49,34 @@ cp /vagrant/vagrant_provision/utils.pm.template /var/lib/shinken/libexec/utils.p
 #cp /vagrant/vagrant_provision/livestatus.cfg.template /etc/shinken/modules/livestatus.cfg
 rsync -avlp /vagrant/vagrant_provision/shinken_config/ /etc/shinken/
 
+# Install InfluxDB
+wget -O /tmp/influxdb_0.13.0_amd64.deb https://dl.influxdata.com/influxdb/releases/influxdb_0.13.0_amd64.deb
+dpkg -i /tmp/influxdb_0.13.0_amd64.deb
+rm /tmp/influxdb_0.13.0_amd64.deb
+service influxdb start
+
 # Launch the installer
 # We do not use the "install" target because we we to create symlinks to the development files
 # instead of copies to facilitate development.
-make graphite shinken on-reader nanto-libs clean
+make shinken on-reader nanto-libs clean
 
 # Create symbolic links for Hokuto
+#TODO : Remove files before replacing with the links
+rm -rf /usr/local/hokuto
 ln -s /vagrant/hokuto/standalone /usr/local/hokuto
-ln -s /vagrant/hokuto/etc/hokuto.cfg /etc/hokuto.cfg
-ln -s /vagrant/hokuto/etc/init.d/hokuto /etc/init.d/hokuto
-update-rc.d hokuto defaults
+#rm /etc/hokuto.cfg
+cp /vagrant/hokuto/etc/hokuto.cfg /etc/hokuto.cfg
+#Commented the init script bcuz I'll launch hokuto manually to debug it
+#ln -s /vagrant/hokuto/etc/init.d/hokuto /etc/init.d/hokuto
+#update-rc.d hokuto defaults
 
 # Create symbolic links for Nanto
+rm -rf /usr/local/nanto
 ln -s /vagrant/nanto/src /usr/local/nanto
+#rm /etc/nanto.cfg
 cp /vagrant/nanto/etc/nanto.cfg /etc/nanto.cfg
 ln -s /vagrant/nanto/etc/init.d/nanto /etc/init.d/nanto
 update-rc.d nanto defaults
-
-# Auto start the carbon daemon on launch
-cp /vagrant/vagrant_provision/carbon.init.template /etc/init.d/carbon
-chmod 755 /etc/init.d/carbon
-update-rc.d carbon defaults
-
-# with symbolic links hokuto and on_reader are not readable from shinken services which prevent shinken from loading hokuto.
 
 # Make the lib folder available globally for the shinken and vagrant users
 #mkdir -p /home/shinken/.local/lib/python2.7/site-packages

@@ -179,8 +179,11 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
         this.buildContainers(container);
         this._buildCommands();
         this.fetchUnits(function(data){
-            if(!Object.keys(this.probes).length)
+            // Once the units are available, show the "add" form 
+            // if this widget does not contain any data source yet
+            if(!Object.keys(options.conf.probes).length) {
                 this.toogleAddPanel();
+            }
         }.bind(this));
         this.buildPanel();
 
@@ -2536,8 +2539,17 @@ define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probe
             container.find('.spinner').remove();
         var select = $('<select name="'+name+'" class="formButton select" ></select>');
 
-        for(var m in metrics){
-            var option = $('<option value="'+m+'">'+m+'</option>');
+        // Get all the metric names
+        var names = Object.keys(metrics);
+        // Order the names alphabetically
+        names = names.sort(function(a, b) {
+            return a.localeCompare(b, {
+                sensitivity: 'base'
+            });
+        });
+
+        for(var i in names) {
+            var option = $('<option value="' + names[i] + '">' + names[i] + '</option>');
             select.append(option);
         }
 

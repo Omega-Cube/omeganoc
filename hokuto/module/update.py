@@ -55,7 +55,7 @@ if(float(CUR_VERSION) < 0.95):
     for result in results:
         probe = result[0]
         tmp = probe.split(oldsep)
-        newprobe = conf['graphite_sep'].join(tmp)
+        newprobe = conf['PROBENAME_SEP'].join(tmp)
         c.execute("UPDATE parts_conf SET key='{0}' WHERE key='{1}';".format(newprobe,probe))
     db.commit()
     c.close()
