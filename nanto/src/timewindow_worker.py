@@ -118,7 +118,7 @@ class TimewindowWorker(PredictionWorker):
 
             return True
         else:
-            self.save_error(target, "This node could not be processed");
+            self.save_error(target, "This node could not be processed")
             return False
         
     def save_error(self, target, message):
