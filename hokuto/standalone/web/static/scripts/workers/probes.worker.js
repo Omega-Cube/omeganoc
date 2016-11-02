@@ -34,6 +34,9 @@ var ONOC = {
  * @param {Function} callback - Function to be called on success
  */
 var _request = function(service,data,callback){
+    if(service.length > 0 && service[0] == '/') {
+        service = service.slice(1);
+    }
     var xhr = new XMLHttpRequest();
     if(data && typeof data !== 'string'){
         var queryStringParts = []

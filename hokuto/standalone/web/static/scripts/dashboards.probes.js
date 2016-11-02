@@ -358,7 +358,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
         }
     };
     //setup the BASE_URL for worker's requests
-    DashboardProbes.worker.postMessage([1,[$SCRIPT_ROOT,ONOC.separator]]);
+    DashboardProbes.worker.postMessage([1,[$URL_ROOT,ONOC.separator]]);
 
     //TODO: GRUICK!
     DashboardProbes._requestMetrics();

@@ -31,7 +31,7 @@
       {% else%}
       var onoc_main_modules = [];
       {% endif %}
-      var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+      var $URL_ROOT = {{ request.url_root|tojson|safe }};
     </script>
 
     {% block head %}
