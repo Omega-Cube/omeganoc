@@ -600,7 +600,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             // if node has already been drawn, move the nodes
             if (node.shape) {
-                return this._updateNodePosition(node);
+                _updateNodePosition(node);
+                return this._updateNodeSize(node)
             } // else, draw new nodes
 
 
@@ -642,6 +643,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             node.shape = shape;
             node.miniShape = miniEllipse;
             shape.dataNode = node;
+            shape.childEllipse = ellipse;
             miniEllipse.dataNode = node;
 
             // Apply graphical styles
@@ -721,6 +723,19 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             shape.x(node.renderX).y(node.renderY);
 
             node.miniShape.cx(node.renderX).cy(node.renderY);
+
+            return node;
+        },
+
+        _updateNodeSize: function(node, animate) {
+            animate = !!animate;
+
+            var shape = node.shape.childEllipse;
+            if(animate) {
+                shape = shape.animate(500);
+            }
+            shape.radius(node.radius, node.radius);
+            node.miniShape.radius(node.radius, node.radius);
 
             return node;
         },
@@ -1587,7 +1602,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                 delete o.shape;
                 delete o.miniShape;
 
-                // Move
+                // Update size & position
+                this._updateNodeSize(n, true);
                 this._updateNodePosition(n, true);
             }
 
