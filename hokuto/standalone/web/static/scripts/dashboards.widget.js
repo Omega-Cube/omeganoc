@@ -18,7 +18,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['jquery', 'onoc.createurl', 'onoc.loadcss', 'onoc.cachedloader','dataservice','onoc.time','onoc.calendar'], function (jQuery, createUrl, loadcss, CachedLoader, DataService, onocTime, onocCalendar) {
+define(['jquery', 
+        'onoc.createurl', 
+        'onoc.loadcss', 
+        'onoc.cachedloader',
+        'dataservice',
+        'onoc.calendar'], 
+        function (jQuery, 
+                  createUrl, 
+                  loadcss, 
+                  CachedLoader, 
+                  DataService,
+                  onocCalendar) {
     /**
      * This module defines a class defining a widget, that is something
      * you can add as the content of one of the dashboard's placeholders
