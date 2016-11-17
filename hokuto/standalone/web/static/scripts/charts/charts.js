@@ -16,7 +16,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery','d3','dashboards.manager','dashboards.widget','dashboards.probes', 'onoc.createurl','./forms.js','./scales.js','onoc.units','./legend.js', './predict.js', 'onoc.calendar','onoc.tooltips'], function(jQuery, d3, DashboardManager, Widget, DashboardProbes, createUrl, form, DashboardChartScale, Units, Legends, Predict, Calendar, Tooltips) {
+define(['jquery',
+        'd3',
+        'dashboards.manager',
+        'dashboards.widget',
+        'dashboards.probes', 
+        'onoc.createurl',
+        'charts/forms',
+        'charts/scales',
+        'onoc.units',
+        'charts/legend',
+        'charts/predict',
+        'onoc.calendar',
+        'onoc.tooltips'], 
+        function(jQuery, 
+                 d3,
+                 DashboardManager, 
+                 Widget, 
+                 DashboardProbes, 
+                 createUrl, 
+                 form, 
+                 DashboardChartScale, 
+                 Units, 
+                 Legends, 
+                 Predict, 
+                 Calendar, 
+                 Tooltips) {
     /**
      * Basicchart widget class,handle multiple charts
      * @class
