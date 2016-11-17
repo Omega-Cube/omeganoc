@@ -4,7 +4,10 @@
 // To add a scrollbar to an element, add the data-scrollbar attribute
 // The attribute contains the height compensation : the viewport's height will
 // be computed to be the containing element height minus the compensation height
-define(['jquery', 'onoc.loadcss', 'onoc.createurl', 'jquery.scrollbar'], function ($, loadCss, createurl) {
+define(['jquery', 
+        'onoc.loadcss', 
+        'onoc.createurl', 
+        'libs/jquery.scrollbar'], function ($, loadCss, createurl) {
     var _firstInit = false;
     var _scrollbars = []; // List of all currently active scrollbars
 

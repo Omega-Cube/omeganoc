@@ -26,16 +26,19 @@
 requirejs.config({
     // Shims
     shim: {
-        'jquery.hashchange': ['jquery'],
-        'jquery.scrollbar': ['jquery'],
-        'jstree': ['jquery'],
-        'gridster': ['jquery'],
-        'svg.easing': ['svg'],
-        'select2': ['jquery'],
+        'libs/jquery.hashchange': ['jquery'],
+        'libs/jquery.scrollbar': ['jquery'],
+        'libs/jstree': ['jquery'],
+        'libs/gridster': ['jquery'],
+        'libs/svg.easing': ['libs/svg'],
+        'libs/select2': ['jquery']
     },
     // Paths
     paths: {
-        'widget': '../../widgets'
+        'widget': '../../widgets',
+        // A special case for jQuery, who has a mandatory export name
+        // http://www.requirejs.org/docs/jquery.html#modulename
+        'jquery': 'libs/jquery'
     }
 });
 

@@ -33,5 +33,4 @@ require(['jquery','onoc.createurl'], function (jQuery, createurl) {
             });
         });
     });
-
 });

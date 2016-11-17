@@ -17,7 +17,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'dashboards.widget', 'console', 'onoc.createurl', 'dashboards.timeline', 'gridster', 'jquery.hashchange', 'onoc.message'], function (jQuery, Widget, Console, createUrl, DashboardTimeline) {
+define(['jquery', 
+        'dashboards.widget', 
+        'console', 
+        'onoc.createurl', 
+        'dashboards.timeline', 
+        'libs/gridster', 
+        'libs/jquery.hashchange', 
+        'onoc.message'], function (jQuery, Widget, Console, createUrl, DashboardTimeline) {
     /**
      * Manages the user's dashboards data and display
      * @property {Gridster} gridster         - Handle parts size and position

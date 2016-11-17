@@ -22,7 +22,16 @@
 * OmegaNoc Renderer implementation, using svg.js
 */
 
-define(['jquery', 'graph.tooltip', 'graph', 'console', 'onoc.createurl', 'onoc.loadcss', 'onoc.loop', 'jquery.mousewheel', 'svg', 'svg.easing'],
+define(['jquery', 
+        'graph.tooltip', 
+        'graph', 
+        'console', 
+        'onoc.createurl', 
+        'onoc.loadcss', 
+        'onoc.loop', 
+        'libs/jquery.mousewheel', 
+        'libs/svg', 
+        'libs/svg.easing'],
 function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
     // NOTE : Grapher is a circular dependency, it will therefore be undefined at the time this function gets called !
     var Bubbles = function (element, graph, graphType) {

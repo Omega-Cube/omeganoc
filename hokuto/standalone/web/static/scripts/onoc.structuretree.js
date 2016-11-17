@@ -17,7 +17,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'onoc.createurl', 'onoc.loadcss', 'scrollbar', 'dataservice', 'console', 'jstree'], function (jQuery, createUrl, loadCss, createScrollbar, DataService, Console) {
+define(['jquery', 
+        'onoc.createurl', 
+        'onoc.loadcss', 
+        'scrollbar', 
+        'dataservice', 
+        'console', 
+        'libs/jstree'], function (jQuery, createUrl, loadCss, createScrollbar, DataService, Console) {
     function StructureTree(container, heightCompensation) {
         var jqContainer = jQuery(container);
         loadCss(createUrl('static/css/jstree.min.css'));

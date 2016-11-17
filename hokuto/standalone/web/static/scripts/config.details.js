@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'select2', 'jquery.validate'], function(jQuery){
+define(['jquery', 'libs/select2', 'libs/jquery.validate'], function(jQuery){
     jQuery(function() {
         var data = _conf_details_data;
         var type = _conf_details_type;

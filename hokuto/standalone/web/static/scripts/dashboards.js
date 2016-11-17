@@ -17,7 +17,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-require(['jquery', 'dashboards.manager', 'onoc.createurl', 'dashboards.widget', 'jquery.validate', 'jquery.bpopup'], function (jQuery, DashboardsManager, createurl, Widget) {
+require(['jquery', 
+         'dashboards.manager', 
+         'onoc.createurl', 
+         'dashboards.widget', 
+         'libs/jquery.validate', 
+         'libs/jquery.bpopup'], function (jQuery, DashboardsManager, createurl, Widget) {
     /**
      * Create Dashboard button behavior
      */

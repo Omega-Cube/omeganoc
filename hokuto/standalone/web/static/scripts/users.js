@@ -37,7 +37,7 @@ require(['jquery','onoc.createurl'], function (jQuery, createurl) {
         });
 
         if(typeof _ISNEW !== 'undefined'){
-            require(['jquery.validate'],function(){
+            require(['libs/jquery.validate'],function(){
                 $("#edit_userScreen").validate({
                     rules: {
                         username: {

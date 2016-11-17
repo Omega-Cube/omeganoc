@@ -17,8 +17,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'graph.structure', 'graph.renderer', 'graph.infopanel', 'graph.state', 'console', 'onoc.structuretree', 'onoc.states', 'onoc.createurl', 'onoc.popupbutton', 'jquery.hashchange', 'onoc.message'],
-       function(jQuery, structure, Bubbles, initInfoPanel, GraphState, Console, StructureTree, States, createurl, popupButton) {
+define(['jquery', 
+        'graph.structure', 
+        'graph.renderer', 
+        'graph.infopanel', 
+        'graph.state', 
+        'console', 
+        'onoc.structuretree', 
+        'onoc.states', 
+        'onoc.createurl', 
+        'onoc.popupbutton', 
+        'libs/jquery.hashchange', 
+        'onoc.message'],
+       function(jQuery, 
+                structure, 
+                Bubbles, 
+                initInfoPanel, 
+                GraphState, 
+                Console, 
+                StructureTree, 
+                States, 
+                createurl, 
+                popupButton) {
     var OVERVIEW_KEY = 'overview_visibility';
     var Grapher = {
         // Holds the currently displayed graph type identifier

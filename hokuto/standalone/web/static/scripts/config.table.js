@@ -1,3 +1,4 @@
+"use strict";
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2015 Omega Cube and contributors
@@ -16,8 +17,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'onoc.createurl', 'console', 'jquery.hashchange'], function(jQuery, createurl, Console){
-    "use strict";
+define(['jquery', 
+        'onoc.createurl', 
+        'console', 
+        'libs/jquery.hashchange'], function(jQuery, createurl, Console){
 
     var _binarytree = [];
     var _data = false;
