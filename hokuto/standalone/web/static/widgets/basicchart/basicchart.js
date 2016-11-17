@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['jquery', 'd3', 'dashboards.manager', 'dashboards.probes', 'charts/charts'], function (jQuery, d3, DashboardManager, DashboardProbes, DashboardChart) {
+define(['jquery', 'externals/d3', 'dashboards.manager', 'dashboards.probes', 'charts/charts'], function (jQuery, d3, DashboardManager, DashboardProbes, DashboardChart) {
     /**
      * Handle differents kind of chart
      * Only visual and rendering operations will be done here

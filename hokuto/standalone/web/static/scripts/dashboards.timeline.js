@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'd3', 'dashboards.manager', 'onoc.calendar'], function (jQuery, d3, DashboardManager, Calendar){
+define(['jquery', 'externals/d3', 'dashboards.manager', 'onoc.calendar'], function (jQuery, d3, DashboardManager, Calendar){
     /**
      * Called on init, build the svg container and settup events listeners
      */

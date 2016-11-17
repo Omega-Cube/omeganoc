@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery','onoc.createurl','d3','dashboards.manager','onoc.calendar'], function(jQuery,createUrl,d3,DashboardManager,Calendar){
+define(['jquery','onoc.createurl','externals/d3','dashboards.manager','onoc.calendar'], function(jQuery,createUrl,d3,DashboardManager,Calendar){
     /**
      * Handle the SLA widget
      * @property {Number} id         - Part's id
