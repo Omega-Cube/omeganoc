@@ -28,7 +28,8 @@ define(['jquery',
         'charts/legend',
         'charts/predict',
         'onoc.calendar',
-        'onoc.tooltips'], 
+        'onoc.tooltips',
+        'onoc.config'], 
         function(jQuery, 
                  d3,
                  DashboardManager, 
@@ -41,7 +42,8 @@ define(['jquery',
                  Legends, 
                  Predict, 
                  Calendar, 
-                 Tooltips) {
+                 Tooltips,
+                 Config) {
     /**
      * Basicchart widget class,handle multiple charts
      * @class
@@ -1652,7 +1654,7 @@ define(['jquery',
         var data = [];
         for(var p in this.probes) data.push({
             'order': Number(this.probes[p].order),
-            'name': 'chart_'+p.split(ONOC.separator).join('_')
+            'name': 'chart_'+p.split(Config.separator()).join('_')
         });
         this.container.focus.selectAll('.ordered').data(data,function(d,e){
             return  d ? d.name : this.id;
@@ -1925,6 +1927,7 @@ define(['jquery',
     DashboardChart.prototype.addArea = function(probe,data,color,y,y2){
         if(!data.length)
             return;
+        var separator = Config.separator();
         var y = y || this.scales['default'].y;
         var y2 = y2 || this.scales['default'].y2;
         var x = this.axis.x;
@@ -1939,7 +1942,7 @@ define(['jquery',
         var g = this.container.focus.insert("g",":first-child")
             .attr("clip-path", clippath)
             .attr("class","chart ordered focus_"+probe)
-            .attr("id","chart_"+probe.split(ONOC.separator).join('_'));
+            .attr("id","chart_"+probe.split(separator).join('_'));
 
         var g2 = this.container.context.insert("g",":first-child")
             .attr("class","chart context_"+probe);
@@ -1985,7 +1988,7 @@ define(['jquery',
         var dots =  this.container.focus.append("g")
             .attr("clip-path", clippath)
             .attr("class","chart dots focus_"+probe)
-            .attr("id","dots_"+probe.split(ONOC.separator).join('_'));
+            .attr("id","dots_"+probe.split(separator).join('_'));
 
         dots.selectAll(".dots")
             .data(data)
@@ -2069,6 +2072,7 @@ define(['jquery',
         var y2 = y2 || this.scales['default'].y2;
         var x = this.axis.x;
         var x2 = this.axis.x2;
+        var separator = Config.separator();
 
         var reverse = (y(2) > y(1));
         var clippath = 'url(#clip_'+this.id+')';
@@ -2078,7 +2082,7 @@ define(['jquery',
         var g = this.container.focus.insert("g",":first-child")
             .attr("clip-path", clippath)
             .attr("class","chart ordered line focus_"+probe)
-            .attr("id","chart_"+probe.split(ONOC.separator).join('_'));
+            .attr("id","chart_"+probe.split(separator).join('_'));
 
         var g2 = this.container.context.insert("g",":first-child")
             .attr("class","chart line context_"+probe);
@@ -2086,7 +2090,7 @@ define(['jquery',
         var dots =  this.container.focus.append("g")
             .attr("clip-path", clippath)
             .attr("class","chart dots focus_"+probe)
-            .attr("id","dots_"+probe.split(ONOC.separator).join('_'));
+            .attr("id","dots_"+probe.split(separator).join('_'));
 
         var paths = this._getPathList(data);
 
@@ -2202,9 +2206,10 @@ define(['jquery',
 
         if(!predict[0].length) return;
 
+        var separator = Config.separator();
         var x= this.axis.x;
-        var g = this.container.focus.select('#chart_'+probe.split(ONOC.separator).join("_"));
-        var gDots = this.container.focus.select('#dots_'+probe.split(ONOC.separator).join("_"));
+        var g = this.container.focus.select('#chart_'+probe.split(separator).join("_"));
+        var gDots = this.container.focus.select('#dots_'+probe.split(separator).join("_"));
 
         //link with the last available value
         var len = data.length;
@@ -2345,18 +2350,19 @@ define(['jquery',
         var interval = getInterval(data);
         var colwidth = this.axis.x(interval) - this.axis.x(0);
         var col2width = this.axis.x2(interval) - this.axis.x2(0);
+        var separator = Config.separator();
 
         var focusGroup = this.container.focus.insert('g',":first-child")
             .attr('class','columns ordered')
             .attr('clip-path',clippath)
-            .attr("id","chart_"+probe.split(ONOC.separator).join('_'));;
+            .attr("id","chart_"+probe.split(separator).join('_'));;
         var contextGroup = this.container.context.insert('g',":first-child")
             .attr('class','columns')
             .attr('clip-path','url(#clip_'+this.id+')');
         var dots = this.container.focus.append('g')
             .attr('class','chart dots focus_'+probe)
             .attr('clip-path',clippath)
-            .attr("id","dots_"+probe.split(ONOC.separator).join('_'));
+            .attr("id","dots_"+probe.split(separator).join('_'));
 
         dots.selectAll(".dots")
             .data(data)
@@ -2920,7 +2926,7 @@ define(['jquery',
         probePosition.append(form.unitSelect(false, false, units));
 
         //add unit
-        if(window.ONOC.is_admin){
+        if(Config.isAdmin()){
             var add = $('<p><button class="add">Add unit</button></p>');
             add.on('click',function(e){
                 e.preventDefault();
@@ -3016,9 +3022,10 @@ define(['jquery',
             if(form[1].value === color)
                 query = form.server.value;
             else{
-                for(var i=0, len = form['server'].length; i<len; i++){
-                    if(i) query = query.concat(ONOC.separator);
-                    query = query.concat(form[i].value);
+                var separator = Config.separator();
+                for(var i=0, len = form['server'].length; i < len; i++) {
+                    if(i) query += separator;
+                    query += form[i].value;
                 }
             }
 
@@ -3028,24 +3035,25 @@ define(['jquery',
             var probeList = [query];
 
             var addCount = 0;
-            for(var i in probeList){
+            for(var i in probeList) {
                 if(this.probes[name]) continue;
                 addCount++;
             }
 
-            if(addCount > 10){
+            if(addCount > 10) {
                 var warned = subcontainer.data('warned');
-                if(!warned){
-                    subcontainer.data('warned',1);
+                if(!warned) {
+                    subcontainer.data('warned', 1);
                     subcontainer.prepend($('<div class="submit-warning">You are going to add '+addCount+' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser!</p></div>'));
                     return false;
-                }else{
+                } 
+                else {
                     subcontainer.data('warned',false);
                     subcontainer.children()[0].remove();
                 }
             }
 
-            for(var i in probeList){
+            for(var i in probeList) {
                 var name = probeList[i];
                 var order = ++this.counter;
 
@@ -3105,7 +3113,7 @@ define(['jquery',
                 query = form.server.value;
             else{
                 for(var i=0, len = form['server'].length; i<len; i++){
-                    if(i) query = query.concat(ONOC.separator);
+                    if(i) query = query.concat(Config.separator());
                     query = query.concat(form[i].value);
                 }
             }
@@ -3122,8 +3130,8 @@ define(['jquery',
             if(addCount > 10){
                 var warned = subcontainer.data('warned');
                 if(!warned){
-                    subcontainer.data('warned',1);
-                    subcontainer.prepend($('<div class="submit-warning">You are going to add '+addCount+' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser.</p></div>'));
+                    subcontainer.data('warned', 1);
+                    subcontainer.prepend($('<div class="submit-warning">You are going to add ' + addCount + ' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser.</p></div>'));
                     return false;
                 }
             }
@@ -3206,13 +3214,16 @@ define(['jquery',
             }
             container.append(groupContainer);
 
-            for(var p = 0, len = groups[g].length;p<len;p++){
+            var separator = Config.separator();
+            for(var p = 0, len = groups[g].length; p<len; p++){
                 var probe = probes[groups[g][p]];
                 var scale = scales[probe.scale];
                 var unit = scale.unit;
 
                 var probeContainer = $('<p class="editContent"></p>');
-                probeContainer.append('<label style="display: table-cell;text-shadow: -2px 2px black;">'+groups[g][p].split(ONOC.separator).join('.')+'</label>');
+                probeContainer.append('<label style="display: table-cell;text-shadow: -2px 2px black;">' + 
+                                      groups[g][p].split(separator).join('.') + 
+                                      '</label>');
                 probeContainer.append(form.colorBox.call(this,probe.color, groups[g][p]));
                 probeContainer.append(form.orientSelect.call(this,scale.orient, groups[g][p]));
                 probeContainer.append(form.directionSelect.call(this,scale.reversed, groups[g][p]));

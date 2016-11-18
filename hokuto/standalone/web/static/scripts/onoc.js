@@ -42,7 +42,7 @@ requirejs.config({
     }
 });
 
-requirejs(['jquery','onoc.tooltips'], function(jQuery,Tooltips) {
+requirejs(['jquery','onoc.tooltips', 'onoc.config'], function(jQuery, Tooltips, Config) {
     var onoc_start = function(module) {
         if(typeof(module) === 'string') {
             module = [module];
@@ -51,6 +51,7 @@ requirejs(['jquery','onoc.tooltips'], function(jQuery,Tooltips) {
         return requirejs(module);
     }
 
+    Config.setValues($URL_ROOT, '[SEP]');
 
     jQuery(document).ready(function() {
         var help = new Tooltips();

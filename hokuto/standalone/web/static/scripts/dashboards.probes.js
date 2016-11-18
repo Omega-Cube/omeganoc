@@ -17,7 +17,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], function (jQuery, Console, DataService, createUrl, States) {
+define(['jquery', 
+        'console', 
+        'dataservice', 
+        'onoc.createurl',
+        'onoc.states',
+        'onoc.config'], function (jQuery, Console, DataService, createUrl, States, Config) {
 
     /**
      * Manage probes data
@@ -29,7 +34,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
     var DashboardProbes = {
         probes: {},
         metrics: false,
-        worker: new Worker("static/scripts/workers/probes.worker.js"),
+        worker: new Worker(createUrl("static/scripts/workers/onoc.js")),
         probesDoneLoadingCallbacks: [],
 
         /**
@@ -37,7 +42,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
          * @param {String} probe - The probe identifer following the format [server]_[service]
          */
         addProbe: function(probe){
-            var query = probe.split(ONOC.separator);
+            var query = probe.split(Config.separator());
             var interval = States.getServicesStates(query[0],query[1]).check_interval || 1;
             this.worker.postMessage([2,[probe,interval]]);
             if(!this.probes[probe])
@@ -121,7 +126,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
         getMetrics: function(query){
             if(!query)
                 return this.metrics;
-            var splited = query.split(ONOC.separator);
+            var splited = query.split(Config.separator());
             if(splited.length === 1)
                 return query;
             var metrics = this.metrics;
@@ -176,7 +181,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
          * @return the host name
          */
         extractHost: function(probe){
-            var host = probe.split(ONOC.separator)[0];
+            var host = probe.split(Config.separator())[0];
             return host;
             /*var metrics = this.metrics;
             var split = probe.split(ONOC.separator);
@@ -197,7 +202,7 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
          * @return the service description name
          */
         extractService: function(probe){
-            var service = probe.split(ONOC.separator)[1];
+            var service = probe.split(Config.separator())[1];
             return service;
             /*var metrics = this.metrics;
             var split = probe.split(ONOC.separator);
@@ -358,7 +363,11 @@ define(['jquery', 'console', 'dataservice', 'onoc.createurl','onoc.states'], fun
         }
     };
     //setup the BASE_URL for worker's requests
-    DashboardProbes.worker.postMessage([1,[$URL_ROOT,ONOC.separator]]);
+    DashboardProbes.worker.postMessage(['workers/probes.worker', 
+                                        Config.baseUrl(), 
+                                        Config.separator(), 
+                                        Config.isAdmin(), 
+                                        Config.shinkenContact()]);
 
     //TODO: GRUICK!
     DashboardProbes._requestMetrics();

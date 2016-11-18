@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['libs/d3','dashboards.probes'],function(d3,DashboardProbes){
+define(['libs/d3','dashboards.probes', 'onoc.config'],function(d3, DashboardProbes, Config){
 
     /**
      * Manage basicchart widget's legends
@@ -110,7 +110,7 @@ define(['libs/d3','dashboards.probes'],function(d3,DashboardProbes){
             .attr('fill',data.color)
             .attr('font-size',12)
             .attr('style','cursor:pointer;')
-            .text(service.split(ONOC.separator).join('.'));
+            .text(service.split(Config.separator()).join('.'));
 
         var legendValue = container.append('g')
             .attr('transform','translate(0,1)');

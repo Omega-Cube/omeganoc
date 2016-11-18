@@ -269,14 +269,16 @@ define(['jquery',
                 url = createurl(url);
             }
 
-            if(!ONOC.conf_is_locked){
+            // TODO: Remove usage of a global var (where should we put conf_is_locked instead ?)
+            if(!ONOC.conf_is_locked) {
                 var span = jQuery('<span class="cell"></span>');
-                span.append('<a href="'+url+'" class="button">Edit</a>');
-                span.append('<a href="'+urladv+'" class="button" data-tooltip="For experts only, edit config file directly.">Advanced</a>');
+                span.append('<a href="' + url + '" class="button">Edit</a>');
+                span.append('<a href="' + urladv + '" class="button" data-tooltip="For experts only, edit config file directly.">Advanced</a>');
                 li.append(span);
-                li.append('<span class="cell"><a href="'+urldel+'" class="button remove">Remove</a></span>');
-            }else{
-                li.append('<span class="cell"><a href="'+url+'" class="button">View</a></span>');
+                li.append('<span class="cell"><a href="' + urldel + '" class="button remove">Remove</a></span>');
+            } 
+            else {
+                li.append('<span class="cell"><a href="' + url + '" class="button">View</a></span>');
             }
             listcontent.append(li);
         }
@@ -285,7 +287,7 @@ define(['jquery',
     function _fillLegend(legend){
         var legendContainer = $('.listlegend').empty();
         for(var l in legend){
-            $('.listlegend').append('<span class="cell">'+legend[l]+'</span>');
+            $('.listlegend').append('<span class="cell">' + legend[l] + '</span>');
         }
         $('.listlegend').append('<span class="cell">Edit</span>');
         $('.listlegend').append('<span class="cell">Remove</span>');

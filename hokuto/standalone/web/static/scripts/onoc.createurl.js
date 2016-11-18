@@ -16,13 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(function () {
+define(['onoc.config'], function (Config) {
     // TODO: Use this in the graph state manager for the load/save urls
     return function (url) {
         // Remove the slash at the start of the relative URL if there's one
         if(url.length > 0 && url[0] == '/') {
             url = url.slice(1);
         }
-        return $URL_ROOT + url;
+        
+        return Config.baseUrl() + url;
     };
 });
