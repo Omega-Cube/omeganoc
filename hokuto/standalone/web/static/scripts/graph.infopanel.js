@@ -1,4 +1,5 @@
-"use strict"
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -56,11 +57,11 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
     function createNotesSection(data) {
         var notes = null;
         if (data.notes || data.notes_url) {
-            var notes = jQuery('<div class="prop-notes"></div>');
+            notes = jQuery('<div class="prop-notes"></div>');
             if (data.notes_url)
                 notes.append(jQuery('<a title="Go to the notes page" target="_blank">Notes</a>').attr({ 'href': data.notes_url }).wrap('<p></p>'));
             else
-                notes.append('<p>Notes</p>')
+                notes.append('<p>Notes</p>');
 
             if (data.notes)
                 notes.append(jQuery('<p></p>').text(data.notes));
@@ -95,7 +96,7 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
         // Get the host data first
         DataService.getHost(hostName, function (host) {
             if (!host) {
-                Console.error('createHostPanel did not find a host called ' + hostName + ' !')
+                Console.error('createHostPanel did not find a host called ' + hostName + ' !');
                 errorCallback();
                 return;
             }
@@ -119,20 +120,20 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
             
             var statusText = 'Unknown', statusClass = 'status-unknown';
             switch(states.getHostState(hostName).state) {
-                case 0:
-                    statusText = 'Up';
-                    statusClass = 'status-ok';
-                    break;
-                    
-                case 1:
-                    statusText = 'Down';
-                    statusClass = 'status-ko';
-                    break;
-                    
-                case 2:
-                    statusText = 'Unreachable';
-                    statusClass = 'status-unknown';
-                    break;
+            case 0:
+                statusText = 'Up';
+                statusClass = 'status-ok';
+                break;
+                
+            case 1:
+                statusText = 'Down';
+                statusClass = 'status-ko';
+                break;
+                
+            case 2:
+                statusText = 'Unreachable';
+                statusClass = 'status-unknown';
+                break;
             }
             
             panel.append(createPropertyTable({
@@ -161,7 +162,7 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
         // Get the service data first
         DataService.getService(hostName, serviceName, function (service) {
             if (!service) {
-                Console.error('createServicePanel did not find a service called ' + hostName + ' !')
+                Console.error('createServicePanel did not find a service called ' + hostName + ' !');
                 errorCallback();
                 return;
             }
@@ -188,25 +189,25 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
 
             var statusText = 'Unknown', statusClass = 'state-unknown';
             switch(states.getServicesStates(hostName, serviceName).state) {
-                case 0:
-                    statusText = 'Ok',
-                    statusClass = 'status-ok';
-                    break;
-                    
-                case 1:
-                    statusText = 'Warning';
-                    statusClass = 'status-warning';
-                    break;
-                    
-                case 2:
-                    statusText = 'Critical';
-                    statusClass = 'status-ko';
-                    break;
+            case 0:
+                statusText = 'Ok',
+                statusClass = 'status-ok';
+                break;
                 
-                case 3:
-                    statusText = 'Unknown';
-                    statusClass = 'status-unknown';
-                    break;
+            case 1:
+                statusText = 'Warning';
+                statusClass = 'status-warning';
+                break;
+                
+            case 2:
+                statusText = 'Critical';
+                statusClass = 'status-ko';
+                break;
+            
+            case 3:
+                statusText = 'Unknown';
+                statusClass = 'status-unknown';
+                break;
             }
 
             panel.append(createPropertyTable({
@@ -232,7 +233,7 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
 
     function errorCallback() {
         alert('error !');
-    };
+    }
 
     function initPanel(container) {
         _container = jQuery(container);
@@ -252,7 +253,7 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
                         createServicePanel(name[0], name[1], function (result) {
                             _container.append(result);
                             _currentPanel = name;
-                        })
+                        });
                     }
                     else {
                         // Host

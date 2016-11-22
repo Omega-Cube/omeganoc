@@ -1,3 +1,8 @@
+'use strict';
+
+// Use of console is allowed in this file only
+/* eslint no-console: "off" */
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -18,56 +23,56 @@
  */
 
 define(function() {
-	var result = {
-		// This object creates an interoperability layer
-		// for debugging operations. It should contain methods
-		// corresponding to the Firebug Console API, and work
-		// every supported environment (even if firebug is not
-		// actually available)
-		// Note that while method names from the API may be present,
-		// the arguments are often simplified (no format strings for example)
+    var result = {
+        // This object creates an interoperability layer
+        // for debugging operations. It should contain methods
+        // corresponding to the Firebug Console API, and work
+        // every supported environment (even if firebug is not
+        // actually available)
+        // Note that while method names from the API may be present,
+        // the arguments are often simplified (no format strings for example)
 
-		_history: [],
+        _history: [],
 
-		log: function (message) {
-			result._history.push('[Log]\t' + message);
-		},
+        log: function (message) {
+            result._history.push('[Log]\t' + message);
+        },
 
-		info: function (message) {
-			result._history.push('[Info]\t' + message);
-		},
+        info: function (message) {
+            result._history.push('[Info]\t' + message);
+        },
 
-		warn: function (message) {
-			result._history.push('[Warning]\t' + message);
-		},
+        warn: function (message) {
+            result._history.push('[Warning]\t' + message);
+        },
 
-		error: function (message) {
-			result._history.push('[Error]\t' + message);
-		},
+        error: function (message) {
+            result._history.push('[Error]\t' + message);
+        },
 
-		_init: function () {
-			if (window.console) {
-				// Replace the default implementations by more optimized ones
-				result.log = function (message) {
-					console.log(message);
-				};
+        _init: function () {
+            if (window.console) {
+                // Replace the default implementations by more optimized ones
+                result.log = function (message) {
+                    console.log(message);
+                };
 
-				result.info = function (message) {
-					console.info(message);
-				};
+                result.info = function (message) {
+                    console.info(message);
+                };
 
-				result.warn = function (message) {
-					console.warn(message);
-				};
+                result.warn = function (message) {
+                    console.warn(message);
+                };
 
-				result.error = function (message) {
-					console.error(message);
-				};
-			}
-		}
-	};
+                result.error = function (message) {
+                    console.error(message);
+                };
+            }
+        }
+    };
 
-	result._init();
+    result._init();
 
-	return result;
+    return result;
 });

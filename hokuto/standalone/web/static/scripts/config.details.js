@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2015 Omega Cube and contributors
@@ -16,36 +18,43 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'libs/select2', 'libs/jquery.validate'], function(jQuery){
+define(['jquery', 'console', 'libs/select2', 'libs/jquery.validate'], function(jQuery, Console){
     jQuery(function() {
-        var data = _conf_details_data;
-        var type = _conf_details_type;
-
-                jQuery("#conf-apply-changes").click(function(e){
-            jQuery.ajax('/config/apply',{
+        jQuery('#conf-apply-changes').click(function() {
+            jQuery.ajax('/config/apply', {
                 'method': 'POST',
-            }).success(function(response){
-                console.log(response);
-                if(!response.success){
+            }).success(function(response) {
+                if(!response.success) {
                     alert(response.error);
-                }else{
-                    alert("Shinken will restart with the new configuration in less than one minute.");
+                } 
+                else {
+                    alert('Shinken will restart with the new configuration in less than one minute.');
                 }
-            }).error(function(response){
-                console.log(response);
+            }).error(function(response) {
+                Console.error('The configuration service responded to the apply call with an error: ' + response);
+                alert('An error occured; Maybe try again later ?');
             });
         });
-        jQuery("#conf-reset-changes").click(function(e){
+
+        jQuery('#conf-reset-changes').click(function(){
             jQuery.ajax('/config/reset',{
                 'method': 'DELETE',
-            }).success(function(response){
+            }).success(function() {
                 document.location.reload();
             }).error(function(response){
-                console.log(response);
+                Console.error('The configuration service responded to the reset call with an error: ' + response);
+                alert('An error occured; Maybe try again later ?');
             });
         });
-        jQuery("#conf-lock").click(function(e){
-            jQuery.ajax('/config/lock').success(function(response){ document.location.reload(); }).error(function(e){console.log(e)});
+
+        jQuery('#conf-lock').click(function(){
+            jQuery.ajax('/config/lock').success(function(){
+                document.location.reload();
+            }).error(function(response) {
+                Console.error('The configuration service responded to the lock call with an error: ' + response);
+                alert('An error occured; Maybe try again later ?');
+
+            });
         });
 
         

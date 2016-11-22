@@ -1,4 +1,5 @@
-"use strict"
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -22,17 +23,18 @@
 * OmegaNoc Renderer implementation, using svg.js
 */
 
-define(['jquery', 
-        'graph.tooltip', 
-        'graph', 
-        'console', 
-        'onoc.createurl', 
-        'onoc.loadcss', 
-        'onoc.loop', 
-        'libs/jquery.mousewheel', 
-        'libs/svg', 
-        'libs/svg.easing'],
-function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
+define([
+    'jquery', 
+    'graph.tooltip', 
+    'graph', 
+    'console', 
+    'onoc.createurl', 
+    'onoc.loadcss', 
+    'onoc.loop', 
+    'libs/svg', 
+    'libs/jquery.mousewheel', 
+    'libs/svg.easing'],
+function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop, SVG) {
     // NOTE : Grapher is a circular dependency, it will therefore be undefined at the time this function gets called !
     var Bubbles = function (element, graph, graphType) {
         var selfRef = this;
@@ -70,7 +72,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
         this.getElement = function () {
             return element;
-        }
+        };
 
         // The moving container
         this.panX = 0; // v
@@ -85,7 +87,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         this.svg = SVG(this.container).size(100, 100);
         selfRef._updateGraphSize();
 
-        this.upImage = document.getElementById("up");
+        this.upImage = document.getElementById('up');
 
         // The overview container
         // A div that contains all of the overview
@@ -99,7 +101,6 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         this.overviewContainer.style.height = this.overviewHeight + 'px';
         this.overviewContainer.style.zIndex = 800;
         element.appendChild(this.overviewContainer);
-        var $overviewContainer = jQuery(this.overviewContainer);
 
         // Overview graph
         this.miniSvg = SVG(this.overviewContainer)
@@ -187,7 +188,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             selfRef.hideCommands();
         };
 
-        this._onEllipseMouseOver = function (e) {
+        this._onEllipseMouseOver = function () {
             // Do not display the tooltip during user manipulations
             var node = this.set.dataNode;
             if (selfRef.currentMouseOperation === Bubbles.MOUSE_OPERATION_NONE) {
@@ -227,7 +228,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                     ///    color: 'red'
                     ///});
                     ///link._glow = glow;
-                    Console.log('TODO : Implement reject glow')
+                    Console.log('TODO : Implement reject glow');
                 }
 
 
@@ -251,7 +252,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             }
         };
 
-        this._onEllipseDoubleClick = function (e) {
+        this._onEllipseDoubleClick = function () {
             jQuery(selfRef.getElement()).trigger('activate', [this.set.dataNode]);
         };
 
@@ -289,7 +290,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         this._onEdgeCommanderCenterClicked = function (e) {
             e.stopPropagation();
             if (selfRef.graphType.onEdgeCommand)
-                selfRef.graphType.onEdgeCommand(this.parent()._edge, selfRef)
+                selfRef.graphType.onEdgeCommand(this.parent()._edge, selfRef);
         };
 
         this._onEdgeCommanderMouseDown = function (e) {
@@ -381,9 +382,9 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             }
         });
 
-        $overviewSelector.mouseup(function (e) {
+        $overviewSelector.mouseup(function () {
             selfRef.currentMouseOperation = Bubbles.MOUSE_OPERATION_NONE;
-        })
+        });
 
         // Single key pressed event
         jQuery(document).keydown(function (e) {
@@ -484,7 +485,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
         jQuery(document).on('columnsresized.onoc', function () {
             // Change the size of the canvas to the size of the element if the graph is too small
-            selfRef._checkCanvasSize($(window).width(), selfRef.getElement().offsetHeight)
+            selfRef._checkCanvasSize(jQuery(window).width(), selfRef.getElement().offsetHeight);
             selfRef._secureGraphPosition();
             selfRef._updateOverviewSize();
         });
@@ -514,14 +515,12 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         });
 
         jQuery(window).resize(function () {
-            selfRef._checkCanvasSize($(window).width(), selfRef.getElement().offsetHeight)
+            selfRef._checkCanvasSize(jQuery(window).width(), selfRef.getElement().offsetHeight);
             selfRef._secureGraphPosition();
             selfRef._updateOverviewSize();
         });
 
         $container.mousewheel(function (e) {
-            var delta = e.originalEvent.wheelDelta;
-
             if (e.ctrlKey) {
                 // Invert X and Y axis
                 // This is mostly for people with a classic wheel with just a Y axis, so
@@ -588,7 +587,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                     $overviewContainer.hide();
             }
             this.overviewIsVisible = show;
-            $overviewContainer.trigger('overview_toggle.onoc')
+            $overviewContainer.trigger('overview_toggle.onoc');
         },
         
         _draw: function () {
@@ -609,8 +608,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             // if node has already been drawn, move the nodes
             if (node.shape) {
-                _updateNodePosition(node);
-                return this._updateNodeSize(node)
+                this._updateNodePosition(node);
+                return this._updateNodeSize(node);
             } // else, draw new nodes
 
 
@@ -694,7 +693,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             var shape = group.shape = this.svg.group().attr({
                 'class': 'group' + this._getNodeTypeClass(group)
             });
-            var text = shape.plain(group.label).attr({
+            shape.plain(group.label).attr({
                 'text-anchor': 'middle'
             });
             var ellipse = shape.ellipse(1, 1);
@@ -775,7 +774,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             else {
                 rx = group.bbox.width * 0.7 + this.groupPadding;
                 ry = group.bbox.height * 0.7 + this.groupPadding;
-                textPos = (group.bbox.height * 0.7) + this.groupPadding + 20
+                textPos = (group.bbox.height * 0.7) + this.groupPadding + 20;
             }
             shape.x(x).y(y);
 
@@ -910,7 +909,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
 
             // Move groups
-            for (var i = 0, c = this.selectedGroups.length; i < c; i++) {
+            for (i = 0, c = this.selectedGroups.length; i < c; i++) {
                 // Manually update the bbox, which will be much faster than
                 // scanning all of the nodes again
                 this.selectedGroups[i].bbox.left -= deltaX;
@@ -986,15 +985,15 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             if (e) {
                 switch (this.currentMouseOperation) {
-                    case Bubbles.MOUSE_OPERATION_SELECTING:
-                        this._drawSelectionRectangle(e);
-                        break;
-                    case Bubbles.MOUSE_OPERATION_DRAGGING:
-                        this._moveSelectedNodesByDragging(e);
-                        break;
-                    case Bubbles.MOUSE_OPERATION_DRAW_LINK:
-                        this._updateUserLinkPreview(e);
-                        break;
+                case Bubbles.MOUSE_OPERATION_SELECTING:
+                    this._drawSelectionRectangle(e);
+                    break;
+                case Bubbles.MOUSE_OPERATION_DRAGGING:
+                    this._moveSelectedNodesByDragging(e);
+                    break;
+                case Bubbles.MOUSE_OPERATION_DRAW_LINK:
+                    this._updateUserLinkPreview(e);
+                    break;
                 }
             }
         },
@@ -1009,15 +1008,15 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             if (e) {
                 switch (this.currentMouseOperation) {
-                    case Bubbles.MOUSE_OPERATION_SELECTING:
-                        this._drawSelectionRectangle(e);
-                        break;
-                    case Bubbles.MOUSE_OPERATION_DRAGGING:
-                        this._moveSelectedNodesByDragging(e);
-                        break;
-                    case Bubbles.MOUSE_OPERATION_DRAW_LINK:
-                        this._updateUserLinkPreview(e);
-                        break;
+                case Bubbles.MOUSE_OPERATION_SELECTING:
+                    this._drawSelectionRectangle(e);
+                    break;
+                case Bubbles.MOUSE_OPERATION_DRAGGING:
+                    this._moveSelectedNodesByDragging(e);
+                    break;
+                case Bubbles.MOUSE_OPERATION_DRAW_LINK:
+                    this._updateUserLinkPreview(e);
+                    break;
                 }
             }
         },
@@ -1033,7 +1032,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                 node = id;
             }
             else if (id in this.graph.nodes) {
-                node = graph.nodes[id];
+                node = this.graph.nodes[id];
             }
             else if (id in this.graph.groups) {
                 node = this.graph.groups[id];
@@ -1050,8 +1049,6 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             var width = this.getElement().offsetWidth;
             var height = this.getElement().offsetHeight;
-
-            var centerNeeded = false;
 
             if (node.bbox.left < (this.panX + visibilityMargin) ||
                 node.bbox.top < (this.panY + visibilityMargin) ||
@@ -1084,12 +1081,12 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                 this.selectedNodes[i].selected = false;
             }
 
-            for (var i = 0, c = this.selectedEdges.length; i < c; ++i) {
+            for (i = 0, c = this.selectedEdges.length; i < c; ++i) {
                 this._applyNormalEdgeStyle(this.selectedEdges[i]);
                 this.selectedEdges[i].selected = false;
             }
 
-            for (var i = 0, c = this.selectedGroups.length; i < c; ++i) {
+            for (i = 0, c = this.selectedGroups.length; i < c; ++i) {
                 this.selectedGroups[i]._selectionCount = 0;
                 this.selectedGroups[i].selected = false;
             }
@@ -1193,8 +1190,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
         // Update position of the overview position indicator
         _updateOverviewPosition: function () {
-            this.overviewSelector.style.left = (this.panX * this.overviewRatio) + "px";
-            this.overviewSelector.style.top = (this.panY * this.overviewRatio) + "px";
+            this.overviewSelector.style.left = (this.panX * this.overviewRatio) + 'px';
+            this.overviewSelector.style.top = (this.panY * this.overviewRatio) + 'px';
         },
 
         // Update size of the overview position indicator
@@ -1211,8 +1208,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             if (h > this.overviewHeight - 4)
                 h = this.overviewHeight - 4;
 
-            this.overviewSelector.style.width = w + "px";
-            this.overviewSelector.style.height = h + "px";
+            this.overviewSelector.style.width = w + 'px';
+            this.overviewSelector.style.height = h + 'px';
 
             this.overviewContainer.style.width = this.overviewWidth + 'px';
             this.overviewContainer.style.height = this.overviewHeight + 'px';
@@ -1344,7 +1341,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             for (var i = 0, c = node.link_out.length; i < c; ++i) {
                 this._updateEdgeSelection(node.link_out[i], true);
             }
-            for (var i = 0, c = node.link_in.length; i < c; ++i) {
+            for (i = 0, c = node.link_in.length; i < c; ++i) {
                 this._updateEdgeSelection(node.link_in[i], true);
             }
         },
@@ -1354,7 +1351,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             for (var i = 0, c = node.link_out.length; i < c; ++i) {
                 this._updateEdgeSelection(node.link_out[i], false);
             }
-            for (var i = 0, c = node.link_in.length; i < c; ++i) {
+            for (i = 0, c = node.link_in.length; i < c; ++i) {
                 this._updateEdgeSelection(node.link_in[i], true);
             }
         },
@@ -1479,18 +1476,18 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             var deltaX = 0;
             var deltaY = 0;
             switch(keycode) {
-                case 39: // Right
-                    deltaX = -moveCoef;
-                    break;
-                case 37: // Left
-                    deltaX = moveCoef;
-                    break;
-                case 38: // Up
-                    deltaY = moveCoef;
-                    break;
-                case 40:
-                    deltaY = -moveCoef;
-                    break;
+            case 39: // Right
+                deltaX = -moveCoef;
+                break;
+            case 37: // Left
+                deltaX = moveCoef;
+                break;
+            case 38: // Up
+                deltaY = moveCoef;
+                break;
+            case 40:
+                deltaY = -moveCoef;
+                break;
             }
             
             this._moveSelectedNodesBy(deltaX, deltaY);
@@ -1520,7 +1517,6 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         // the interpolate parameter is optionnal.
         setGraphData: function (newGraph, newGraphType) {
             var oldGraph = this.graph;
-            var selfRef = this;
             this.graph = newGraph;
             this.graphType = newGraphType;
 
@@ -1540,7 +1536,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             var miniRemovedElements = []; // Shapes that will be removed from the overview
             for (var oldId in oldGraph.nodes) {
                 var n = oldGraph.nodes[oldId];
-                if (!!newGraph.nodes[n.id]) {
+                if (newGraph.nodes[n.id]) {
                     kept_nodes.push(n);
                 }
                 else {
@@ -1549,9 +1545,9 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                 }
             }
 
-            for (var oldId in oldGraph.groups) {
+            for (oldId in oldGraph.groups) {
                 var g = oldGraph.groups[oldId];
-                if (!!newGraph.groups[g.id]) {
+                if (newGraph.groups[g.id]) {
                     kept_groups.push(g);
                 }
                 else {
@@ -1566,7 +1562,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                 }
             }
 
-            for (var newId in newGraph.groups) {
+            for (newId in newGraph.groups) {
                 if (!oldGraph.groups[newId]) {
                     new_groups.push(newGraph.groups[newId]);
                 }
@@ -1585,18 +1581,19 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             this._updateGraphSize();
 
             // Hide shapes for nodes that didn't make it
-            for (var i in removedElements) {
+            for (i in removedElements) {
                 removedElements[i].animate(500).opacity(0).after(function () {
                     this.remove();
                 });
             }
 
-            for (var i in miniRemovedElements) {
+            for (i in miniRemovedElements) {
                 miniRemovedElements[i].remove();
             }
 
             // Move survivors
-            for (var i = 0, c = kept_nodes.length, o, n; i < c; ++i) {
+            var o;
+            for (i = 0, c = kept_nodes.length; i < c; ++i) {
                 n = newGraph.nodes[kept_nodes[i].id];
                 o = kept_nodes[i];
 
@@ -1616,7 +1613,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                 this._updateNodePosition(n, true);
             }
 
-            for (var i = 0, c = kept_groups.length; i < c; ++i) {
+            for (i = 0, c = kept_groups.length; i < c; ++i) {
                 g = newGraph.groups[kept_groups[i].id];
                 o = kept_groups[i];
 
@@ -1634,16 +1631,16 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
             // Draw the new elements
             // Groups
-            for (var i = 0, c = new_groups.length; i < c; ++i) {
+            for (i = 0, c = new_groups.length; i < c; ++i) {
                 this._drawGroup(new_groups[i]);
             }
 
             // Nodes
-            for (var i = 0, c = new_nodes.length; i < c; ++i) {
+            for (i = 0, c = new_nodes.length; i < c; ++i) {
                 this._drawNode(new_nodes[i]);
             }
             // Edges
-            for (var i = 0, c = newGraph.edges.length; i < c; i++) {
+            for (i = 0, c = newGraph.edges.length; i < c; i++) {
                 this._drawEdge(newGraph.edges[i], true);
             }
 
@@ -1659,14 +1656,14 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             // CLEANUP
 
             // Untie shapes from the old graph edges
-            for (var i = 0, c = oldGraph.edges.length, e; i < c; ++i) {
+            for (i = 0, c = oldGraph.edges.length; i < c; ++i) {
                 e = oldGraph.edges[i];
                 delete e.connection;
                 delete e.miniConnection;
             }
 
             // Untie shapes from the old nodes
-            for (var i = 0, c = oldGraph.nodes.length, n; i < c; ++i) {
+            for (i = 0, c = oldGraph.nodes.length; i < c; ++i) {
                 n = oldGraph.nodes[i];
                 delete n.shape;
                 delete n.miniShape;
@@ -1676,13 +1673,13 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
 
         show: function () {
             if(this.overviewIsVisible)
-                this.overviewContainer.style.display = "block";
-            this.container.style.display = "block";
+                this.overviewContainer.style.display = 'block';
+            this.container.style.display = 'block';
         },
 
         hide: function () {
-            this.overviewContainer.style.display = "none";
-            this.container.style.display = "none";
+            this.overviewContainer.style.display = 'none';
+            this.container.style.display = 'none';
         },
 
         // Checks if the canvas is big enough to contain the graph, 
@@ -1710,7 +1707,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
                 return; // Commands already in place, abort
             }
 
-            if (!node.id in this.graph.nodes) {
+            if (!(node.id in this.graph.nodes)) {
                 throw new 'This node does not seem to be currently displayed in the graph';
             }
 
@@ -1754,23 +1751,23 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             });
 
             if (node.radius > this.smallRadiusThreshold) {
-                var i = commands.length;
-                switch (i % 3) {
-                    case 1:
-                        this._createCommandIcon(commands[--i], node, currentRadius, 2);
-                        currentRadius -= radiusStep;
-                        break;
-                    case 2:
-                        this._createCommandIcon(commands[--i], node, currentRadius, 1);
-                        this._createCommandIcon(commands[--i], node, currentRadius, 3);
-                        currentRadius -= radiusStep;
-                        break;
+                var cLen = commands.length;
+                switch (cLen % 3) {
+                case 1:
+                    this._createCommandIcon(commands[--cLen], node, currentRadius, 2);
+                    currentRadius -= radiusStep;
+                    break;
+                case 2:
+                    this._createCommandIcon(commands[--cLen], node, currentRadius, 1);
+                    this._createCommandIcon(commands[--cLen], node, currentRadius, 3);
+                    currentRadius -= radiusStep;
+                    break;
                 }
 
-                while (i > 0) {
-                    this._createCommandIcon(commands[--i], node, currentRadius, 1);
-                    this._createCommandIcon(commands[--i], node, currentRadius, 2);
-                    this._createCommandIcon(commands[--i], node, currentRadius, 3);
+                while (cLen > 0) {
+                    this._createCommandIcon(commands[--cLen], node, currentRadius, 1);
+                    this._createCommandIcon(commands[--cLen], node, currentRadius, 2);
+                    this._createCommandIcon(commands[--cLen], node, currentRadius, 3);
                     currentRadius -= radiusStep;
                 }
             }
@@ -1791,18 +1788,18 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
             var selfRef = this;
             var x = 0, y = 0;
             switch (position) {
-                case 1:
-                    x += radius - 6;
-                    y -= 32;
-                    break;
-                case 2:
-                    x += radius;
-                    y -= 9;
-                    break;
-                case 3:
-                    x += radius - 6;
-                    y += 14;
-                    break;
+            case 1:
+                x += radius - 6;
+                y -= 32;
+                break;
+            case 2:
+                x += radius;
+                y -= 9;
+                break;
+            case 3:
+                x += radius - 6;
+                y += 14;
+                break;
             }
 
             var icon = node.shape.image(createUrl('static/images/graph-commands/' + command.image)).attr({
@@ -2054,29 +2051,29 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         updateNodeState: function (node, newState) {
             if (node.state) {
                 switch (node.state.state) {
-                    case 1:
-                        node.shape.removeClass('state-warning');
-                        node.miniShape.removeClass('state-warning');
-                        break;
+                case 1:
+                    node.shape.removeClass('state-warning');
+                    node.miniShape.removeClass('state-warning');
+                    break;
 
-                    case 2:
-                        node.shape.removeClass('state-error');
-                        node.miniShape.removeClass('state-error');
-                        break;
+                case 2:
+                    node.shape.removeClass('state-error');
+                    node.miniShape.removeClass('state-error');
+                    break;
                 }
             }
 
             if (newState) {
                 switch (newState.state) {
-                    case 1:
-                        node.shape.addClass('state-warning');
-                        node.miniShape.addClass('state-warning');
-                        break;
+                case 1:
+                    node.shape.addClass('state-warning');
+                    node.miniShape.addClass('state-warning');
+                    break;
 
-                    case 2:
-                        node.shape.addClass('state-error');
-                        node.miniShape.addClass('state-error');
-                        break;
+                case 2:
+                    node.shape.addClass('state-error');
+                    node.miniShape.addClass('state-error');
+                    break;
                 }
             }
 
@@ -2087,29 +2084,29 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop) {
         updateGroupState: function (group, newState) {
             if (group.state) {
                 switch (group.state.state) {
-                    case 1:
-                        group.shape.removeClass('state-warning');
-                        group.miniShape.removeClass('state-warning');
-                        break;
+                case 1:
+                    group.shape.removeClass('state-warning');
+                    group.miniShape.removeClass('state-warning');
+                    break;
 
-                    case 2:
-                        group.shape.removeClass('state-error');
-                        group.miniShape.removeClass('state-error');
-                        break;
+                case 2:
+                    group.shape.removeClass('state-error');
+                    group.miniShape.removeClass('state-error');
+                    break;
                 }
             }
 
             if (newState) {
                 switch (newState.state) {
-                    case 1:
-                        group.shape.addClass('state-warning');
-                        group.miniShape.addClass('state-warning');
-                        break;
+                case 1:
+                    group.shape.addClass('state-warning');
+                    group.miniShape.addClass('state-warning');
+                    break;
 
-                    case 2:
-                        group.shape.addClass('state-error');
-                        group.miniShape.addClass('state-error');
-                        break;
+                case 2:
+                    group.shape.addClass('state-error');
+                    group.miniShape.addClass('state-error');
+                    break;
                 }
             }
 

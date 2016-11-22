@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -17,14 +19,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 
-        'dashboards.widget', 
-        'console', 
-        'onoc.createurl', 
-        'dashboards.timeline', 
-        'libs/gridster', 
-        'libs/jquery.hashchange', 
-        'onoc.message'], function (jQuery, Widget, Console, createUrl, DashboardTimeline) {
+define([
+    'jquery', 
+    'dashboards.widget', 
+    'console', 
+    'onoc.createurl', 
+    'dashboards.timeline', 
+    'libs/gridster', 
+    'libs/jquery.hashchange', 
+    'onoc.message'], function (jQuery, Widget, Console, createUrl, DashboardTimeline) {
     /**
      * Manages the user's dashboards data and display
      * @property {Gridster} gridster         - Handle parts size and position
@@ -36,7 +39,7 @@ define(['jquery',
     var DashboardsManager = {
         gridster: null,
         element: null,
-        currentDashboard: "",
+        currentDashboard: '',
         lastAssignedTempID: 0,
         currentParts: {}, // A list of all the currently displayed parts data, indexed by part ID
 
@@ -59,23 +62,23 @@ define(['jquery',
             jQuery('#dashboard-big-msg').onocMessage();
 
             // Initialize global timeline element
-            DashboardsManager.timeline = new DashboardTimeline($('#dashboard-global-timeline'));
+            DashboardsManager.timeline = new DashboardTimeline(jQuery('#dashboard-global-timeline'));
 
             // Initialize Gridster
-            var cols = Math.floor(($('#content').width()) / 70);
+            var cols = Math.floor((jQuery('#content').width()) / 70);
             DashboardsManager.gridster = target.gridster({
                 widget_margins: [10, 10],
                 widget_base_dimensions: [50, 50],
                 min_cols : cols,
-		resize: {
-		    'enabled': true,
+                resize: {
+                    'enabled': true,
                     'min_size': [8, 6]
-		},
+                }
             }).width('auto').data('gridster');
 
-            $(window).resize(function () {
+            jQuery(window).resize(function () {
                 // Update gridster's grid to match the new window dimentions
-                var cols = Math.floor(($('#content').width()) / 70);
+                var cols = Math.floor((jQuery('#content').width()) / 70);
                 DashboardsManager.gridster.cols = cols;
                 DashboardsManager.gridster.recalculate_faux_grid();
             });
@@ -125,7 +128,7 @@ define(['jquery',
                 return decodeURIComponent(result);
             }
             else {
-                return "";
+                return '';
             }
         },
 
@@ -191,10 +194,10 @@ define(['jquery',
         },
 
         /**
-	 * Build a new widget
+         * Build a new widget
          * @param {String} widgetName - The widget we need to create
          */
-	buildWidget: function(widgetName,callback){
+        buildWidget: function(widgetName,callback) {
             Widget.getWidgetById(widgetName, function (widget) {
                 if (!widget)
                     return;
@@ -203,25 +206,25 @@ define(['jquery',
                 widget.createDefaultData(this);
                 if(typeof callback === 'function') callback();
             }.bind(this));
-	},
+        },
 
         /**
          * Add a new part to the current dashboard
          * @param {Object} partData - Part's configuration
          * @param {Object} widget - Part's widget instance
          */
-	addWidget: function (partData, widget) {
+        addWidget: function (partData, widget) {
             partData.id = DashboardsManager._createTemporaryID();
             partData.dashboard = DashboardsManager.currentDashboard;
 
-	    //GRUICK!
-	    partData.conf = JSON.stringify(partData.conf);
-	    DashboardsManager.savePartData(partData,function(partData){
+            //GRUICK!
+            partData.conf = JSON.stringify(partData.conf);
+            DashboardsManager.savePartData(partData,function(partData) {
                 if(partData.conf)
-		    partData.conf = JSON.parse(partData.conf);
+                    partData.conf = JSON.parse(partData.conf);
                 DashboardsManager._createPart(partData, widget,false);
                 DashboardsManager._scanChangedPositions();
-	    });
+            });
         },
 
         /**
@@ -299,9 +302,9 @@ define(['jquery',
                 DashboardsManager.gridster.add_widget(container[0], partData.width, partData.height, partData.col, partData.row);
             }
             catch(e){
-                console.log('Oh sh....');
-                console.error(e,e.stack);
-                location.reload(true);
+                Console.log('Gridster seems to be acting weird again. Please bear with us until we find time to replace it. You may want to reload the page now.');
+                Console.error(e);
+                //location.reload(true);
             }
 
             DashboardsManager.currentParts[partData.id] = partData;
@@ -309,7 +312,6 @@ define(['jquery',
 
         /**
          * Changes the displayed dasoboard title
-         * TODO: herrrr third method related to dashboard reneaming stuff, removeme
          * @param {String} title
          */
         _setDashboardTitle: function (title) {
@@ -326,7 +328,7 @@ define(['jquery',
             var url = createUrl('/dashboards/details/' + dashboardId);
             jQuery.getJSON(url).done(function (data) {
                 callback(data);
-            }).fail(function (jqXhr, textStatus, errorThrown) {
+            }).fail(function (jqXhr, textStatus) {
                 if (errorCallback) {
                     errorCallback(jqXhr.status, textStatus);
                 }
@@ -372,8 +374,8 @@ define(['jquery',
             return {
                 row: parseInt(elm.attr('data-row'), 10),
                 col: parseInt(elm.attr('data-col'), 10),
-		width: parseInt(elm.attr('data-sizex'), 10),
-		height: parseInt(elm.attr('data-sizey'), 10)
+                width: parseInt(elm.attr('data-sizex'), 10),
+                height: parseInt(elm.attr('data-sizey'), 10)
             };
         },
 
@@ -414,17 +416,17 @@ define(['jquery',
                 if (pData.width != curPos.width || pData.height != curPos.height) {
                     // Apply and save
                     // TODO : Replace this with a single-request batched save
-		    pData.width = curPos.width;
-		    pData.height = curPos.height;
+                    pData.width = curPos.width;
+                    pData.height = curPos.height;
 
                     DashboardsManager.savePartData({
                         id: pData.id,
-			width: pData.width,
-			height: pData.height
+                        width: pData.width,
+                        height: pData.height
                     });
                     //TODO: REFACTOR
                     if(pData.controller.chart)
-		        pData.controller.chart.updateBoxSize(pData.width,pData.height);
+                        pData.controller.chart.updateBoxSize(pData.width,pData.height);
                     if(pData.controller.resize)
                         pData.controller.resize(pData.width,pData.height);
                 }
@@ -441,13 +443,13 @@ define(['jquery',
             var url = createUrl('/dashboards/part');
             if(!partData.id && !partData.conf)
                 return false;
-            jQuery.post(url, partData, function (data, statusText, jqXHR) {
+            jQuery.post(url, partData, function (data) {
                 if (data.original_id != data.saved_id) {
                     DashboardsManager._applyDefinitivePartId(data.original_id, data.saved_id);
-		    partData.id = data.saved_id;
+                    partData.id = data.saved_id;
                 }
-		if(callback)
-		    callback(partData);
+                if(callback)
+                    callback(partData);
             }, 'json');
         },
 
@@ -456,7 +458,7 @@ define(['jquery',
          * @param {Number} oldId - old temporary ID
          * @param {Number} newId - New ID returned by the server
          */
-        _applyDefinitivePartId: function (oldId, newId){
+        _applyDefinitivePartId: function (oldId, newId) {
             var elm = jQuery('[data-part-id=' + oldId + ']');
             elm.attr('data-part-id', newId);
             if (oldId in DashboardsManager.currentParts) {
@@ -472,11 +474,13 @@ define(['jquery',
         unloadDashboard: function () {
             DashboardsManager.currentParts = {};
             var count = 0;
-            var parts = DashboardsManager.element.find(' > li').each(function (i, e) {
+            DashboardsManager.element.find(' > li').each(function (i, e) {
                 DashboardsManager.gridster.remove_widget(e, true);
                 count++;
             });
-            if(!count) DashboardsManager._deleteTopMenuEntry(DashboardsManager.currentDashboard);
+            if(!count) {
+                DashboardsManager._deleteTopMenuEntry(DashboardsManager.currentDashboard);
+            }
 
             DashboardsManager._showDashboardControls(false);
             //TODO: flush worker too
@@ -546,41 +550,41 @@ define(['jquery',
          * Display dashboards list (dashboards landing page)
          */
         _setDashboardsList: function(){
-            DashboardsManager._setDashboardTitle("DASHBOARDS");
+            DashboardsManager._setDashboardTitle('DASHBOARDS');
             var dblist = jQuery('#dashboards-list');
             dblist.css('display','block');
             jQuery('#dashboard').css('display','none');
 
             //setup delete buttons
             dblist.find('.delete').each(function(index,element){
-                $(element).click(function(event){
-                    var target = $(event.target);
+                jQuery(element).click(function(event){
+                    var target = jQuery(event.target);
                     var name = event.target.dataset['db'];
-                    $.ajax({
+                    jQuery.ajax({
                         'url': createUrl('/dashboards/' + name),
                         'type': 'DELETE'
                     }).success(function(){
                         target.parent().remove();
                         DashboardsManager._deleteTopMenuEntry(name);
                     }).error(function(e){
-                        console.error(e);
+                        Console.error('An error occured while trying to delete the dashboard: ' + e);
                     });
                 });
             });
 
             //setup rename buttons
             dblist.find('.edit').each(function(index,element){
-                $(element).click(function(event){
-                    var target = $(event.target);
+                jQuery(element).click(function(event){
+                    var target = jQuery(event.target);
                     var dbname = target.parent().find('.name');
                     var name = event.target.dataset['db'];
-                    var form = $('<form action="#" name="renamedb"><input type="text" name="dbname" class="name" value="'+name+'"/><input class="submit" type="submit" value="ok"/></form>');
-                    form.submit(function(e,f){
+                    var form = jQuery('<form action="#" name="renamedb"><input type="text" name="dbname" class="name" value="'+name+'"/><input class="submit" type="submit" value="ok"/></form>');
+                    form.submit(function(e){
                         e.preventDefault();
                         var newname = form[0].dbname.value;
                         if(newname !== name){
                             dbname.text(newname);
-                            $.ajax({
+                            jQuery.ajax({
                                 'url': createUrl('/dashboards'),
                                 'type': 'POST',
                                 'data': {
@@ -608,13 +612,13 @@ define(['jquery',
             if (show){
                 controls.fadeIn();
                 controls.find('.remove').click(function(){
-                    $.ajax({
+                    jQuery.ajax({
                         'url': '/dashboards/' + DashboardsManager.currentDashboard,
                         'type': 'DELETE'
                     }).success(function(){
                         document.location = '/manage/dashboards';
                     }).error(function(e){
-                        console.error(e);
+                        Console.error('An error occured while trying to delete the dashboard: ' + e);
                     });
                     return false;
                 });

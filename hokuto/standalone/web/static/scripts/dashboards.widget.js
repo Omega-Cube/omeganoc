@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -18,26 +20,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['jquery', 
-        'onoc.createurl', 
-        'onoc.loadcss', 
-        'onoc.cachedloader',
-        'dataservice',
-        'onoc.calendar'], 
-        function (jQuery, 
-                  createUrl, 
-                  loadcss, 
-                  CachedLoader, 
-                  DataService,
-                  onocCalendar) {
+define([
+    'jquery', 
+    'onoc.createurl', 
+    'onoc.loadcss', 
+    'onoc.cachedloader'
+], function (jQuery, 
+             createUrl, 
+             loadcss, 
+             CachedLoader) {
     /**
      * This module defines a class defining a widget, that is something
      * you can add as the content of one of the dashboard's placeholders
      */
 
-    var Widget = function () {
+    function Widget() {
         /**
-         * This object misses some propertys, as it will receive them directly from the server
+         * This object misses some properties, as it will receive them directly from the server
          * Contains the JS module of this widget
          * @property {Widget} _module - Choosen widget instance
          */
@@ -111,7 +110,6 @@ define(['jquery',
             var closeBtn = jQuery('<li class="remove">Delete</li>');
             closeBtn.click(function () {
                 var that = jQuery(this);
-                var id = that.data('part-id');
                 DashboardsManager.closePart(part);
                 that.remove();
             });
@@ -174,8 +172,8 @@ define(['jquery',
             jQuery(commands).fadeOut(25, function () {
                 // Show teh edit box
                 var txtBox = jQuery('<input type="text" class="widget-title-edit" title="Press enter to validate" />').hide().val(title.text());
-                var close = $('<button class="cancel">Cancel</button>');
-                var validate = $('<button class="validate">Ok</button>');
+                var close = jQuery('<button class="cancel">Cancel</button>');
+                var validate = jQuery('<button class="validate">Ok</button>');
 
                 //
                 function backToNormal(){
@@ -202,7 +200,7 @@ define(['jquery',
                     }
 
                     backToNormal();
-                };
+                }
 
                 close.on('click',backToNormal);
                 validate.on('click',save);
@@ -228,7 +226,7 @@ define(['jquery',
 
             });
         }
-    }
+    };
 
     // Static functions
     /**
@@ -253,7 +251,7 @@ define(['jquery',
      */
     Widget.getWidgetsList = function (callback) {
         Widget._listCache.getData(function (result) {
-            var ar = jQuery.map(result, function (value, key) {
+            var ar = jQuery.map(result, function (value) {
                 return value;
             });
             callback(ar);
@@ -270,7 +268,7 @@ define(['jquery',
      */
     Widget.getWidgetById = function (id, callback, dontLoadModule) {
         dontLoadModule = !!dontLoadModule;
-        var list = Widget._listCache.getData(function (result) {
+        Widget._listCache.getData(function (result) {
             if (id in result) {
                 var widget = result[id];
                 if (dontLoadModule) {
@@ -286,7 +284,7 @@ define(['jquery',
             else
                 callback(null);
         });
-    }
+    };
 
     return Widget;
 });

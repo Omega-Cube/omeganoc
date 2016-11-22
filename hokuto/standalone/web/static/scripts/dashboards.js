@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -17,12 +19,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-require(['jquery', 
-         'dashboards.manager', 
-         'onoc.createurl', 
-         'dashboards.widget', 
-         'libs/jquery.validate', 
-         'libs/jquery.bpopup'], function (jQuery, DashboardsManager, createurl, Widget) {
+require([
+    'jquery', 
+    'dashboards.manager', 
+    'onoc.createurl', 
+    'dashboards.widget', 
+    'libs/jquery.validate', 
+    'libs/jquery.bpopup'], function (jQuery, DashboardsManager, createurl, Widget) {
     /**
      * Create Dashboard button behavior
      */
@@ -67,7 +70,7 @@ require(['jquery',
         });
 
         // Form validation
-        var form = $('#createForm');
+        var form = jQuery('#createForm');
         form.validate({
             rules: {
                 name: {
@@ -88,9 +91,9 @@ require(['jquery',
             showAddWidgetPopup(function (widget) {
                 DashboardsManager.buildWidget(widget);
                 setTimeout(function(){
-                    var newwidget = $('#dashboard > ul > li');
+                    var newwidget = jQuery('#dashboard > ul > li');
                     newwidget = newwidget[newwidget.length - 1];
-                    $('#dashboard').scrollTop(newwidget.offsetTop);
+                    jQuery('#dashboard').scrollTop(newwidget.offsetTop);
                 },150);
             });
         });
@@ -121,10 +124,10 @@ require(['jquery',
                 addLink.click(function (e) {
                     e.preventDefault();
 
-                    var that = $(this);
+                    var that = jQuery(this);
                     var wId = that.parent().data('widget-id');
 
-                    showAddWidgetPopup._callback(wId)
+                    showAddWidgetPopup._callback(wId);
 
                     jQuery('#add-widget-popup').bPopup().close();
                 });
@@ -178,6 +181,6 @@ require(['jquery',
         initAddWidgetButton();
 
         // Start showing the dashboard
-        DashboardsManager.init($('#dashboard > ul'));
+        DashboardsManager.init(jQuery('#dashboard > ul'));
     });
 });

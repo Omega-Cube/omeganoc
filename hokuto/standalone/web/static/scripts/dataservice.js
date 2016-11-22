@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -23,8 +25,8 @@ define(['jquery', 'onoc.createurl'], function (jQuery, createUrl) {
             jQuery.getJSON(createUrl('/services/data/get/'), request,function (data) {
                 successCallback(data);
             }).fail(function() {
-            if(errorCallback)
-                errorCallback();
+                if(errorCallback)
+                    errorCallback();
             });
         },
         getHostsList: function (successCallback, errorCallback) {

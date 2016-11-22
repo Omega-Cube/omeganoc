@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -21,19 +23,19 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
     /**
      * Called on init, build the svg container and settup events listeners
      */
-    function _buildContainer(){
+    function _buildContainer() {
         var headerHeight = 30;
         var svgHeight = this.containers.main.height() - headerHeight;
         var defaultRange = 1000 * 24 * 3600;
 
         //timeline header
-        var commands = $("<div></div>");
+        var commands = jQuery('<div></div>');
         commands.attr('class','dashboard-timeline-header');
         this.containers.main.append(commands);
 
-        var timepicker = $('<span class="datepicker"></span>');
-        var from = $('<input class="datePicker" type="text" value="'+(this.start.toLocaleDateString())+'" name="from" readonly="readonly" />');
-        var until = $('<input class="datePicker" type="text" value="'+(this.end.toLocaleDateString())+'" name="until" readonly="readonly" />');
+        var timepicker = jQuery('<span class="datepicker"></span>');
+        var from = jQuery('<input class="datePicker" type="text" value="'+(this.start.toLocaleDateString())+'" name="from" readonly="readonly" />');
+        var until = jQuery('<input class="datePicker" type="text" value="'+(this.end.toLocaleDateString())+'" name="until" readonly="readonly" />');
 
         var fromCalendar = new Calendar(from, function(time){
             var fromTime = new Date(time);
@@ -45,7 +47,7 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
             this.scale.domain([this.start,this.end]);
             this.brush.x(this.scale);
             this.redraw();
-            this.containers.main.trigger("timeline.update", [fromTime,untilTime]);
+            this.containers.main.trigger('timeline.update', [fromTime,untilTime]);
         }.bind(this));
         var untilCalendar = new Calendar(until,function(time){
             var fromTime = this.start;
@@ -60,16 +62,16 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
             this.scale.domain([this.start,this.end]);
             this.brush.x(this.scale);
             this.redraw();
-            this.containers.main.trigger("timeline.update",[fromTime,untilTime]);
+            this.containers.main.trigger('timeline.update',[fromTime,untilTime]);
         }.bind(this));
 
         commands.append('<h3>Global Timeline</h3>').append(timepicker).append('<span>From :</span>').append(from).append('<span>To :</span>').append(until);
 
         //svg
-        var svg = d3.select(this.containers.main[0]).append("svg")
-            .attr("width",this.containers.main.width())
-            .attr("height", svgHeight)
-            .attr("font-size", "12");
+        var svg = d3.select(this.containers.main[0]).append('svg')
+            .attr('width',this.containers.main.width())
+            .attr('height', svgHeight)
+            .attr('font-size', '12');
 
         var scale = d3.time.scale()
             .range([20,this.containers.main.width() - 20])
@@ -82,12 +84,12 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
             .tickPadding(8);
 
         var brush = d3.svg.brush().x(scale);
-        brush.on("brushend", function(){
+        brush.on('brushend', function(){
             if(!this.brush.empty())
-                this.containers.main.trigger("timeline.update",this.brush.extent());
+                this.containers.main.trigger('timeline.update',this.brush.extent());
             return true;
         }.bind(this));
-        brush.on("brush",function(){
+        brush.on('brush',function(){
             var newbrush = d3.event.target.extent();
             from.attr('value',newbrush[0].toLocaleString());
             until.attr('value',newbrush[1].toLocaleString());
@@ -114,7 +116,7 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
         this.containers.scale = scaleContainer;
         this.containers.from = from;
         this.containers.until = until;
-    };
+    }
 
     /**
      * Manage a timeline, actually only used by the global timeline widget but can be used as a standalone
@@ -163,8 +165,10 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
      * @param {Date} end
      */
     DashboardTimeline.prototype.update = function(start,end){
-        if(start && start instanceof Date) var start = start.getTime();
-        if(end && end instanceof Date) var end = end.getTime();
+        if(start && start instanceof Date) 
+            start = start.getTime();
+        if(end && end instanceof Date) 
+            end = end.getTime();
 
         var check = false;
         if(start && start < this.start.getTime()){
@@ -214,7 +218,7 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
      * Set this.start
      */
     DashboardTimeline.prototype.setStart = function(start){
-        if(typeof start === 'Number')
+        if(typeof start === 'number')
             this.start = new Date(start);
         else if(start instanceof Date)
             this.start = start;
@@ -227,7 +231,7 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
      * Set this.end
      */
     DashboardTimeline.prototype.setEnd = function(end){
-        if(typeof end === 'Number')
+        if(typeof end === 'number')
             this.end = new Date(end);
         else if(end instanceof Date)
             this.end = end;

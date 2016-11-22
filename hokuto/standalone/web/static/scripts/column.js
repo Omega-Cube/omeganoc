@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -16,48 +18,48 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-requirejs(['jquery'], function($) {
-	function _columns_getAllColumnsWidth() {
-		var cols = $("aside");
-		var result = 0;
-		cols.each(function (i, e) {
-			e = $(e);
-			result += e.width();
-		});
+require(['jquery'], function(jQuery) {
+    function _columns_getAllColumnsWidth() {
+        var cols = jQuery('aside');
+        var result = 0;
+        cols.each(function (i, e) {
+            e = jQuery(e);
+            result += e.width();
+        });
 
-		return result;
-	}
+        return result;
+    }
 
-	function _columns_updateMiddleSize(columnsSize) {
-		var middle = document.getElementById("middle");
-		middle.style.width = "-webkit-calc(100% - " + columnsSize + "px)";
-		//middle.style.width = "-moz-calc(100% - " + columnsSize + "px)";
-		middle.style.width = "calc(100% - " + columnsSize + "px)";
-	}
+    function _columns_updateMiddleSize(columnsSize) {
+        var middle = document.getElementById('middle');
+        middle.style.width = '-webkit-calc(100% - ' + columnsSize + 'px)';
+        //middle.style.width = "-moz-calc(100% - " + columnsSize + "px)";
+        middle.style.width = 'calc(100% - ' + columnsSize + 'px)';
+    }
 
 
-	$(document).ready(function () {
-		var buttons = $(".collapser");
+    jQuery(document).ready(function () {
+        var buttons = jQuery('.collapser');
 
-		buttons.each(function (i, e) {
-			$(e).click(function () {
-				var button = $(this);
+        buttons.each(function (i, e) {
+            jQuery(e).click(function () {
+                var button = jQuery(this);
 
-				if (button.data("activated")) {
-					button.data("activated", false);
-					button.parent().removeClass("hide");
-				}
-				else {
-					button.data("activated", true);
-					button.parent().addClass("hide");
-				}
+                if (button.data('activated')) {
+                    button.data('activated', false);
+                    button.parent().removeClass('hide');
+                }
+                else {
+                    button.data('activated', true);
+                    button.parent().addClass('hide');
+                }
 
-				var cols = _columns_getAllColumnsWidth();
-				_columns_updateMiddleSize(cols);
+                var cols = _columns_getAllColumnsWidth();
+                _columns_updateMiddleSize(cols);
 
-				// Notify anyone interested that the columns size were updated
-				$(document).trigger('columnsresized.onoc');
-			});
-		});
-	});
+                // Notify anyone interested that the columns size were updated
+                jQuery(document).trigger('columnsresized.onoc');
+            });
+        });
+    });
 });

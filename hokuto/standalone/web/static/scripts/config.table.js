@@ -1,4 +1,5 @@
-"use strict";
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2015 Omega Cube and contributors
@@ -17,10 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 
-        'onoc.createurl', 
-        'console', 
-        'libs/jquery.hashchange'], function(jQuery, createurl, Console){
+define([
+    'jquery', 
+    'onoc.createurl', 
+    'console', 
+    'libs/jquery.hashchange'], function(jQuery, createurl, Console) {
 
     var _binarytree = [];
     var _data = false;
@@ -188,20 +190,22 @@ define(['jquery',
     /**
      * Set the create button url to follow hash change
      **/
-    function _applyCreateUrl(hash){
+    function _applyCreateUrl(hash) {
         document.getElementById('config_create').setAttribute('href',createurl('/config/'+hash+'/create'));
     }
 
     /**
      * Append a new node to the binarytree
      */
-    function _appendBinary(element,key,binary){
+    function _appendBinary(element,key,binary) {
         if(!binary[1]){
             binary = [false,element,false];
             return binary;
-        }else if(element[key] <= binary[1][key]){
+        }
+        else if(element[key] <= binary[1][key]) {
             binary[0] = _appendBinary(element,key,binary[0]);
-        }else{
+        }
+        else {
             binary[2] = _appendBinary(element,key,binary[2]);
         }
         return binary;
@@ -210,7 +214,7 @@ define(['jquery',
     /**
      * Parse the binarytree and return sorted array
      */
-    function _parse(tmp,binary){
+    function _parse(tmp,binary) {
         if(binary[0]) tmp = _parse(tmp,binary[0]);
         if(binary[1]) tmp.push(binary[1]);
         if(binary[2]) tmp = _parse(tmp,binary[2]);
@@ -220,7 +224,7 @@ define(['jquery',
     /**
      * Search for a pattern from keys (WIP: unused now but is ready for the incoming search toolbar)
      */
-    function _search(search,tmp,key,binary){
+    function _search(search,tmp,key,binary) {
         if(binary[0]) _search(search,tmp,key,binary[0]);
         if(binary[1][key].search(search) != -1) tmp.push(binary[1]);
         if(binary[2]) _search(search,tmp,key,binary[2]);
@@ -230,24 +234,24 @@ define(['jquery',
     /**
      * Build the binarytree and return sorted array
      */
-    function _sort(list,key){
+    function _sort(list,key) {
         _binarytree = [];
         var tmp = [];
-        for(var i = 0; i<list.length;i++){
+        for(var i = 0; i<list.length;i++) {
             _binarytree = _appendBinary(list[i],key,_binarytree);
         }
         tmp = _parse(tmp,_binarytree);
         return tmp;
     }
 
-    function _fillTable(results){
+    function _fillTable(results) {
         listcontent.find('.item').remove();
         listcontent.find('.empty').remove();
-        for(var i in results){
-            var li = $('<li class="item"></li>');
+        for(var i in results) {
+            var li = jQuery('<li class="item"></li>');
 
             var columns = (isTemplate) ? ['name'] : struct.default_columns;
-            for(var k in columns){
+            for(var k in columns) {
                 li.append('<span class="cell">'+results[i][columns[k]]+'</span>');
             }
 
@@ -284,13 +288,12 @@ define(['jquery',
         }
     }
 
-    function _fillLegend(legend){
-        var legendContainer = $('.listlegend').empty();
-        for(var l in legend){
-            $('.listlegend').append('<span class="cell">' + legend[l] + '</span>');
+    function _fillLegend(legend) {
+        for(var l in legend) {
+            jQuery('.listlegend').append('<span class="cell">' + legend[l] + '</span>');
         }
-        $('.listlegend').append('<span class="cell">Edit</span>');
-        $('.listlegend').append('<span class="cell">Remove</span>');
+        jQuery('.listlegend').append('<span class="cell">Edit</span>');
+        jQuery('.listlegend').append('<span class="cell">Remove</span>');
     }
     
     function _applyHash(hash) {
@@ -303,7 +306,7 @@ define(['jquery',
         listcontent.find('.item').remove();
         listcontent.find('.empty').remove();
         listtitle.empty();
-        jQuery(".configlist-title .search").val('');
+        jQuery('.configlist-title .search').val('');
 
         // Remove the trailing s if it's there
         if(hash.charAt(hash.length - 1) == 's')
@@ -327,14 +330,14 @@ define(['jquery',
 
         //fetch data and fill list
         var serviceUrl = createurl('/config/list/' + struct.id + (isTemplate ? 'templates' : 's'));
-        jQuery.get(serviceUrl).success(function(response){
-            if(response.success){
+        jQuery.get(serviceUrl).success(function(response) {
+            if(response.success) {
                 _data = _sort(response.data,struct.key);
 
                 //setup title
                 var title = (_data.length > 1) ? struct.names : struct.name;
                 if(isTemplate) title += ' ' + 'template';
-                title += ' ('+_data.length+')';
+                title += ' (' + _data.length + ')';
                 listtitle.text(title);
                 listdescription.text(struct.description);
 
@@ -342,51 +345,60 @@ define(['jquery',
                 _fillLegend(legend);
 
                 //fill list
-                if(_data.length){
+                if(_data.length) {
                     _fillTable(_data);
-                }else{
-                    var li = $('<li class="empty">There is currently no '+(typeName + ((isTemplate) ? ' template ':''))+' defined!</li>');
+                }
+                else {
+                    var li = jQuery('<li class="empty">There is currently no ' + (typeName + ((isTemplate) ? ' template ' : '')) + ' defined!</li>');
                     listcontent.append(li);
                 }
             }
-        }).error(function(e,f){
-            console.error(e,f);
+        }).error(function(response) {
+            Console.error('An error was returned by the config/list service: ', response);
+            alert('An error occured while loading the page. Maybe try again later?');
         });
-    };
+    }
+
     jQuery(function(){
         //actions
-        jQuery("#conf-apply-changes").click(function(e){
+        jQuery('#conf-apply-changes').click(function() {
             jQuery.ajax('/config/apply',{
                 'method': 'POST',
             }).success(function(response){
-                console.log(response);
                 if(!response.success){
                     alert(response.error);
                 }else{
                     if(response.service_changed) {
-                        alert("Shinken will restart with the new configuration in less than one minute.\nBe aware that you have changed some services names, if you don't want to lose their data you have to move them manually from /opt/graphite/storage/whisper.");
+                        alert('Shinken will restart with the new configuration in less than one minute.\nBe aware that you have changed some services names, if you don\'t want to lose their data you have to move them manually from /opt/graphite/storage/whisper.');
                     }
                     else {
-                        alert("Shinken will restart with the new configuration in less than one minute.");
+                        alert('Shinken will restart with the new configuration in less than one minute.');
                     }
                 }
-            }).error(function(response){
-                console.log(response);
+            }).error(function(response) {
+                Console.error('An error was returned by the config/apply service: ', response);
+                alert('An error occured while loading the page. Maybe try again later?');
             });
         });
-        jQuery("#conf-reset-changes").click(function(e){
+        jQuery('#conf-reset-changes').click(function() {
             jQuery.ajax('/config/reset',{
                 'method': 'DELETE',
-            }).success(function(response){
+            }).success(function(){
                 document.location.reload();
             }).error(function(response){
-                console.log(response);
+                Console.error('An error was returned by the config/reset service: ', response);
+                alert('An error occured while loading the page. Maybe try again later?');
             });
         });
-        jQuery("#conf-lock").click(function(e){
-            jQuery.ajax('/config/lock').success(function(response){ document.location.reload(); }).error(function(e){console.log(e)});
+        jQuery('#conf-lock').click(function(){
+            jQuery.ajax('/config/lock').success(function() {
+                document.location.reload();
+            }).error(function(response){
+                Console.error('An error was returned by the config/lock service: ', response);
+                alert('An error occured while loading the page. Maybe try again later?');
+            });
         });
-        jQuery(".configlist-title .search").on("input",function(e){
+        jQuery('.configlist-title .search').on('input',function(e) {
             var key = e.target.value;
             var results = _search(key,[],struct.key,_binarytree);
             _fillTable(results);

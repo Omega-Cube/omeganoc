@@ -1,3 +1,5 @@
+'use strict';
+
 // Initialization & general data management
 /*
  * This file is part of Omega Noc
@@ -17,32 +19,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 
-        'graph.structure', 
-        'graph.renderer', 
-        'graph.infopanel', 
-        'graph.state', 
-        'console', 
-        'onoc.structuretree', 
-        'onoc.states', 
-        'onoc.createurl', 
-        'onoc.popupbutton', 
-        'libs/jquery.hashchange', 
-        'onoc.message'],
-       function(jQuery, 
-                structure, 
-                Bubbles, 
-                initInfoPanel, 
-                GraphState, 
-                Console, 
-                StructureTree, 
-                States, 
-                createurl, 
-                popupButton) {
+define([
+    'jquery', 
+    'graph.structure', 
+    'graph.renderer', 
+    'graph.infopanel', 
+    'graph.state', 
+    'console', 
+    'onoc.structuretree', 
+    'onoc.states', 
+    'onoc.createurl', 
+    'onoc.popupbutton', 
+    'libs/jquery.hashchange', 
+    'onoc.message'
+], function(jQuery, 
+            structure, 
+            Bubbles, 
+            initInfoPanel, 
+            GraphState, 
+            Console, 
+            StructureTree, 
+            States, 
+            createurl, 
+            popupButton) {
     var OVERVIEW_KEY = 'overview_visibility';
     var Grapher = {
         // Holds the currently displayed graph type identifier
-        _currentType: "",
+        _currentType: '',
 
         // Holds the currently used instance of the renderer, the class responsible for drawing the graph on screen
         _renderer: null,
@@ -76,8 +79,8 @@ define(['jquery',
                 }
                 
                 // Save links
-                for(var i in graph.edges) {
-                    var e = graph.edges[i];
+                for(var j in graph.edges) {
+                    var e = graph.edges[j];
                     // Only save user created nodes
                     if(e.shinken_type == 'user_created') {
                         data['link:' + e.source.id + ':' + e.target.id] = 'virtual';
@@ -180,7 +183,8 @@ define(['jquery',
                 });
 
             }, function (err) {
-                Grapher.showGlobalMessage('Could not load this graph. Check that you are using a valid URL')
+                Grapher.showGlobalMessage('Could not load this graph. Check that you are using a valid URL');
+                Console.error('Graph loading error: ' + err);
             });
         },
 
@@ -198,7 +202,7 @@ define(['jquery',
                 dataType: 'json',
                 url: '/reset_graph',
                 data: {'graph': Grapher._currentType, 'layout': layout},
-                success: function (data){
+                success: function () {
                     // Load and save the graph
                     Grapher.loadAndShowGraph(Grapher._currentType);
                 },
@@ -233,7 +237,7 @@ define(['jquery',
             var parts = hashValue.split('/');
             var args = [];
             if (parts.length > 1) {
-                args = parts[1].split(/ *; */).map(function (currentValue, index, array) {
+                args = parts[1].split(/ *; */).map(function (currentValue) {
                     return currentValue.split(/ *, */);
                 });
             }
@@ -258,10 +262,10 @@ define(['jquery',
                 }
                 else if (node.shinken_type === 'service') {
                     var nameParts = node.id.split('$');
-                    var curState = States.getServicesStates(nameParts[0], nameParts[1]);
-                    if (!node.state || node.state.state != curState.state) {
+                    var curSvcState = States.getServicesStates(nameParts[0], nameParts[1]);
+                    if (!node.state || node.state.state != curSvcState.state) {
                         // The service changed state
-                        Grapher._renderer.updateNodeState(node, curState);
+                        Grapher._renderer.updateNodeState(node, curSvcState);
                     }
                 }
                 else {
@@ -269,12 +273,12 @@ define(['jquery',
                 }
             }
 
-            for (var name in Grapher._renderer.graph.groups) {
-                var group = Grapher._renderer.graph.groups[name];
+            for (var groupName in Grapher._renderer.graph.groups) {
+                var group = Grapher._renderer.graph.groups[groupName];
                 // All groups are hosts
-                var curState = States.getHostState(group.id);
-                if (!group.state || group.state.state != curState.state)
-                    Grapher._renderer.updateGroupState(group, curState);
+                var curHostState = States.getHostState(group.id);
+                if (!group.state || group.state.state != curHostState.state)
+                    Grapher._renderer.updateGroupState(group, curHostState);
             }
         },
     };
@@ -305,7 +309,7 @@ define(['jquery',
             Grapher.applyCurrentHash();
         }
 
-        var tree = new StructureTree(document.getElementById('treeview-container'), 80);
+        new StructureTree(document.getElementById('treeview-container'), 80);
 
         initInfoPanel(document.querySelector('.column-content.props'));
     });
@@ -437,8 +441,8 @@ define(['jquery',
             graphtype = graphtype.substr(0, sep);
         }
         
-        if(graphtype != _menuGraphType) {
-            _menuGraphType = graphtype
+        if(graphtype !== _menuGraphType) {
+            _menuGraphType = graphtype;
             jQuery.getJSON(createurl('/graph/saves/' + graphtype), function(data) {
                 _clearLoadSaveMenu();
                 
