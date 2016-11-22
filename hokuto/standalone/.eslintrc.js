@@ -1,4 +1,5 @@
 module.exports = {
+    "root": true, // Added to avoid loading configurations located in the project containing folder
     "env": {
         "browser": true
     },
