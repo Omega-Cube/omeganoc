@@ -1,0 +1,13 @@
+{
+  "name": "hokuto",
+  "version": "1.0.0",
+  "description": "A monitoring interface for Shinken",
+  "private": true,
+  "scripts": {},
+  "author": "Xavier Roger-Machart <xrm@omegacube.fr>",
+  "license": "AGPL3",
+  "devDependencies": {
+    "eslint": "^3.10.2",
+    "eslint-plugin-requirejs": "^3.0.0"
+  }
+}
