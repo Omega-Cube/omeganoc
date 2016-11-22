@@ -68,11 +68,11 @@ require(['jquery', 'console', 'onoc.createurl'], function (jQuery, Console, crea
             }
         });
         if(!(entries.length - 1)){
-            var link = $('<a href="'+createUrl('/dashboards')+'"></a>');
-            var current = $('#menu-dashboards-list').parent().children().first();
+            var link = jQuery('<a href="'+createUrl('/dashboards')+'"></a>');
+            var current = jQuery('#menu-dashboards-list').parent().children().first();
             link.text(current.text());
             current.replaceWith(link);
-            $('#dashboards-list').append('<li class="no-dashboard"><a href="'+createUrl('/dashboards')+'">You have no dashboards yet</a></li>');
+            jQuery('#dashboards-list').append('<li class="no-dashboard"><a href="'+createUrl('/dashboards')+'">You have no dashboards yet</a></li>');
         }
     };
 
@@ -82,10 +82,10 @@ require(['jquery', 'console', 'onoc.createurl'], function (jQuery, Console, crea
 
         //setup delete buttons
         dblist.find('.delete').each(function(index,element){
-            $(element).click(function(event){
-                var target = $(event.target);
+            jQuery(element).click(function(event){
+                var target = jQuery(event.target);
                 var name = target.parent().data('db');
-                $.ajax({
+                jQuery.ajax({
                     'url': createUrl('/dashboards/' + name),
                     'type': 'DELETE'
                 }).success(function(){
@@ -99,17 +99,17 @@ require(['jquery', 'console', 'onoc.createurl'], function (jQuery, Console, crea
 
         //setup rename buttons
         dblist.find('.edit').each(function(index,element){
-            $(element).click(function(event){
-                var target = $(event.target);
+            jQuery(element).click(function(event){
+                var target = jQuery(event.target);
                 var dbname = target.parent().find('.name');
                 var name = target.parent().data('db');
-                var form = $('<form action="#" name="renamedb"><input type="text" name="dbname" class="name" value="'+name+'"/><input class="submit" type="submit" value="ok"/></form>');
+                var form = jQuery('<form action="#" name="renamedb"><input type="text" name="dbname" class="name" value="'+name+'"/><input class="submit" type="submit" value="ok"/></form>');
                 form.submit(function(e,f){
                     e.preventDefault();
                     var newname = form[0].dbname.value;
                     if(newname !== name){
                         dbname.text(newname);
-                        $.ajax({
+                        jQuery.ajax({
                             'url': createUrl('/dashboards'),
                             'type': 'POST',
                             'data': {

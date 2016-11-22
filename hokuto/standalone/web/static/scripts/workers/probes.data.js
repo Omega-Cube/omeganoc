@@ -1,9 +1,10 @@
-"use strict"
+'use strict';
 
-define(['onoc.createurl', 
-        'onoc.xhr', 
-        'workers/probes.log', 
-        'workers/probes.probe'], function(createUrl, OnocXhr, Log, Probe) {
+define([
+    'onoc.createurl', 
+    'onoc.xhr', 
+    'workers/probes.log', 
+    'workers/probes.probe'], function(createUrl, OnocXhr, Log, Probe) {
     var separator = '[SEP]';
 
     /**
@@ -25,7 +26,7 @@ define(['onoc.createurl',
             var probe = data[0];
             var interval = data[1];
             if(typeof probe !== 'string'){
-                postMessage([9001,"Failed to add probe, argument must be a string "+(typeof probe)+" given."]);
+                postMessage([9001,'Failed to add probe, argument must be a string ' + (typeof probe) + ' given.']);
                 return false;
             }
             if(!this.probes[probe]){
@@ -48,10 +49,9 @@ define(['onoc.createurl',
          *        {Object} data.probes          - probes data
          *        {Array}  data.contextTimeline - Current timeline
          *        {Array}  data.focusTimeline   - new timeline
-         * @param {Number} sig                  - Caller ID
          * @return false if no probe have reached a new aggregate level, new probes aggregated data eitherway
          */
-        checkAggregate: function(data,sig){
+        checkAggregate: function(data){
             var results = false, result = false, stacks = false;
             for(var p in data.probes){
                 if(data.probes[p].stacked){
@@ -107,7 +107,7 @@ define(['onoc.createurl',
         get: function(query,signature){
             if(!query)
                 return false;
-            if(typeof query === "string")
+            if(typeof query === 'string')
                 return this.getProbe(query);
             else if(typeof query === 'object'){
                 var results = {};
@@ -215,7 +215,7 @@ define(['onoc.createurl',
                     }
 
                     if(isNaN(newValue)){
-                        postMessage([0,"NaN spotted on stacked probe!"]);
+                        postMessage([0,'NaN spotted on stacked probe!']);
                         continue;
                     }
 
@@ -232,7 +232,7 @@ define(['onoc.createurl',
                     'start': probe.start,
                     'end': probe.end,
                     'range': probe.range
-                }
+                };
             }
 
             return results;
@@ -257,9 +257,8 @@ define(['onoc.createurl',
          *                 data.probes: probes list
          *                 data.start: request timerange start
          *                 data.end: request timerange end
-         * @param {Number} sig - Requester ID
          */
-        getLogs: function(data,sig){
+        getLogs: function(data){
             var probes = data['probes'];
             var results = {};
             var h,s,d;
@@ -310,7 +309,7 @@ define(['onoc.createurl',
             var start = data['start'];
             var end = data['end'];
             if((!start && !end) || !probes){
-                postMessage([9001,"Can't update fromDate, missing parameters"]);
+                postMessage([9001,'Can\'t update fromDate, missing parameters']);
                 return false;
             }
 
@@ -363,7 +362,7 @@ define(['onoc.createurl',
             }.bind(this));
 
             //fetch query if possible
-            this.fetchPredicts(probes, signature)
+            this.fetchPredicts(probes, signature);
 
             return this;
         },
@@ -371,10 +370,10 @@ define(['onoc.createurl',
         /**
          * TODO: Fetch one probe
          */
-        fetchProbe: function(probe){
-            //TODO
-            return this;
-        },
+        // fetchProbe: function(probe){
+        //     //TODO
+        //     return this;
+        // },
 
         /**
          * Fetch log data
@@ -470,14 +469,11 @@ define(['onoc.createurl',
             // will get the closest possible result when compared to the original Graphite implementation
             // Optimizations will come later, with a more general reorganization
             var interval = 0;
-            var current, host, service, metric;
-            var lastFilledSlot, firstFilledSlot, currentSlot, point, points, pointTime;
+            var current;
+            var lastFilledSlot, firstFilledSlot, currentSlot, point, points;
             for(var id in response) {
                 interval = (this.probes[id].getInterval() * 60) || 60;
                 current = response[id];
-                host = current.host;
-                service = current.service;
-                metric = current.metric;
 
                 firstFilledSlot = 0;
                 lastFilledSlot = 0;

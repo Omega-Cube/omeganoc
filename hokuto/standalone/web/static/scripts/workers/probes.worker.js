@@ -1,4 +1,4 @@
-"use strict"
+'use strict';
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -72,18 +72,18 @@
 // };
 
 
-require(['workers/probes.data'], function(Data) {
+require(['workers/workerdata', 'workers/probes.data'], function(WorkerData, Data) {
     /**
      * Control room
      */
-    onmessage = function(m){
-        if(typeof m.data !== 'object' || (!m.length && m.length < 2)){
-            console.log('Passed object must be an array of two or more values!');
+    WorkerData.wait(function(m){
+        if(typeof m !== 'object' || (!m.length && m.length < 2)){
+            //console.log('Passed object must be an array of two or more values!');
             return false;
         }
 
-        var data = m.data[1];
-        var sig = m.data[2];
+        var data = m[1];
+        var sig = m[2];
         /*
         1: set baseURL for ajax requests
         2: add probe
@@ -97,7 +97,7 @@ require(['workers/probes.data'], function(Data) {
         10: Get logs data
         11: Delete part
         */
-        switch(m.data[0]) {
+        switch(m[0]) {
         // case 1:
         //     BASE_URL = data[0];
         //     ONOC.separator = data[1];
@@ -108,10 +108,10 @@ require(['workers/probes.data'], function(Data) {
         case 3:
             Data.fetch(data, sig);
             break;
-        case 4:
-            //TODO: not functional yet
-            Data.fetchProbe(data);
-            break;
+        // case 4:
+        //     //TODO: not functional yet
+        //     Data.fetchProbe(data);
+        //     break;
         case 5:
             Data.fetchLog(data);
             break;
@@ -122,10 +122,10 @@ require(['workers/probes.data'], function(Data) {
             if(!data.start && !data.end)
                 return false;
             if(Data.getTimeline(data, sig))
-                postMessage([0, "New fromDate require to fetch new data"]);
+                postMessage([0, 'New fromDate require to fetch new data']);
             break;
         case 8:
-            var aggregate = Data.checkAggregate(data, sig);
+            var aggregate = Data.checkAggregate(data);
             if(aggregate)
                 postMessage([8, aggregate, sig]);
             break;
@@ -137,13 +137,13 @@ require(['workers/probes.data'], function(Data) {
             }]);
             break;
         case 10:
-            var logs = Data.getLogs(data,sig);
+            var logs = Data.getLogs(data);
             if(logs)
                 postMessage([10,logs]);
             break;
         default:
-            postMessage("Errrr dunno what to do with this crap or forgot to set a break statement. " + m.data[0]);
+            postMessage('Errrr dunno what to do with this crap or forgot to set a break statement. ' + m[0]);
             break;
         }
-    };
+    });
 });

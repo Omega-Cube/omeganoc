@@ -1,4 +1,6 @@
-"use strict"
+'use strict';
+
+/* globals importScripts */
 
 // Startup script for a web worker
 // Loads all the RequireJS related stuff and starts
@@ -11,21 +13,15 @@
 // - The isAdmin configuration value (for storage in onoc.config)
 // - The shinkenContact configuration value (for storage in onoc.config)
 
-var _onoc_worker_initialized = false;
-
-onmessage = function(evt) {
-    if(!_onoc_worker_initialized) {
-        requirejs({
-            baseUrl: '../'
-        }, ['onoc.config'], function(Config) {
-            // Write configuration
-            Config.setValues(evt.data[1], evt.data[2], evt.data[3], evt.data[4]);
-            // Start worker logic
-            requirejs([evt.data[0]]);
-        });
-
-        _onoc_worker_initialized = true;
-    }
-}
-
 importScripts('../libs/require.js');
+
+require.config({ baseUrl: '../' });
+require(['onoc.config', 'workers/workerdata'], function(Config, WorkerData) {
+    WorkerData.pick(function(data) {
+        // Write configuration
+        Config.setValues(data[1], data[2], data[3], data[4]);
+        // Start worker logic
+        require([data[0]]);
+        WorkerData.notifyLogicReady();
+    });
+});

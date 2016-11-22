@@ -34,12 +34,15 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
                     renderer.startCreateUserLink(clickedNode, function (otherNode) {
                         // The user designated a target node
                         // Check that the link does not already exist
-                        for (var i = 0, c = otherNode.link_in.length; i < c; ++i) {
+                        var i = 0;
+                        var c = otherNode.link_in.length;
+                        for (; i < c; ++i) {
                             if (otherNode.link_in[i].target.id === clickedNode.id) {
                                 return false;
                             }
                         }
-                        for (var i = 0, c = clickedNode.link_out.length; i < c; ++i) {
+                        c = clickedNode.link_out.length;
+                        for (i = 0; i < c; ++i) {
                             if (clickedNode.link_out[i].source.id === otherNode.id) {
                                 return false;
                             }
@@ -68,12 +71,15 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
                         return edge;
                     }, function (otherNode) {
                         // Accept the link only if it's not already there
-                        for (var i = 0, c = otherNode.link_in.length; i < c; ++i) {
+                        var i = 0;
+                        var c = otherNode.link_in.length;
+                        for (; i < c; ++i) {
                             if (otherNode.link_in[i].source.id === clickedNode.id) {
                                 return false;
                             }
                         }
-                        for (var i = 0, c = otherNode.link_out.length; i < c; ++i) {
+                        c = otherNode.link_out.length;
+                        for (i = 0; i < c; ++i) {
                             if (otherNode.link_out[i].target.id === clickedNode.id) {
                                 return false;
                             }

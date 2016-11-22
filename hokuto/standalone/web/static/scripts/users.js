@@ -21,15 +21,15 @@ require(['jquery','onoc.createurl'], function (jQuery, createurl) {
 
     jQuery(document).ready(function() {
         //bind buttons actions
-        $('#mainContent').find('.block').on('click',function(e){
-            $.ajax(createurl('/block-user/'+e.target.parentNode.parentNode.dataset['id']),{
+        jQuery('#mainContent').find('.block').on('click',function(e){
+            jQuery.ajax(createurl('/block-user/'+e.target.parentNode.parentNode.dataset['id']),{
                 'type': 'PUT'
             }).success(function(){
                 document.location.reload();
             }).error(function(e){ console.error(e);});
         });
-        $('#mainContent').find('.delete').on('click',function(e){
-            $.ajax(createurl('/delete-user/'+e.target.parentNode.parentNode.dataset['id']),{
+        jQuery('#mainContent').find('.delete').on('click',function(e){
+            jQuery.ajax(createurl('/delete-user/'+e.target.parentNode.parentNode.dataset['id']),{
                 'type': 'DELETE'
             }).success(function(){
                 document.location.reload();
@@ -38,7 +38,7 @@ require(['jquery','onoc.createurl'], function (jQuery, createurl) {
 
         if(typeof _ISNEW !== 'undefined'){
             require(['libs/jquery.validate'],function(){
-                $("#edit_userScreen").validate({
+                jQuery("#edit_userScreen").validate({
                     rules: {
                         username: {
                             required: (_ISNEW) ? true:false,

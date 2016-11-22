@@ -19,11 +19,11 @@
  */
 require(['jquery','onoc.createurl'], function (jQuery, createurl) {
     jQuery(document).ready(function() {
-        $('.unitlist').find('.unit').each(function(index){
-            var id = $(this).data('id');
-            var container = $(this);
-            $(this).find('.delete').click(function(){
-                $.ajax(createurl("/units/delete/"+id),{
+        jQuery('.unitlist').find('.unit').each(function(index){
+            var id = jQuery(this).data('id');
+            var container = jQuery(this);
+            jQuery(this).find('.delete').click(function(){
+                jQuery.ajax(createurl("/units/delete/"+id),{
                     'type': 'DELETE'
                 }).success(function(response){
                     container.remove();

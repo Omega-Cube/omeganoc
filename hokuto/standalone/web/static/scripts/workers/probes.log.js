@@ -1,4 +1,4 @@
-"use strict"
+'use strict';
 
 define([], function() {
     /**
@@ -8,7 +8,7 @@ define([], function() {
      * @prop {Number} _knownFrom  - Known timeline start
      * @prop {Number} _knownUntil - Known timeline end
      */
-    var Log = function(){
+    var Log = function() {
         this._logs = [];
         this._knownFrom = false;
         this._knownUntil = false;
@@ -20,12 +20,12 @@ define([], function() {
      * @param {Number} from  - Start of the requested timeline
      * @param {Number} until - End of the requested timeline
      */
-    Log.prototype.getLogs = function(from, until){
+    Log.prototype.getLogs = function(from, until) {
         if(!from || from < this._knownFrom) from = this._knownFrom;
         if(!until || until > this._knownUntil) until = this._knownUntil;
         var results = [];
 
-        for(var i=0, len = this._logs.length;i<len;i++){
+        for(var i=0, len = this._logs.length;i<len;i++) {
             if(this._logs[i].time > until)
                 break;
             if(this._logs[i].time < from)

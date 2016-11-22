@@ -37,7 +37,7 @@ require(['jquery','onoc.createurl', 'onoc.states'],function(jQuery, createUrl, O
             }
             container.addEventListener('change',function(e){
                 var target = e.target.value;
-                var container = $('#logs-switch-1 .logs_list');
+                var container = jQuery('#logs-switch-1 .logs_list');
                 container.empty();
                 buildLogList(target,container);
             });
@@ -50,7 +50,7 @@ require(['jquery','onoc.createurl', 'onoc.states'],function(jQuery, createUrl, O
             var url = (service) ? createUrl('/services/livestatus/get/service/logs/'+host+'/'+service+'/') :
                 createUrl('/services/livestatus/get/host/logs/'+host+'/');
             var columns = ['time','host_name','service_description','plugin_output','state'].join(','); 
-            $.ajax({
+            jQuery.ajax({
                 'url': url + columns,
                 'type': 'GET'
             }).success(function(response){
@@ -59,7 +59,7 @@ require(['jquery','onoc.createurl', 'onoc.states'],function(jQuery, createUrl, O
                 for(var l in results){
                     log = results[l];
                     date = new Date(log.time * 1000);
-                    entry = $('<li></li>');
+                    entry = jQuery('<li></li>');
                     entry.append('<span class="date">'+(date.toLocaleDateString() +', '+date.toLocaleTimeString())+'</span>');
                     entry.append('<span class="output">'+log['plugin_output']+'</span>');
                     container.append(entry);
@@ -67,7 +67,7 @@ require(['jquery','onoc.createurl', 'onoc.states'],function(jQuery, createUrl, O
             });
         };
 
-        $(document).on('onoc.livestatus.states',function(){
+        jQuery(document).on('onoc.livestatus.states',function(){
             if(!hosts){
                 hosts = OnocStates.getServicesList();
                 _init(hosts);

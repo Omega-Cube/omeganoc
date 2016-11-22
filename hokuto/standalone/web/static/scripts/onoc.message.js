@@ -26,9 +26,9 @@ define(['jquery'], function (jQuery) {
 
     jQuery.fn.onocMessage = function () {
         return this.each(function() {
-            setup($(this));
+            setup(jQuery(this));
         });
-    }
+    };
 
     // Private functions
 
@@ -53,7 +53,7 @@ define(['jquery'], function (jQuery) {
                             $this.text(newText).fadeIn();
                             $this.data(dataKey).isHidden = false;
                         }
-                    })
+                    });
                 }
                 else if (text) {
                     target.text(text).fadeIn();

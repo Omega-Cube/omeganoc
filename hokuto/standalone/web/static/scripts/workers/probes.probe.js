@@ -1,4 +1,4 @@
-"use strict"
+'use strict';
 
 define([], function() {
     /**
@@ -65,7 +65,8 @@ define([], function() {
      * @return [min, max]
      */
     Probe.prototype.getRange = function(data){
-        var min = false, max = false, data = data || this._data;
+        var min = false, max = false;
+        data = data || this._data;
         for(var d in data){
             if(min.constructor === Boolean || min > data[d]) min = data[d] || 0;
             if(max.constructor === Boolean || max < data[d]) max = data[d] || 0;
@@ -88,20 +89,23 @@ define([], function() {
             return this._cache[date];
 
         if(data) {
-            if(date >= start && date <= end){
+            if(date >= start && date <= end) {
                 var time = date - start;
-                var offset = Math.round(time/step);
+                var offset = Math.round(time / step);
                 result = data[offset] || 0;
-            }else if(this._predicted && date >= this._predicted.start && date <= this._predicted.end){
-                var time = date - this._predicted.start;
-                var offset = (this._predicted.step) ? Math.round(time / this._predicted.step) : 0;
-                if(!this._predicted.values[offset]) offset = this._predicted.values.length - 1;
-                result = this._predicted.values[offset].value;
+            }
+            else if(this._predicted && date >= this._predicted.start && date <= this._predicted.end) {
+                var futureTime = date - this._predicted.start;
+                var futureOffset = (this._predicted.step) ? Math.round(futureTime / this._predicted.step) : 0;
+                if(!this._predicted.values[futureOffset]) {
+                    futureOffset = this._predicted.values.length - 1;
+                }
+                result = this._predicted.values[futureOffset].value;
             }
             this._cache[date] = result;
         }
         else {
-            postMessage([9001,"Trying to get data from an undefined or empty probe : "+probe]);
+            postMessage([9001,'Trying to get data from an undefined or empty probe']);
         }
         return result;
     };
@@ -170,8 +174,10 @@ define([], function() {
      * @param {Object} data - Object returned by the server (without formating)
      */
     Probe.prototype.setPredicted = function(data) {
-        if(!data) return;
-        if(!!data.values) {
+        if(!data) { 
+            return;
+        }
+        if(data.values) {
             var formated = {};
             var values = [];
             for(var v in data.values) {
@@ -226,6 +232,7 @@ define([], function() {
         var currentData = this._data;
         var newData = data;
         var resultData = [];
+        var tmp = [];
         if(step > this.getStep()) {
             var tmp = [];
             var interval = Math.ceil(step / this.getStep());
@@ -325,7 +332,6 @@ define([], function() {
         var data = this._data;
         var step = this._step;
         var interval = interval || this._getAggregateLevel(from,until);
-        var start = (from < this._lastKnownFromDate) ? this._lastKnownFromDate : from;
 
         var tmp = [], time = this._lastKnownFromDate, s = true;
         for(var i = 0, len = data.length; i < len; i += interval, time += interval * step){
@@ -339,7 +345,7 @@ define([], function() {
                 avg = data[i] || 0;
 
             for(var j = 0; j < interval; j++){
-                if(typeof data[i+j] !== "object"){
+                if(typeof data[i+j] !== 'object'){
                     isNull = false;
                     if(mode === 'max'){
                         if(data[i+j] > avg)
@@ -360,7 +366,7 @@ define([], function() {
                 continue;
 
             if(isNaN(avg)){
-                postMessage([0,"NaN spotted on basic probe."]);
+                postMessage([0,'NaN spotted on basic probe.']);
                 continue;
             }
 
@@ -370,11 +376,13 @@ define([], function() {
                 'y0': 0,
                 'start': s
             });
-            if(s)
+            if(s) {
                 s = false;
-            else if(isNull)
+            }
+            else if(isNull) {
                 s = true;
-        };
+            }
+        }
 
         return {
             'values': tmp,
@@ -389,13 +397,14 @@ define([], function() {
      * @param {Number} from  - Start of the timeline
      * @param {Number} until - End of the timeline
      */
-    Probe.prototype._getAggregateLevel = function(from,until){
+    Probe.prototype._getAggregateLevel = function(from, until) {
         var step = this._step;
         var start = (from < this._lastKnownFromDate) ? this._lastKnownFromDate : from;
         var length = (until - start) / step;
         var interval = 1;
-        if(length > 100)
-            while(length / (interval *= 2) > 100) {}
+        while(length / interval > 100) {
+            interval *= 2;
+        }
         return interval;
     };
 

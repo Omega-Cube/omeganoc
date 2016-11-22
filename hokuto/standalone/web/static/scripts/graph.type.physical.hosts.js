@@ -32,8 +32,8 @@ define(['graph.type.base'], function (base) {
                     window.location.hash = '#logical.host/' + node.id;
                 }
             }];
-        }
-    }
+        };
+    };
 
     PhysicalHosts.prototype = base;
 

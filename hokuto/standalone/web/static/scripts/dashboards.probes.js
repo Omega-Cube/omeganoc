@@ -22,7 +22,73 @@ define(['jquery',
         'dataservice', 
         'onoc.createurl',
         'onoc.states',
-        'onoc.config'], function (jQuery, Console, DataService, createUrl, States, Config) {
+        'onoc.config',
+        'workerclient'], function (jQuery, Console, DataService, createUrl, States, Config, WorkerClient) {
+
+    //onmessage event, aka workers control room
+    function onWorkerMessage(data){
+        if(data instanceof Array && data.length >= 2){
+            var response = data[1], event = false;
+            /**
+             * 0: log/notification
+             * 1: Received probes data
+             * 6: Returned probes data
+             * 8: Returned newly aggregated data
+             * 9: Returned cursor data
+             * 10: Returned logs data
+             * 11: Returned predict data
+             * 9001: error
+             */
+            switch(data[0]){
+                case 0:
+                    console.log("[WORKER]",response);
+                    break;
+                case 1:
+                    event = 'fetch';
+                    console.log("[WORKER] Got data from the server.",data);
+                    break;
+                case 6:
+                    event = "get";
+                    console.log("[WORKER] Returned requested data.",data);
+                    break;
+                case 8:
+                    event = "aggregate";
+                    break;
+                case 9:
+                    event = "cursor";
+                    break;
+                case 10:
+                    event = "logs";
+                    break;
+                case 11:
+                    event = "predict";
+                    break;
+                case 9001:
+                    event = "error";
+                    console.error("[WORKER]",response);
+                    break;
+                default:
+                    event = "error";
+                    console.log("[WORKER] Unknown return code",data[0],response);
+                    break;
+            }
+            //execute listeners
+            if(event && this._listeners[this._events[event]].length) {
+                var listener = this._listeners[this._events[event]];
+                var sig = false, callback = false, l = false;
+                for(var i = 0, len = listener.length; i<len; i++) {
+                    l = listener[i];
+                    sig = l[0];
+                    callback = l[1];
+                    //check if the event require a valid signature
+                    if(data[2] && data[2] !== sig)
+                        continue;
+                    callback(data[1]);
+                }
+            }
+        }
+    };
+
 
     /**
      * Manage probes data
@@ -34,7 +100,7 @@ define(['jquery',
     var DashboardProbes = {
         probes: {},
         metrics: false,
-        worker: new Worker(createUrl("static/scripts/workers/onoc.js")),
+        worker: new WorkerClient('workers/probes.worker', onWorkerMessage),
         probesDoneLoadingCallbacks: [],
 
         /**
@@ -271,7 +337,8 @@ define(['jquery',
                 dataType: 'json',
                 data: request
             });
-        }
+        },
+
     };
 
     //worker responses
@@ -299,75 +366,6 @@ define(['jquery',
         this._listeners[this._events[event]].push([signature,callback]);
         return this._listeners.length - 1;
     };
-
-    //onmessage event, aka workers control room
-    DashboardProbes.worker.onmessage = function(m){
-        if(m.data instanceof Array && m.data.length >= 2){
-            var response = m.data[1], event = false;
-            /**
-             * 0: log/notification
-             * 1: Received probes data
-             * 6: Returned probes data
-             * 8: Returned newly aggregated data
-             * 9: Returned cursor data
-             * 10: Returned logs data
-             * 11: Returned predict data
-             * 9001: error
-             */
-            switch(m.data[0]){
-            case 0:
-                console.log("[WORKER]",response);
-                break;
-            case 1:
-                event = 'fetch';
-                console.log("[WORKER] Got data from the server.",m.data);
-                break;
-            case 6:
-                event = "get";
-                console.log("[WORKER] Returned requested data.",m.data);
-                break;
-            case 8:
-                event = "aggregate";
-                break;
-            case 9:
-                event = "cursor";
-                break;
-            case 10:
-                event = "logs";
-                break;
-            case 11:
-                event = "predict";
-                break;
-            case 9001:
-                event = "error";
-                console.error("[WORKER]",response);
-                break;
-            default:
-                event = "error";
-                console.log("[WORKER] Unknown return code",m.data[0],response);
-            }
-            //execute listeners
-            if(event && this._listeners[this._events[event]].length){
-                var listener = this._listeners[this._events[event]];
-                var sig = false, callback = false, l = false;
-                for(var i = 0, len = listener.length;i<len;i++){
-                    l = listener[i];
-                    sig = l[0];
-                    callback = l[1];
-                    //check if the event require a valide signature
-                    if(m.data[2] && m.data[2] !== sig)
-                        continue;
-                    callback(m.data[1]);
-                }
-            }
-        }
-    };
-    //setup the BASE_URL for worker's requests
-    DashboardProbes.worker.postMessage(['workers/probes.worker', 
-                                        Config.baseUrl(), 
-                                        Config.separator(), 
-                                        Config.isAdmin(), 
-                                        Config.shinkenContact()]);
 
     //TODO: GRUICK!
     DashboardProbes._requestMetrics();
