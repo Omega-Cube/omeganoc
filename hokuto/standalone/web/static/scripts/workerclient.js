@@ -5,6 +5,8 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
         this.worker = new Worker(createUrl('static/scripts/workers/onoc.js'));
         this.worker._client = this;
         this.worker.onmessage = this.processMessage;
+        this.worker.onerror = this.processError;
+
 
         // A list of messages that are stored, waiting for the worker to be ready
         this.outMessageQueue = [];
@@ -67,6 +69,10 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
             // Forward other messages to the worker user
             client.onMessageCallback(evt.data);
         }
+    };
+
+    WorkerClient.prototype.processError = function() {
+        Console.error('An error occured while initializing a worker');
     };
 
     // Sends a message to the worker
