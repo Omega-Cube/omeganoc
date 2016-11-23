@@ -1,4 +1,4 @@
-"use strict"
+'use strict';
 
 /*
  * This file is part of Omega Noc
@@ -29,13 +29,13 @@ define(['libs/rsvp'], function(RSVP) {
                 if(data) {
                     var dataStrParts = [];
                     for(var key in data) {
-                        if(typeof data[key] === 'array') {
+                        if(data[key] instanceof Array) {
                             for(var i in data[key]) {
-                                dataStrParts.push(encodeURIComponent(key) + "=" + encodeURIComponent(data[key][i]));
+                                dataStrParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key][i]));
                             }
                         }
                         else {
-                            dataStrParts.push(encodeURIComponent(key) + "=" + encodeURIComponent(data[key]));
+                            dataStrParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
                         }
                     }
 
@@ -61,7 +61,7 @@ define(['libs/rsvp'], function(RSVP) {
                             reject(xhr);
                         }
                     }
-                }
+                };
 
                 xhr.open('GET', url);
                 xhr.send(null);

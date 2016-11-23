@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -18,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define(['jquery'],function(jQuery){
+define(['jquery', 'console'],function(jQuery, Console){
     /**
      * Display a calendar date selector
      */
@@ -36,21 +38,23 @@ define(['jquery'],function(jQuery){
         this.target = false;
         this.set(new Date());
 
-        this.monthNames = [ "January", "February", "March", "April", "May", "June",
-                            "July", "August", "September", "October", "November", "December" ];
+        this.monthNames = [ 
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December' 
+        ];
         this.dayNames = ['Mo','Tu','We','Th','Fr','Sa','Su'];
 
         //containers
-        this.container = $('<section class="onoc-date-picker"></section>');
+        this.container = jQuery('<section class="onoc-date-picker"></section>');
 
-        this.monthContainer = $('<div class="month"></div');
+        this.monthContainer = jQuery('<div class="month"></div');
         this.monthContainer.append('<button class="prev"></button>');
         this.monthContainer.append('<button class="next"></button>');
         this.monthContainer.append('<span class="current"></span>');
 
-        this.daysContainer = $('<div class="day"></div>');
+        this.daysContainer = jQuery('<div class="day"></div>');
 
-        var close = $('<button class="close"></button>');
+        var close = jQuery('<button class="close"></button>');
 
         //events
         this.monthContainer.on('click',this._monthSwitch.bind(this));
@@ -113,13 +117,13 @@ define(['jquery'],function(jQuery){
 
         var activeDate = new Date(this.year,this.month + 1, 0);
         var dayNumber = activeDate.getDate();
-        var ol = $('<ol></ol>');
-        var legend = $('<li class="legend"></li>')
+        var ol = jQuery('<ol></ol>');
+        var legend = jQuery('<li class="legend"></li>');
         for(var d in this.dayNames){
             legend.append('<span>'+this.dayNames[d]+'</span>');
         }
         ol.append(legend);
-        var week = $('<li class="week"></li>');
+        var week = jQuery('<li class="week"></li>');
         activeDate.setDate(1);
         var day = activeDate.getDay();
         if(day === 0) day = 7;
@@ -130,12 +134,12 @@ define(['jquery'],function(jQuery){
         for(var i = 1;i<=dayNumber;i++, counter++){
             if(!((counter - 1) % 7)){
                 ol.append(week);
-                week = $('<li class="week"></li>');
+                week = jQuery('<li class="week"></li>');
             }
-            week.append('<span data-day="'+i+'" '+
+            week.append('<span data-day="' + i + '" ' +
                       ((i=== this.day && this.month === this.selected.getMonth() && this.year === this.selected.getFullYear()) ?
                        'class="selected day"':'class="day"')+'>'
-                      +((i < 10) ? '0'.concat(i):i)+'</span>');
+                      + ((i < 10) ? '0'.concat(i):i)+'</span>');
         }
         ol.append(week);
         this.daysContainer.append(ol);
@@ -218,7 +222,7 @@ define(['jquery'],function(jQuery){
      */
     onocCalendar.prototype.setCallback = function(callback){
         if(typeof callback !== 'function'){
-            console.error("[Calendar] Callback must be a function");
+            Console.error('[Calendar] Callback must be a function');
             return false;
         }
         this.callback = callback;
@@ -230,7 +234,7 @@ define(['jquery'],function(jQuery){
      */
     onocCalendar.prototype.setTarget = function(target){
         if(!target || typeof target.append === 'undefined'){
-            console.error("[Calendar] missing target or wrong type.");
+            Console.error('[Calendar] missing target or wrong type.');
             return false;
         }
         this.target = target;

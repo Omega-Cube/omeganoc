@@ -1,4 +1,6 @@
-﻿/*
+﻿'use strict';
+
+/*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
  * Xavier Roger-Machart, xrm@omegacube.fr
@@ -91,10 +93,10 @@ define([], function () {
         result.updateBbox();
 
         // Also compute bboxes for groups
-        for (var id in result.groups) {
+        for (id in result.groups) {
             result.groups[id].updateBbox();
         }
 
         return result;
-    }
+    };
 });

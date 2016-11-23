@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -176,7 +178,7 @@ define(['libs/d3','dashboards.probes', 'onoc.config'],function(d3, DashboardProb
      */
     Legends.prototype.extend = function(){
         //abstract
-    }
+    };
 
     /**
      * (Re)draw legends elements.
@@ -191,6 +193,7 @@ define(['libs/d3','dashboards.probes', 'onoc.config'],function(d3, DashboardProb
         var left = 0;
         var height = 0;
         var maxHeight = 0;
+        var i, len;
         for(var host in this.groups){
             var groupHeight = 12 + 13 * this.groups[host].count;
             var totalHeight = height + groupHeight;
@@ -202,7 +205,7 @@ define(['libs/d3','dashboards.probes', 'onoc.config'],function(d3, DashboardProb
             if(groupHeight > maxHeight) maxHeight = groupHeight;
 
             var probes = this.groups[host].container.selectAll('.legend-item')[0];
-            for(var i = 0;i<this.groups[host].count;i++){
+            for(i = 0;i<this.groups[host].count;i++){
                 var boxWidth = probes[i].getElementsByTagName('text')[0].getBoundingClientRect().width + 10;
                 if(!boxWidth || boxWidth === 10){
                     check = false;
@@ -226,9 +229,10 @@ define(['libs/d3','dashboards.probes', 'onoc.config'],function(d3, DashboardProb
         }
 
         if(check){
-            for(var i =0, len = this.elements.length;i<len;i++){
-                if(!this.elements[i]) continue;
-                var host = this.elements[i].attr('data-host');
+            for(i = 0, len = this.elements.length; i < len; i++){
+                if(!this.elements[i]) 
+                    continue;
+                host = this.elements[i].attr('data-host');
                 this.elements[i].select('g').attr('transform','translate('+this.groups[host].width+',1)');
             }
         }

@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -20,7 +22,7 @@ define(['onoc.config'], function (Config) {
     // TODO: Use this in the graph state manager for the load/save urls
     return function (url) {
         // Remove the slash at the start of the relative URL if there's one
-        if(url.length > 0 && url[0] == '/') {
+        if(url.length > 0 && url[0] === '/') {
             url = url.slice(1);
         }
         

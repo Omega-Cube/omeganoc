@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -62,7 +64,7 @@ define(['jquery'], function (jQuery) {
             if (cacheDuration > 0) {
                 timerHandle = setTimeout(onTimeout, cacheDuration);
             }
-        }
+        };
 
         function onTimeout() {
             cache = null;
@@ -76,7 +78,7 @@ define(['jquery'], function (jQuery) {
             else {
                 callback(cache);
             }
-        }
+        };
 
         this.forceUpdate = function (callback) {
             updateCallbacks.push(callback);
@@ -89,7 +91,7 @@ define(['jquery'], function (jQuery) {
                 jQuery.ajax(url, xhrOptions);
                 isUpdating = true;
             }
-        }
+        };
     };
 
     return CachedLoader;

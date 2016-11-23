@@ -1,4 +1,4 @@
-﻿"use strict"
+﻿'use strict';
 
 /*
  * This file is part of Omega Noc

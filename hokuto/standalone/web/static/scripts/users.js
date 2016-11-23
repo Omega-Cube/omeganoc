@@ -1,3 +1,8 @@
+'use strict';
+
+// TODO: Find a way to get rid of that global somehow
+/* globals _ISNEW */
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -17,54 +22,59 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-require(['jquery','onoc.createurl'], function (jQuery, createurl) {
+require(['jquery','onoc.createurl', 'console'], function (jQuery, createurl, Console) {
 
     jQuery(document).ready(function() {
         //bind buttons actions
         jQuery('#mainContent').find('.block').on('click',function(e){
             jQuery.ajax(createurl('/block-user/'+e.target.parentNode.parentNode.dataset['id']),{
                 'type': 'PUT'
-            }).success(function(){
+            }).success(function() {
                 document.location.reload();
-            }).error(function(e){ console.error(e);});
+            }).error(function(e) { 
+                Console.error('Error while blocking the user: ' + e);
+            });
         });
         jQuery('#mainContent').find('.delete').on('click',function(e){
             jQuery.ajax(createurl('/delete-user/'+e.target.parentNode.parentNode.dataset['id']),{
                 'type': 'DELETE'
             }).success(function(){
                 document.location.reload();
-            }).error(function(e){ console.error(e);});
+            }).error(function(e) {
+                Console.error('Error while deleting a user: ' + e);
+            });
         });
 
         if(typeof _ISNEW !== 'undefined'){
             require(['libs/jquery.validate'],function(){
-                jQuery("#edit_userScreen").validate({
+                var isNew = !!_ISNEW;
+                jQuery('#edit_userScreen').validate({
                     rules: {
                         username: {
-                            required: (_ISNEW) ? true:false,
+                            required: isNew,
                             minlength: 4,
                             maxlength: 20
                         },
                         password: {
-                            required: (_ISNEW) ? true : false
+                            required: isNew
                         },
                         confirm_password: {
-                            required: (_ISNEW) ? true : false,
-                            equalTo: "#password"
+                            required: isNew,
+                            equalTo: '#password'
                         }
 
                     },
                     messages: {
                         username: {
-                            required: "Please entrer a username",
-                            minlength: "Username should contain between 4 and 20 characters",
-                            maxlength: "Username should contain between 4 and 20 characters"
+                            required: 'Please entrer a username',
+                            minlength: 'Username should contain between 4 and 20 characters',
+                            maxlength: 'Username should contain between 4 and 20 characters'
                         },
                         password: {
-                            required: "Please entrer a password"
+                            required: 'Please entrer a password'
                         },
                         confirm_password: {
-                            equalTo: "Passwords must match"
+                            equalTo: 'Passwords must match'
                         }
                     }
 

@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -43,7 +45,6 @@ define(['jquery', 'console', 'onoc.createurl'], function(jQuery, Console, create
         _sendDelay: 1500, // Delay before a save operation is actually executed
 
         load: function (graphType, successCallback, errorCallback) {
-            var that = GraphState;
             var url = createurl('/loadgraph/' + graphType);
             var jqxhr = jQuery.getJSON(url, function (result) {
                 if (successCallback) {
@@ -69,7 +70,7 @@ define(['jquery', 'console', 'onoc.createurl'], function(jQuery, Console, create
             var that = GraphState;
         
             if (clear || !(graphType in GraphState._saveBuffer)) {
-                that._saveBuffer[graphType] = {}
+                that._saveBuffer[graphType] = {};
             }
         
             that._saveBuffer[graphType] =

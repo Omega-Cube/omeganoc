@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -41,7 +43,7 @@ require(['jquery','onoc.createurl', 'onoc.states'],function(jQuery, createUrl, O
                 container.empty();
                 buildLogList(target,container);
             });
-        };
+        }
 
         function buildLogList(target,container){
             target = String.split(target,'.');
@@ -65,7 +67,7 @@ require(['jquery','onoc.createurl', 'onoc.states'],function(jQuery, createUrl, O
                     container.append(entry);
                 }
             });
-        };
+        }
 
         jQuery(document).on('onoc.livestatus.states',function(){
             if(!hosts){

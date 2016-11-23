@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -30,7 +32,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return form container
          */
         unitSelect : function(current,probe,units){
-            var container = $('<select name="unit" style="display:table-cell;" class="formButton select"></select>');
+            var container = jQuery('<select name="unit" style="display:table-cell;" class="formButton select"></select>');
             for(var u in units)
                 container.append('<option '+((current === u) ? 'selected="selected"': '')+' value="'+u+'">'+u+'</option>');
 
@@ -84,14 +86,13 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return form container
          */
         orientSelect : function(current,probe){
-            var container = $('<span style="display:table-cell;"></span>');
-            var orient = $('<select name="orient" class="hidden"></select>');
+            var container = jQuery('<span style="display:table-cell;"></span>');
+            var orient = jQuery('<select name="orient" class="hidden"></select>');
             orient.append('<option '+((current === 'left') ? 'selected="selected"': '')+' value="left">Left</option>');
             orient.append('<option '+((current === 'right') ? 'selected="selected"': '')+' value="right">Right</option>');
 
-            var button = $('<button style="width:3.25em;" class="formButton"></button>');
+            var button = jQuery('<button style="width:3.25em;" class="formButton"></button>');
             var values = ['left','right'];
-            var probe = probe;
             button.text((current === 'right') ? 'Right' : 'Left');
 
             button[0].addEventListener('click',function(event){
@@ -105,7 +106,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 button.text(newVal.charAt(0).toUpperCase().concat(newVal.slice(1)));
 
                 var scale = this.scales[this.probes[probe].scale];
-                var newVal = this.getScale(scale.unit, newVal , scale.reversed, scale.stacked);
+                newVal = this.getScale(scale.unit, newVal , scale.reversed, scale.stacked);
                 this.probes[probe].scale = newVal;
                 var query = {
                     'id': this.id,
@@ -152,19 +153,15 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return form container
          */
         orientAddSelect : function(current){
-            var current = current || 'left';
-            var values = ['left','right'];
+            current = current || 'left';
 
-            var container = $('<p class="orient"></p>');
+            var container = jQuery('<p class="orient"></p>');
             container.append('<button data-index="0" data-value="left" '+((current === 'left') ? 'class="selected"': '')+'>left</button>');
             container.append('<button data-index="1" data-value="right" '+((current === 'right') ? 'class="selected"': '')+'>right</button>');
 
-            var select = $('<select name="orient" class="hidden"></select>');
+            var select = jQuery('<select name="orient" class="hidden"></select>');
             select.append('<option '+((current === 'left') ? 'selected="selected"': '')+' value="left"></option>');
             select.append('<option '+((current === 'right') ? 'selected="selected"': '')+' value="right"></option>');
-
-
-            var button = $('<button style="width:3.25em;" class="formButton"></button>');
 
             var probe = probe;
 
@@ -190,13 +187,12 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return The selection container
          */
         directionSelect : function(current,probe){
-            var container = $('<span style="display:table-cell;"></span>');
-            var direction = $('<select name="reversed" class="hidden"></select>');
+            var container = jQuery('<span style="display:table-cell;"></span>');
+            var direction = jQuery('<select name="reversed" class="hidden"></select>');
             direction.append('<option '+((!current) ? 'selected="selected"': '')+' value="false">Top</option>');
             direction.append('<option '+((current) ? 'selected="selected"': '')+' value="true">Bottom</option>');
 
-            var button = $('<button style="width:4.5em;" class="formButton"></button>');
-            var probe = probe;
+            var button = jQuery('<button style="width:4.5em;" class="formButton"></button>');
             button.text((current) ? 'Bottom':'Top');
 
             button[0].addEventListener('click',function(event){
@@ -208,7 +204,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 button.text((current) ? 'Bottom':'Top');
 
                 var scale = this.scales[this.probes[probe].scale];
-                var newVal = this.getScale(scale.unit, scale.orient , current, scale.stacked);
+                newVal = this.getScale(scale.unit, scale.orient , current, scale.stacked);
                 this.probes[probe].scale = newVal;
 
                 var query = {
@@ -255,8 +251,8 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return The selection container
          */
         directionAddSelect : function(current){
-            var container = $('<p class="direction"></p>');
-            var select = $('<select name="reversed" class="hidden"></select>');
+            var container = jQuery('<p class="direction"></p>');
+            var select = jQuery('<select name="reversed" class="hidden"></select>');
             select.append('<option '+((!current) ? 'selected="selected"': '')+' value="false">Top</option>');
             select.append('<option '+((current) ? 'selected="selected"': '')+' value="true">Bottom</option>');
 
@@ -285,11 +281,10 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return The selection container
          */
         typeSelect : function(current,stacked,probe){
-            var container = $('<span style="display:table-cell;"></span>');
-            var button = $('<button style="width:5em;" class="formButton"></button>');
-            var select = $('<select name="type" class="hidden"></select>');
+            var container = jQuery('<span style="display:table-cell;"></span>');
+            var button = jQuery('<button style="width:5em;" class="formButton"></button>');
+            var select = jQuery('<select name="type" class="hidden"></select>');
             var values = ['line','area','column'];
-            var probe = probe;
             container.append(button);
             container.append(select);
             if(!stacked)
@@ -347,11 +342,11 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return The selection container
          */
         typeAddSelect : function(current){
-            var container = $('<p class="type"></p>');
+            var container = jQuery('<p class="type"></p>');
             //var button = $('<button style="width:5em;" class="formButton"></button>');
-            var select = $('<select name="type" class="hidden"></select>');
+            var select = jQuery('<select name="type" class="hidden"></select>');
             var values = ['line','area','column'];
-            var current = current || 'line';
+            current = current || 'line';
 
             for(var v in values){
                 var val = values[v];
@@ -381,12 +376,10 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return stack checkbox container
          */
         stackCheckbox : function(current,probe){
-            var container = $('<span style="display:table-cell;"><input type="checkbox" data-tooltip="Stack/Unstack this probe with other stacked probes" name="stacked" '+((current) ? 'checked="checked"':'')+'/></span>');
+            var container = jQuery('<span style="display:table-cell;"><input type="checkbox" data-tooltip="Stack/Unstack this probe with other stacked probes" name="stacked" '+((current) ? 'checked="checked"':'')+'/></span>');
 
             if(probe)
                 container[0].getElementsByTagName('input')[0].addEventListener('change',function(event){
-
-                    var scale = this.scales[this.probes[probe].scale];
                     var newVal = event.target.checked;
                     this.probes[probe].stacked = newVal;
 
@@ -419,13 +412,14 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * Return disponible colors list
          */
         getColorsList: function(){
-            var colors = ["#7EB26D","#EAB839","#6ED0E0","#EF843C","#E24D42","#1F78C1","#BA43A9","#705DA0",
-                          "#508642","#CCA300","#447EBC","#C15C17","#890F02","#0A437C","#6D1F62","#584477",
-                          "#B7DBAB","#F4D598","#70DBED","#F9BA8F","#F29191","#82B5D8","#E5A8E2","#AEA2E0",
-                          "#629E51","#E5AC0E","#64B0C8","#E0752D","#BF1B00","#0A50A1","#962D82","#614D93",
-                          "#9AC48A","#F2C96D","#65C5DB","#F9934E","#EA6460","#5195CE","#D683CE","#806EB7",
-                          "#3F6833","#967302","#2F575E","#99440A","#58140C","#052B51","#511749","#3F2B5B",
-                          "#E0F9D7","#FCEACA","#CFFAFF","#F9E2D2","#FCE2DE","#BADFF4","#F9D9F9","#DEDAF7"];
+            var colors = [
+                '#7EB26D','#EAB839','#6ED0E0','#EF843C','#E24D42','#1F78C1','#BA43A9','#705DA0',
+                '#508642','#CCA300','#447EBC','#C15C17','#890F02','#0A437C','#6D1F62','#584477',
+                '#B7DBAB','#F4D598','#70DBED','#F9BA8F','#F29191','#82B5D8','#E5A8E2','#AEA2E0',
+                '#629E51','#E5AC0E','#64B0C8','#E0752D','#BF1B00','#0A50A1','#962D82','#614D93',
+                '#9AC48A','#F2C96D','#65C5DB','#F9934E','#EA6460','#5195CE','#D683CE','#806EB7',
+                '#3F6833','#967302','#2F575E','#99440A','#58140C','#052B51','#511749','#3F2B5B',
+                '#E0F9D7','#FCEACA','#CFFAFF','#F9E2D2','#FCE2DE','#BADFF4','#F9D9F9','#DEDAF7'];
             return colors;
         },
 
@@ -436,14 +430,15 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return colors form container
          */
         colorBox : function(current,probe){
-            var container = $('<select class="color" name="color" style="background-color: '+current+';display:table-cell;vertical-align: middle; padding: 1px;"></select>');
-            var colors = ["#7EB26D","#EAB839","#6ED0E0","#EF843C","#E24D42","#1F78C1","#BA43A9","#705DA0",
-                          "#508642","#CCA300","#447EBC","#C15C17","#890F02","#0A437C","#6D1F62","#584477",
-                          "#B7DBAB","#F4D598","#70DBED","#F9BA8F","#F29191","#82B5D8","#E5A8E2","#AEA2E0",
-                          "#629E51","#E5AC0E","#64B0C8","#E0752D","#BF1B00","#0A50A1","#962D82","#614D93",
-                          "#9AC48A","#F2C96D","#65C5DB","#F9934E","#EA6460","#5195CE","#D683CE","#806EB7",
-                          "#3F6833","#967302","#2F575E","#99440A","#58140C","#052B51","#511749","#3F2B5B",
-                          "#E0F9D7","#FCEACA","#CFFAFF","#F9E2D2","#FCE2DE","#BADFF4","#F9D9F9","#DEDAF7"];
+            var container = jQuery('<select class="color" name="color" style="background-color: '+current+';display:table-cell;vertical-align: middle; padding: 1px;"></select>');
+            var colors = [
+                '#7EB26D','#EAB839','#6ED0E0','#EF843C','#E24D42','#1F78C1','#BA43A9','#705DA0',
+                '#508642','#CCA300','#447EBC','#C15C17','#890F02','#0A437C','#6D1F62','#584477',
+                '#B7DBAB','#F4D598','#70DBED','#F9BA8F','#F29191','#82B5D8','#E5A8E2','#AEA2E0',
+                '#629E51','#E5AC0E','#64B0C8','#E0752D','#BF1B00','#0A50A1','#962D82','#614D93',
+                '#9AC48A','#F2C96D','#65C5DB','#F9934E','#EA6460','#5195CE','#D683CE','#806EB7',
+                '#3F6833','#967302','#2F575E','#99440A','#58140C','#052B51','#511749','#3F2B5B',
+                '#E0F9D7','#FCEACA','#CFFAFF','#F9E2D2','#FCE2DE','#BADFF4','#F9D9F9','#DEDAF7'];
 
             for(var c in colors)
                 container.append('<option '+((current === colors[c]) ? 'selected="selected"': '')+' value="'+colors[c]+'" style="background-color: '+colors[c]+';"></option>');
@@ -476,8 +471,8 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return colors form container
          */
         colorAddBox : function(current){
-            var select = $('<select name="color" class="hidden"></select>');
-            var container = $('<p class="color"></p>');
+            var select = jQuery('<select name="color" class="hidden"></select>');
+            var container = jQuery('<p class="color"></p>');
             var colors = this.getColorsList();
 
             var i = 0;
@@ -507,7 +502,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @return form container
          */
         removeButton : function(probe){
-            var container = $('<button class="formButton remove">X</button>');
+            var container = jQuery('<button class="formButton remove">X</button>');
             container[0].addEventListener('click',function(){
                 this.removeProbe(probe);
                 this.setDomain(this.data);

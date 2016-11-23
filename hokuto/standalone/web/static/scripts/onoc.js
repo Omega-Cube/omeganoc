@@ -1,4 +1,6 @@
-"use strict"
+'use strict';
+
+/* globals requirejs, onoc_main_modules, ONOC */
 
 /*
  * This file is part of Omega Noc
@@ -49,9 +51,9 @@ requirejs(['jquery','onoc.tooltips', 'onoc.config'], function(jQuery, Tooltips, 
         }
 
         return requirejs(module);
-    }
+    };
 
-    Config.setValues($URL_ROOT, '[SEP]');
+    Config.setValues(ONOC.url_root, ONOC.separator, ONOC.is_admin, ONOC.shinken_contact);
 
     jQuery(document).ready(function() {
         var help = new Tooltips();

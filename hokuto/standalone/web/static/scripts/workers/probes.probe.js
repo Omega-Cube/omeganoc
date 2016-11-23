@@ -233,12 +233,14 @@ define([], function() {
         var newData = data;
         var resultData = [];
         var tmp = [];
+        var interval = 0;
+        var i, len, val, v;
         if(step > this.getStep()) {
-            var tmp = [];
-            var interval = Math.ceil(step / this.getStep());
-            for(var i = 0, len = currentData.length; i<len; i+=interval) {
-                var val = 0;
-                for(var v=0;v<interval;v++) {
+            tmp = [];
+            interval = Math.ceil(step / this.getStep());
+            for(i = 0, len = currentData.length; i<len; i+=interval) {
+                val = 0;
+                for(v = 0; v < interval; v++) {
                     if(typeof currentData[i+v] === 'undefined') break;
                     val += currentData[i+v] / interval;
                 }
@@ -247,11 +249,11 @@ define([], function() {
             currentData = tmp;
         } 
         else if(step < this.getStep()) {
-            var tmp = [];
-            var interval = Math.ceil(this.getStep() / step);
-            for(var i = 0, len = newData.length; i<len; i+=interval) {
-                var val = 0;
-                for(var v=0;v<interval;v++) {
+            tmp = [];
+            interval = Math.ceil(this.getStep() / step);
+            for(i = 0, len = newData.length; i<len; i+=interval) {
+                val = 0;
+                for(v = 0; v < interval; v++) {
                     if(typeof newData[i+v] === 'undefined') break;
                     val += newData[i+v] / interval;
                 }
@@ -262,33 +264,34 @@ define([], function() {
         }
 
         //build the new dataset
+        var diff;
         if(start <= this._lastKnownFromDate) {
             if(end !== this._lastKnownFromDate) {
                 if(end > this._lastKnownFromDate) {
-                    var diff = Math.ceil((end - this._lastKnownFromDate) / step);
+                    diff = Math.ceil((end - this._lastKnownFromDate) / step);
                     while(--diff) newData.pop();
                 }
                 else {
-                    var diff = Math.ceil((this._lastKnownFromDate - end) / step);
+                    diff = Math.ceil((this._lastKnownFromDate - end) / step);
                     while(--diff) newData.push(null);
                 }
             }
             resultData = newData.concat(currentData);
-            var end = this._lastKnownUntilDate;
+            end = this._lastKnownUntilDate;
         }
         else {
             if(start !== this._lastKnownUntilDate) {
                 if(start < this._lastKnownUntilDate) {
-                    var diff = Math.ceil((this._lastKnownUntilDate - start) / step);
+                    diff = Math.ceil((this._lastKnownUntilDate - start) / step);
                     while(--diff) newData.shift();
                 }
                 else {
-                    var diff = Math.ceil((start - this._lastKnownFromDate) / step);
+                    diff = Math.ceil((start - this._lastKnownFromDate) / step);
                     while(--diff) newData = [null].concat(newData);
                 }
             }
             resultData = currentData.concat(newData);
-            var start = this._lastKnownFromDate;
+            start = this._lastKnownFromDate;
         }
 
         this.setData(resultData);
@@ -328,10 +331,10 @@ define([], function() {
      * @return Formated and aggregated data
      */
     Probe.prototype._aggregate = function(from, until, mode, interval) {
-        var mode = mode || 'max';
+        mode = mode || 'max';
+        interval = interval || this._getAggregateLevel(from,until);
         var data = this._data;
         var step = this._step;
-        var interval = interval || this._getAggregateLevel(from,until);
 
         var tmp = [], time = this._lastKnownFromDate, s = true;
         for(var i = 0, len = data.length; i < len; i += interval, time += interval * step){

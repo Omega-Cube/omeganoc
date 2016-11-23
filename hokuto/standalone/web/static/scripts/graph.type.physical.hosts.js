@@ -1,4 +1,6 @@
-﻿/*
+﻿'use strict';
+
+/*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
  * Xavier Roger-Machart, xrm@omegacube.fr
@@ -28,7 +30,7 @@ define(['graph.type.base'], function (base) {
             return [{
                 image: 'glass-plus.png',
                 label: 'Zoom on this node',
-                click: function (clickedNode) {
+                click: function () {
                     window.location.hash = '#logical.host/' + node.id;
                 }
             }];

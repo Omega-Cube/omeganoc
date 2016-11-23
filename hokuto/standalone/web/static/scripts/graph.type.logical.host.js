@@ -1,4 +1,6 @@
-﻿/*
+﻿'use strict';
+
+/*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
  * Xavier Roger-Machart, xrm@omegacube.fr
@@ -19,13 +21,13 @@
 
 // The physical graph type displays hostgroups and hosts, organized by physical dependencies
 
-define(['graph.type.base', 'graph.state'], function (base, GraphState) {
+define(['graph.type.base', 'graph.state', 'console'], function (base, GraphState, Console) {
     var LogicalHost = function (graph, fullName) {
         var selfRef = this;
         this.name = fullName;
         this.graph = graph;
 
-        this.getCommandsForNode = function (node) {
+        this.getCommandsForNode = function () {
             return [{
                 image: 'link-to.png',
                 label: 'Create a new link from this node',
@@ -33,15 +35,13 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
                     renderer.hideCommands();
                     renderer.startCreateUserLink(clickedNode, function (otherNode) {
                         // The user designated a target node
-                        console.log('Creating a link between ' + clickedNode.label + ' and ' + otherNode.label);
-
                         // Check that the link does not already exist
                         for (var i = 0, c = otherNode.link_in.length; i < c; ++i) {
                             if (otherNode.link_in[i].target.id === clickedNode.id) {
                                 return false;
                             }
                         }
-                        for (var i = 0, c = clickedNode.link_out.length; i < c; ++i) {
+                        for (i = 0, c = clickedNode.link_out.length; i < c; ++i) {
                             if (clickedNode.link_out[i].source.id === otherNode.id) {
                                 return false;
                             }
@@ -75,7 +75,7 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
                                 return false;
                             }
                         }
-                        for (var i = 0, c = otherNode.link_out.length; i < c; ++i) {
+                        for (i = 0, c = otherNode.link_out.length; i < c; ++i) {
                             if (otherNode.link_out[i].target.id === clickedNode.id) {
                                 return false;
                             }
@@ -83,7 +83,7 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
                         return true;
                     }, function () {
                         // The user aborted the operation
-                        console.log('abort');
+                        Console.log('abort');
                     });
                 }
             }];
@@ -91,8 +91,6 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
 
         // TODO : This method is temporary; will probably get replaced by something like getCommandsForEdge
         this.onEdgeCommand = function (edge, renderer) {
-            console.log('oui monsieur ' + edge.source.id + ' - ' + edge.target.id);
-
             // Remove the edge from the screen
             renderer.removeEdge(edge);
 
@@ -114,8 +112,8 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
             var data = {};
             data[key] = null;
             GraphState.save(selfRef.name, data);
-        }
-    }
+        };
+    };
 
     LogicalHost.prototype = base;
 

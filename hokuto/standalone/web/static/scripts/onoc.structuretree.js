@@ -1,4 +1,4 @@
-"use strict"
+'use strict';
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -17,13 +17,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 
-        'onoc.createurl', 
-        'onoc.loadcss', 
-        'scrollbar', 
-        'dataservice', 
-        'console', 
-        'libs/jstree'], function (jQuery, createUrl, loadCss, createScrollbar, DataService, Console) {
+define([
+    'jquery', 
+    'onoc.createurl', 
+    'onoc.loadcss', 
+    'scrollbar', 
+    'dataservice', 
+    'console', 
+    'libs/jstree'], function (jQuery, createUrl, loadCss, createScrollbar, DataService, Console) {
     function StructureTree(container, heightCompensation) {
         var jqContainer = jQuery(container);
         loadCss(createUrl('static/css/jstree.min.css'));
@@ -51,13 +52,14 @@ define(['jquery',
         function _loadNode(callback) {
             var result = [];
             var orphanHosts = [];
+            var i, c;
 
             // Load host groups
             for (var hname in currentDataHolders.hosts) {
                 var h = currentDataHolders.hosts[hname];
 
                 if (h.groups && h.groups.length) {
-                    for (var i = 0, c = h.groups.length; i < c; ++i) {
+                    for (i = 0, c = h.groups.length; i < c; ++i) {
                         var hgroupname = h.groups[i];
                         var d = result.length;
                         if (d === 0) {
@@ -102,7 +104,7 @@ define(['jquery',
                 var orphanNode = _createHostGroupNode('__orphans', 'Orphans');
                 result.push(orphanNode);
 
-                for (var i = 0, c = orphanHosts.length; i < c; ++i) {
+                for (i = 0, c = orphanHosts.length; i < c; ++i) {
                     orphanNode.children.push(_loadHostNode(orphanHosts[i], orphanNode.id));
                 }
             }
@@ -154,7 +156,7 @@ define(['jquery',
                 'children': [],
                 'isa': 'service',
                 'serviceId': serviceId,
-            }
+            };
         }
 
         function _loadDataHolders(successCallback, errorCallback) {

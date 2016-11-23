@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -16,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
+define(['jquery', 'onoc.createurl', 'console'], function(jQuery, createUrl, Console) {
 
     /**
      * Handle alerts, warnings and notifications display
@@ -35,15 +37,15 @@ define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
             this.fetchCurrentStates();
         },
 
-            /**
-             * Subscribe to the updated states event.
-             * will imediatly trigger the event if data were already fetched.
-             */
-            subscribe: function(callback) {
-                jQuery(document).on('updated.states.onoc', callback);
-                if(this._states.length)
-                    jQuery(document).trigger('updated.states.onoc');
-            },
+        /**
+         * Subscribe to the updated states event.
+         * will imediatly trigger the event if data were already fetched.
+         */
+        subscribe: function(callback) {
+            jQuery(document).on('updated.states.onoc', callback);
+            if(this._states.length)
+                jQuery(document).trigger('updated.states.onoc');
+        },
 
         /**
          * Fetch services and hosts status from the server
@@ -54,23 +56,23 @@ define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
                 'url': url,
                 'type': 'GET'
             }).success(function(response) {
-                    //is the conf currently locked by user? if so highlight the correct header section
-                    if(response.is_conf_owner){
-                        var classname = 'alert';
-                        if(response.is_conf_owner > 0) classname = 'warning';
-                        jQuery('#menu-admin-list').parent().addClass(classname);
-                        jQuery('#menu-admin-list .config').addClass(classname);
+                //is the conf currently locked by user? if so highlight the correct header section
+                if(response.is_conf_owner){
+                    var classname = 'alert';
+                    if(response.is_conf_owner > 0) classname = 'warning';
+                    jQuery('#menu-admin-list').parent().addClass(classname);
+                    jQuery('#menu-admin-list .config').addClass(classname);
+                }
+                else {
+                    jQuery('#menu-admin-list').parent().removeClass('alert warning');
+                    jQuery('#menu-admin-list .config').removeClass('alert warning');
+                    if(jQuery('.infobox.alert').length){
+                        var container = jQuery('.infobox.alert');
+                        container.empty();
+                        container.removeClass('alert').addClass('success');
+                        container.append('<h2>Configuration have been successfully applied</h2>');
                     }
-                    else {
-                        jQuery('#menu-admin-list').parent().removeClass('alert warning');
-                        jQuery('#menu-admin-list .config').removeClass('alert warning');
-                        if(jQuery('.infobox.alert').length){
-                            var container = jQuery('.infobox.alert');
-                            container.empty();
-                            container.removeClass('alert').addClass('success');
-                            container.append('<h2>Configuration have been successfully applied</h2>');
-                        }
-                    }
+                }
 
                 var tmp = response.results;
                 for(var h in tmp) {
@@ -90,7 +92,7 @@ define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
                 jQuery(document).trigger('updated.states.onoc');
                 setTimeout(this.fetchCurrentStates.bind(this), this.cooldown);
             }.bind(this)).error(function(jqxhr, message) {
-                console.error("States request failed, maybe shinken or hokuto is down.");
+                Console.warning('States request failed (' + message + '), maybe shinken or hokuto is down.');
                 setTimeout(this.fetchCurrentStates.bind(this), this.cooldown);
             }.bind(this));
         },
@@ -113,7 +115,7 @@ define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
                     break;
                 }
             }
-            return result
+            return result;
         },
 
         /**
@@ -124,7 +126,7 @@ define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
             var host = this.getHostState(h);
 
             if(!host) {
-                console.log("No data found for " + h);
+                Console.log('No data found for ' + h);
                 return false;
             }
 
@@ -148,22 +150,22 @@ define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
                 host = this._states[h];
                 if(host.state === 1) {
                     warnings.push({
-                    'host': host.name,
-                    'output': host.plugin_output,
-                    'last_check': host.last_check,
-                    'next_check': host.next_check,
-                    'last_ok': host.last_time_up,
-                    'service': host.service_description
+                        'host': host.name,
+                        'output': host.plugin_output,
+                        'last_check': host.last_check,
+                        'next_check': host.next_check,
+                        'last_ok': host.last_time_up,
+                        'service': host.service_description
                     });
                 }
                 else if(host.state === 2) {
                     critical.push({
-                    'host': host.name,
-                    'output': host.plugin_output,
-                    'last_check': host.last_check,
-                    'next_check': host.next_check,
-                    'last_ok': host.last_time_up,
-                    'service': host.service_description
+                        'host': host.name,
+                        'output': host.plugin_output,
+                        'last_check': host.last_check,
+                        'next_check': host.next_check,
+                        'last_ok': host.last_time_up,
+                        'service': host.service_description
                     });
                 }
 
@@ -199,7 +201,7 @@ define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
          * Return the list of hosts and their related services
          */
         getServicesList: function() {
-            var results = {}
+            var results = {};
             var host = false;
             for(var h in this._states) {
                 host = this._states[h];

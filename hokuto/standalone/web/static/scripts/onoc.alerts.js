@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -26,48 +28,53 @@ define(['jquery','onoc.createurl','onoc.states'],function(jQuery,createUrl,OnocS
         warnings: [],
         critical: [],
         container: {
-            main: $('header .alerts'),
-            warnings: $('header .alerts .warnings'),
-            errors: $('header .alerts .critical')
+            main: jQuery('header .alerts'),
+            warnings: jQuery('header .alerts .warnings'),
+            errors: jQuery('header .alerts .critical')
         },
 
         /**
          * Construct containers and bind events
          */
-        _init: function(){
+        _init: function() {
             //refresh alerts when hosts/services states are updated
-            $(document).on('updated.states.onoc', this.getAlerts.bind(this));
+            jQuery(document).on('updated.states.onoc', this.getAlerts.bind(this));
+
+            //TODO: Refactoring; the warning and error sections are very similar
 
             //warning
-            this.container.warnings.on('mouseenter',function(e){
-                if(!this.warnings.length) return;
+            this.container.warnings.on('mouseenter',function() {
+                if(!this.warnings.length) 
+                    return;
                 this.container.warnings.removeClass('new');
 
-                var details = $('.alerts .details');
+                var details = jQuery('.alerts .details');
                 if(details)
                     details.remove();
 
-                var details = $('<div class="details warnings"><p class="legend"><span>Host</span><span>Service</span><span>Output</span><span>Last check</span><span>Next check</span></p></div>');
+                details = jQuery('<div class="details warnings"><p class="legend"><span>Host</span><span>Service</span><span>Output</span><span>Last check</span><span>Next check</span></p></div>');
                 var length = this.warnings.length;
                 for(var d in this.warnings)
                     details.append(this._buildAlertEntry(this.warnings[d]));
                 this.container.main.append(details);
                 var height = length * 30 + 20;
                 if(height > document.body.clientHeight - 120)
-                    height = document.body.clientHeight -120;
-                setTimeout(function(){ details.attr('style','height:'+height+'px;');},10);
+                    height = document.body.clientHeight - 120;
+                setTimeout(function() { 
+                    details.attr('style','height:'+height+'px;');
+                },10);
             }.bind(this));
 
             //errors
-            this.container.errors.on('mouseenter',function(e){
+            this.container.errors.on('mouseenter',function(){
                 if(!this.critical.length) return;
                 this.container.errors.removeClass('new');
 
-                var details = $('.alerts .details');
+                var details = jQuery('.alerts .details');
                 if(details)
                     details.remove();
 
-                var details = $('<div class="details critical"><p class="legend"><span>Host</span><span>Service</span><span>Output</span><span>Last check</span><span>Next check</span></p></div>');
+                details = jQuery('<div class="details critical"><p class="legend"><span>Host</span><span>Service</span><span>Output</span><span>Last check</span><span>Next check</span></p></div>');
                 var length = this.critical.length;
                 for(var d in this.critical)
                     details.append(this._buildAlertEntry(this.critical[d]));
@@ -79,8 +86,8 @@ define(['jquery','onoc.createurl','onoc.states'],function(jQuery,createUrl,OnocS
             }.bind(this));
 
             //hidding details when leaving the alerts arez
-            this.container.main.on('mouseleave',function(e){
-                var details = $('.alerts .details');
+            this.container.main.on('mouseleave',function(){
+                var details = jQuery('.alerts .details');
                 if(details)
                     details.remove();
             });
@@ -91,12 +98,11 @@ define(['jquery','onoc.createurl','onoc.states'],function(jQuery,createUrl,OnocS
          * Create the line for each alert
          */
         _buildAlertEntry: function(data){
-            var container = $('<p class="entry"></p>');
+            var container = jQuery('<p class="entry"></p>');
             container.append('<span>'+data.host+'</span>');
             container.append('<span>'+(data.service || '')+'</span>');
             container.append('<span>'+data.output+'</span>');
 
-            var last_ok = (data.last_ok) ? new Date(data.last_ok).toLocaleTimeString() : 'unknown';
             var next_check = (data.next_check) ? new Date(data.next_check).toLocaleTimeString() : 'unknown';
             var last_check = (data.last_check) ? new Date(data.last_check).toLocaleTimeString() : 'unknown';
 

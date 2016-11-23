@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -103,7 +105,7 @@ define([], function(){
     Predict.prototype.getProbePredicts = function(probe,start){
         if(!this.data[probe])
             return false;
-        var start = start || new Date().getTime();
+        start = start || new Date().getTime();
         var results = {};
         var values = this.data[probe].values;
         for(var v in values){
@@ -115,7 +117,7 @@ define([], function(){
         var formated = [];
         for(var i = 0, len = 5; i<len; i++){
             var tmp = [];
-            for(var v in results){
+            for(v in results){
                 tmp.push({
                     'x': Number(v),
                     'y': results[v][i]
@@ -125,19 +127,19 @@ define([], function(){
         }
 
         return formated;
-    }
+    };
 
     /**
      * Return all predicted data
      * @param {Number} start - timestamp from which we want predict data
      */
     Predict.prototype.getAll = function(start){
-        var start = start || 0;
+        start = start || 0;
         var results = {};
         for(var p in this.data)
             results[p] = this.getProbePredicts(p,start);
         return results;
-    }
+    };
 
     return Predict;
 });

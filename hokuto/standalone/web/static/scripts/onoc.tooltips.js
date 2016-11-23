@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -17,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-define([], function() {
+define(['console'], function(Console) {
     /**
      * Manage tooltips
      * [WIP] WORK IN PROGRESS
@@ -38,7 +40,7 @@ define([], function() {
         };
         this.visible = false;
         this.namespace = false;
-        this.defaultRoot = "div";
+        this.defaultRoot = 'div';
 
         //set context to body by default
         //TODO: add a setContext method
@@ -138,7 +140,7 @@ define([], function() {
         //check right position
         if((x + 100) > this.contentBox.width - window.scrollX){
             if(clientRect.width > 100)
-                x -= clientRext.width / 2;
+                x -= clientRect.width / 2;
             else
                 x -= 100;
         }
@@ -153,20 +155,20 @@ define([], function() {
      * TODO: removeme?
      */
     OnocTooltips.prototype.setNamespace = function(namespace){
-        if(typeof namespace !== "string"){
-            console.error("[onoc.tooltips] Unable to set namespace",namespace);
+        if(typeof namespace !== 'string'){
+            Console.error('[onoc.tooltips] Unable to set namespace',namespace);
             return false;
         }
         this.namespace = namespace;
         return this;
-    }
+    };
 
     /**
      * Create a new element from the current namespace if any
      */
     OnocTooltips.prototype.createElement = function(element){
-        if(typeof element !== "object" && !element.tag){
-            console.error("[onoc.tooltips] can't create element",element);
+        if(typeof element !== 'object' && !element.tag){
+            Console.error('[onoc.tooltips] can\'t create element',element);
             return false;
         }
         var elem = false;
@@ -187,8 +189,8 @@ define([], function() {
      * Create a new text element from the current namespace if any
      */
     OnocTooltips.prototype.createTextElement = function(text){
-        if(typeof text !== "string"){
-            console.error("[onoc.tooltips] can't create text element",text);
+        if(typeof text !== 'string'){
+            Console.error('[onoc.tooltips] can\'t create text element',text);
             return false;
         }
         return document.createTextNode(text);
@@ -199,10 +201,11 @@ define([], function() {
      * @param {Array} template - DOM structure
      */
     OnocTooltips.prototype.build = function(template){
-        if(typeof template !== "object"){
-            if(typeof template === "string") return this.createElement(toto);
+        if(typeof template !== 'object'){
+            if(typeof template === 'string')
+                return this.createElement(template);
             else{
-                console.error("[onoc.tooltips] Can't parse template, must be a string or an object",template);
+                Console.error('[onoc.tooltips] Can\'t parse template, must be a string or an object',template);
                 return false;
             }
         }
@@ -219,7 +222,7 @@ define([], function() {
             this._append(root,level);
 
         return root;
-    }
+    };
 
     /**
      * Recursive function, append a template tree to the root element
@@ -227,14 +230,14 @@ define([], function() {
      * @param {Array} template   - DOM structure
      * @return root
      */
-    OnocTooltips.prototype._append = function(root,template){
+    OnocTooltips.prototype._append = function(root,template) {
         for(var e in template){
             var elem = this.createElement(template[e]);
             if(template[e].childs) this._append(elem,template[e].childs);
             root.appendChild(elem);
         }
         return root;
-    }
+    };
 
     return OnocTooltips;
 });

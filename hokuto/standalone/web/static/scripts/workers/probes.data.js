@@ -53,6 +53,7 @@ define([
          */
         checkAggregate: function(data){
             var results = false, result = false, stacks = false;
+            var step, probe;
             for(var p in data.probes){
                 if(data.probes[p].stacked){
                     stacks = stacks || {};
@@ -60,7 +61,7 @@ define([
                     stacks[data.probes[p].scale].push(p);
                     continue;
                 }
-                var step = this.probes[p].getStep() * 2;
+                step = this.probes[p].getStep() * 2;
                 if(this.probes[p].checkAggregate(data.contextTimeline, [data.focusTimeline[0] - step, data.focusTimeline[1] + step])){
                     result = this.probes[p].get(data.focusTimeline[0] - step,data.focusTimeline[1] + step, data.mode);
                     results = results || {};
@@ -73,17 +74,17 @@ define([
                 for(var s in stacks){
                     var values = {};
                     var check = false;
-                    for(var p in stacks[s]){
-                        var probe = this.probes[stacks[s][p]];
-                        var step = probe.getStep() * 2;
+                    for(p in stacks[s]){
+                        probe = this.probes[stacks[s][p]];
+                        step = probe.getStep() * 2;
                         if(probe.checkAggregate(data.contextTimeline, [data.focusTimeline[0] - step, data.focusTimeline[1] + step]))
                             check = true;
                     }
 
                     if(check){
                         results = results || {};
-                        for(var p in stacks[s]){
-                            var probe = stacks[s][p];
+                        for(p in stacks[s]){
+                            probe = stacks[s][p];
                             values[probe] = this.getProbe(probe, data.focusTimeline[0], data.focusTimeline[1], data.mode, 1);
                         }
                         var aggregate = this.aggregateStack(values, data.mode);
@@ -133,14 +134,14 @@ define([
                 //get stacked data
                 for(var s in stacks){
                     var values = {};
-                    for(var p in stacks[s]){
+                    for(p in stacks[s]) {
                         values[stacks[s][p]] = this.getProbe(stacks[s][p],query['start'],query['end'],mode,1);
                     }
 
                     //aggregate theme
                     var aggregate = this.aggregateStack(values,mode);
-                    for(var s in aggregate){
-                        results[s] = aggregate[s];
+                    for(var a in aggregate) {
+                        results[a] = aggregate[a];
                     }
                 }
 
@@ -187,7 +188,7 @@ define([
                         var value = probe.values[i+j].y;
                         for(var q in stack){
                             if(q === p) continue;
-                            for(var k = cached[q] || 0, len = stack[q].values.length; k < len; k++){
+                            for(var k = cached[q] || 0, klen = stack[q].values.length; k < klen; k++){
                                 var tmp = stack[q].values[k];
                                 if(tmp.x.getTime() < time.getTime()) continue;
                                 if(tmp.x.getTime() === time.getTime())
@@ -315,7 +316,7 @@ define([
 
             var fetch = false;
             for(var p in this.probes)
-                var fetch = (this.probes[p].checkNeedFetch(start,end) || fetch);
+                fetch = (this.probes[p].checkNeedFetch(start,end) || fetch);
             if(fetch)
                 this.fetch(data,signature);
             else

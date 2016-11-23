@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -17,18 +19,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-require(['jquery','onoc.createurl'], function (jQuery, createurl) {
+require(['jquery','onoc.createurl', 'console'], function (jQuery, createurl, Console) {
     jQuery(document).ready(function() {
-        jQuery('.unitlist').find('.unit').each(function(index){
+        jQuery('.unitlist').find('.unit').each(function() {
             var id = jQuery(this).data('id');
             var container = jQuery(this);
             jQuery(this).find('.delete').click(function(){
-                jQuery.ajax(createurl("/units/delete/"+id),{
+                jQuery.ajax(createurl('/units/delete/'+id),{
                     'type': 'DELETE'
-                }).success(function(response){
+                }).success(function() {
                     container.remove();
-                }).error(function(response){
-                    console.error("Delete unit request failed!",response);
+                }).error(function(response) {
+                    Console.error('Delete unit request failed: ' + response);
                 });
             });
         });

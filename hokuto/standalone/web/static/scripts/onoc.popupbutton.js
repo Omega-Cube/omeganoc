@@ -1,4 +1,4 @@
-"use strict"
+'use strict';
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -39,7 +39,7 @@ define(['jquery'], function(jQuery) {
             
             jqThis.hide();
         });
-    }
+    };
     
     return popupButton;
 });

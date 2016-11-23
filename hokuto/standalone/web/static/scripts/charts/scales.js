@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -42,7 +44,7 @@ define(['libs/d3','onoc.units'],function(d3,Units){
         this.orient = 'left';
         this.reversed = false;
         this.log = false;
-        this.unit = "";
+        this.unit = '';
         this.format = function(d){
             return Units.unitFormat(d,Units.units[this.unit]);
         };
@@ -60,8 +62,8 @@ define(['libs/d3','onoc.units'],function(d3,Units){
     DashboardChartScale.prototype.set = function(options){
         for(var opt in options)
             this[opt] = options[opt];
-        if(!!options.reversed)
-            this.reversed = (options.reversed === "true");
+        if(options.reversed)
+            this.reversed = (options.reversed === 'true');
     };
 
     /**
@@ -84,7 +86,7 @@ define(['libs/d3','onoc.units'],function(d3,Units){
     DashboardChartScale.prototype.build = function(log){
         this.log = log;
         if(!log){
-            this.y = d3.scale.linear()
+            this.y = d3.scale.linear();
             this.y.ticks(5);
             this.y.tickFormat(this.format.bind(this));
         }else{

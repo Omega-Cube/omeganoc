@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -92,19 +94,19 @@ require(['jquery', 'console', 'onoc.createurl'], function (jQuery, Console, crea
                     target.parent().remove();
                     deleteTopMenuEntry(name);
                 }).error(function(e){
-                    console.error(e);
+                    Console.error('An error occured while removing the dashboard "' + name + '": ' + e);
                 });
             });
         });
 
         //setup rename buttons
-        dblist.find('.edit').each(function(index,element){
-            jQuery(element).click(function(event){
+        dblist.find('.edit').each(function(index,element) {
+            jQuery(element).click(function(event) {
                 var target = jQuery(event.target);
                 var dbname = target.parent().find('.name');
                 var name = target.parent().data('db');
                 var form = jQuery('<form action="#" name="renamedb"><input type="text" name="dbname" class="name" value="'+name+'"/><input class="submit" type="submit" value="ok"/></form>');
-                form.submit(function(e,f){
+                form.submit(function(e) {
                     e.preventDefault();
                     var newname = form[0].dbname.value;
                     if(newname !== name){

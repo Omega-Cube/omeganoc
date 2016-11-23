@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -16,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['onoc.createurl'], function(createUrl) {
+define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
     var Units = {
         units: {},
         unknown: {
@@ -30,9 +32,9 @@ define(['onoc.createurl'], function(createUrl) {
          */
         unitFormat : function(value,unit){
             if(value === 'unknown') return value;
-            var result = "";
+            var result = '';
             var factor = 0;
-            var unit = unit || this.unknown;
+            unit = unit || this.unknown;
             if(unit.factor){
                 while(value > unit.factor){
                     factor++;

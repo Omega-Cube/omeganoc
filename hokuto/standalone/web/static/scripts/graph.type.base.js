@@ -1,4 +1,6 @@
-﻿/*
+﻿'use strict';
+
+/*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
  * Xavier Roger-Machart, xrm@omegacube.fr
@@ -28,7 +30,7 @@ define([], function () {
 
         // This method should return an array of commands
         // that should be shown by the renderer for a specified node.
-        getCommandsForNode: function (node) {
+        getCommandsForNode: function () {
             return [];
         }
     };

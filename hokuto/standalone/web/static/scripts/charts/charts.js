@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -16,34 +18,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery',
-        'libs/d3',
-        'dashboards.manager',
-        'dashboards.widget',
-        'dashboards.probes', 
-        'onoc.createurl',
-        'charts/forms',
-        'charts/scales',
-        'onoc.units',
-        'charts/legend',
-        'charts/predict',
-        'onoc.calendar',
-        'onoc.tooltips',
-        'onoc.config'], 
-        function(jQuery, 
-                 d3,
-                 DashboardManager, 
-                 Widget, 
-                 DashboardProbes, 
-                 createUrl, 
-                 form, 
-                 DashboardChartScale, 
-                 Units, 
-                 Legends, 
-                 Predict, 
-                 Calendar, 
-                 Tooltips,
-                 Config) {
+define([
+    'jquery',
+    'libs/d3',
+    'dashboards.manager',
+    'dashboards.widget',
+    'dashboards.probes', 
+    'onoc.createurl',
+    'charts/forms',
+    'charts/scales',
+    'onoc.units',
+    'charts/legend',
+    'charts/predict',
+    'onoc.calendar',
+    'onoc.tooltips',
+    'onoc.config'
+], function(
+    jQuery, 
+    d3,
+    DashboardManager, 
+    Widget, 
+    DashboardProbes, 
+    createUrl, 
+    form, 
+    DashboardChartScale, 
+    Units, 
+    Legends, 
+    Predict, 
+    Calendar, 
+    Tooltips,
+    Config) 
+{
     /**
      * Basicchart widget class,handle multiple charts
      * @class
@@ -83,7 +88,7 @@ define(['jquery',
      * @property {Object} container         - Store containers elements
      * @property {Object} current           - Current active scales on y axis.
      */
-    var DashboardChart = function(){
+    var DashboardChart = function() {
         this.id = false;
         this.scales = {};
         this.predict = new Predict();
@@ -205,7 +210,7 @@ define(['jquery',
         this.buildScale();
         this.buildContainers(container);
         this._buildCommands();
-        this.fetchUnits(function(data){
+        this.fetchUnits(function(){
             // Once the units are available, show the "add" form 
             // if this widget does not contain any data source yet
             if(!Object.keys(options.conf.probes).length) {
@@ -225,7 +230,7 @@ define(['jquery',
             }else{
                 var host = DashboardProbes.extractHost(title);
                 var service = DashboardProbes.extractService(title);
-                if(service === '__HOST__') service = "";
+                if(service === '__HOST__') service = '';
                 var probe = host.concat('.',service);
                 var date = target.getAttribute('data-date');
                 var value = target.getAttribute('data-value');
@@ -273,13 +278,13 @@ define(['jquery',
 
         //Handle legend things ... and ... stuffs...
         this.legendManager = new Legends(this.container.legend,this.conf.width);
-        this.legendManager.extend = function(computedHeight){
+        this.legendManager.extend = function(){
             this.updateBoxSize();
         }.bind(this);
 
         // For the rest of the initialization we need the probes data
         // to be ready; the callback here will be called when it is
-        DashboardProbes.onMetricsReady(function(metrics) {
+        DashboardProbes.onMetricsReady(function() {
             this.probes = options.conf.probes;
             //toogle the spinner if probes
             if(Object.keys(this.probes).length){
@@ -306,27 +311,27 @@ define(['jquery',
                         'color': this.probes[p].color
                     });
     
-                    this.legendManager.getProbeContainer(p).on('click',function(){
+                    this.legendManager.getProbeContainer(p).on('click',function() {
                         this.context.moveOrderToTop(this.probe);
-                    }.bind({"context": this, "probe": p}));
+                    }.bind({'context': this, 'probe': p}));
                 }
                 this.counter = order;
             }
     
             //draw the legend and resize the box
-            var setLegend = function(){
+            var setLegend = function() {
                 var check = this.legendManager.redraw();
                 if(!check){
                     setTimeout(setLegend.bind(this),1000);
                     return;
                 }
                 this.updateBoxSize();
-            }
+            };
             setLegend.call(this);
     
             //add listeners to the probe worker to update this chart on updates
             DashboardProbes.worker.on('cursor',this.showCursor.bind(this));
-            DashboardProbes.worker.on('fetch', function(data){
+            DashboardProbes.worker.on('fetch', function() {
                 this.container.main.parent().find('.refresh').attr('class','refresh');
                 DashboardProbes.worker.postMessage([6,{
                     'probes': this.probes,
@@ -376,12 +381,12 @@ define(['jquery',
                         this.container.context.select('.x.brush').call(this.container.brush);
                         this.axis.x.domain([this.conf.brushstart, this.conf.brushend]);
     
-                        DashboardProbes.worker.postMessage([8,{
+                        DashboardProbes.worker.postMessage([8, {
                             'probes': this.probes,
                             'contextTimeline': [context[0].getTime(),context[1].getTime()],
                             'focusTimeline': [this.conf.brushstart.getTime(),this.conf.brushend.getTime()],
                             'mode': this.conf.mode
-                        },this.id])
+                        },this.id]);
                     }.bind(this),500);
                 }
             }.bind(this), this.id);
@@ -389,7 +394,6 @@ define(['jquery',
                 var stacked = {};
                 for(var p in data){
                     var probe = this.probes[p];
-                    var scale = this.scales[probe.scale];
                     if(probe.stacked){
                         stacked[probe.scale] = stacked[probe.scale] || {};
                         stacked[probe.scale][p] = data[p];
@@ -400,7 +404,7 @@ define(['jquery',
                     var stackedData = DashboardProbes.getStackedData(stacked[s],data);
                     if(stackedData.length){
                         var i = 0;
-                        for(var p in stacked[s]){
+                        for(p in stacked[s]){
                             data[p].values = stackedData[i];
                             //if(this.content[p])
                             //    this.content[p].redraw(stackedData[i]);
@@ -409,7 +413,7 @@ define(['jquery',
                     }
                 }
                 //prevent any glitch if the worker havn't returned all probes for any reason
-                for(var p in this.currentData){
+                for(p in this.currentData) {
                     if(!data[p]){
                         data[p] = this.currentData[p];
                     }
@@ -422,7 +426,7 @@ define(['jquery',
             }.bind(this),this.id);
     
             //main timeline events
-            $('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
+            jQuery('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
                 var domain = this.axis.x2.domain();
                 this.conf.brushstart = start;
                 this.conf.brushend = end;
@@ -432,7 +436,7 @@ define(['jquery',
                     for(var c in this.content)
                         this.content[c].redraw();
                     this.drawLogs();
-                    this.container.focus.select(".x.axis").call(this.axis.xAxis);
+                    this.container.focus.select('.x.axis').call(this.axis.xAxis);
                     this.drawGrid();
                     this.container.brush.extent([start,end]);
                     this.container.context.call(this.container.brush);
@@ -491,7 +495,7 @@ define(['jquery',
      * @param {$Element} container - the container which will show the spinner
      */
     DashboardChart.prototype.toogleSpinner = function(container){
-        var spinner = $('<img width="16" height="16" alt="loading" class="spinner" src="/static/images/jstree/throbber.gif" />');
+        var spinner = jQuery('<img width="16" height="16" alt="loading" class="spinner" src="/static/images/jstree/throbber.gif" />');
         container.append(spinner);
     };
 
@@ -522,16 +526,16 @@ define(['jquery',
         this.conf.trackMargin.top += this.conf.chartHeight + chartMargin.top;
 
         this.conf.width = this.conf.containerWidth - chartMargin.left - chartMargin.right;
-    }
+    };
 
     /**
      * Build d3 axis objects
      */
-    DashboardChart.prototype.buildAxis = function(){
+    DashboardChart.prototype.buildAxis = function() {
         // Create x axis generators
         var maxTicks = Math.floor(this.conf.width / 80);
-        this.axis.xAxis = d3.svg.axis().ticks(maxTicks).scale(this.axis.x).orient("bottom");
-        this.axis.xAxis2 = d3.svg.axis().ticks(maxTicks).scale(this.axis.x2).orient("bottom");
+        this.axis.xAxis = d3.svg.axis().ticks(maxTicks).scale(this.axis.x).orient('bottom');
+        this.axis.xAxis2 = d3.svg.axis().ticks(maxTicks).scale(this.axis.x2).orient('bottom');
 
         this.container.focus.select('.x.axis').call(this.axis.xAxis);
         this.container.context.select('.x.axis').call(this.axis.xAxis2);
@@ -554,12 +558,12 @@ define(['jquery',
                 this.container.focus.select('.y.axis.reversed.right').select('g').remove();
         }
         this.drawGrid();
-    }
+    };
 
     /**
      * Draw the background grid
      */
-    DashboardChart.prototype.drawGrid = function(){
+    DashboardChart.prototype.drawGrid = function() {
         var container = this.container.grid;
         var x= this.axis.x;
 
@@ -567,47 +571,48 @@ define(['jquery',
         var vert = x.ticks();
         var v = container.selectAll('.vert_grid').data(vert);
         v.exit().remove();
-        v.enter().append('line').attr("class","vert_grid").attr("stroke","grey").attr("y1",0).attr("opacity","0.5").attr("stroke-width",1.15);
-        v.attr("x1",function(d){ return x(d); }).attr("x2",function(d){ return x(d);}).attr("y2", this.conf.chartHeight);
+        v.enter().append('line').attr('class','vert_grid').attr('stroke','grey').attr('y1',0).attr('opacity','0.5').attr('stroke-width',1.15);
+        v.attr('x1',function(d){ return x(d); }).attr('x2',function(d){ return x(d);}).attr('y2', this.conf.chartHeight);
 
         //horizontal lines
         var values = [];
+        var y, ticks, i, len;
         if(this.current['left']['top'] && this.scales[this.current['left']['top']]){
-            var y = this.scales[this.current['left']['top']].y;
-            var ticks = y.ticks(5);
-            for(var i = 0, len = ticks.length; i<len;i++)
+            y = this.scales[this.current['left']['top']].y;
+            ticks = y.ticks(5);
+            for(i = 0, len = ticks.length; i<len;i++)
                 values.push(y(ticks[i]));
         }else if(this.current['right']['top'] && this.scales[this.current['right']['top']]){
-            var y = this.scales[this.current['right']['top']].y;
-            var ticks = y.ticks(5);
-            for(var i = 0, len = ticks.length; i<len;i++)
+            y = this.scales[this.current['right']['top']].y;
+            ticks = y.ticks(5);
+            for(i = 0, len = ticks.length; i<len;i++)
                 values.push(y(ticks[i]));
         }
         if(this.current['left']['opposate'] && this.scales[this.current['left']['opposate']]){
-            var y = this.scales[this.current['left']['opposate']].y;
-            var ticks = y.ticks(5);
-            for(var i = 0, len = ticks.length; i<len;i++)
+            y = this.scales[this.current['left']['opposate']].y;
+            ticks = y.ticks(5);
+            for(i = 0, len = ticks.length; i<len;i++)
                 values.push(y(ticks[i]));
         }else if(this.current['right']['opposate'] && this.scales[this.current['right']['opposate']]){
-            var y = this.scales[this.current['right']['opposate']].y;
-            var ticks = y.ticks(5);
-            for(var i = 0, len = ticks.length; i<len;i++)
+            y = this.scales[this.current['right']['opposate']].y;
+            ticks = y.ticks(5);
+            for(i = 0, len = ticks.length; i<len;i++)
                 values.push(y(ticks[i]));
         }
 
         var h = container.selectAll('.hor_grid').data(values);
         h.exit().remove();
-        h.enter().append('line').attr("class","hor_grid").attr("stroke","grey").attr("x1",0).attr("opacity","0.5").attr("stroke-width",1.15);
-        h.attr("y1",function(d){ return d; }).attr("y2",function(d){ return d;}).attr("x2", this.conf.width);
-    }
+        h.enter().append('line').attr('class','hor_grid').attr('stroke','grey').attr('x1',0).attr('opacity','0.5').attr('stroke-width',1.15);
+        h.attr('y1',function(d){ return d; }).attr('y2',function(d){ return d;}).attr('x2', this.conf.width);
+    };
 
     /**
      * Add a new scale
      * @param {String} name    - The scale name
      * @param {Object} options - Scale configuration
      */
-    DashboardChart.prototype.addScale = function(name, options){
-        if(!!options && options.reversed === 'true' && !this.opposate){
+    DashboardChart.prototype.addScale = function(name, options) {
+        if(!!options && options.reversed === 'true' && !this.opposate) {
             this.opposate = true;
             for(var s in this.scales){
                 this.scales[s].height /= 2;
@@ -616,32 +621,37 @@ define(['jquery',
             }
         }
 
-        if(!this.opposate){
-            var height = this.conf.chartHeight - 22;
-            var trackHeight = this.conf.trackHeight;
-        }else{
-            var height = (this.conf.chartHeight - 22) / 2;
-            var trackHeight = this.conf.trackHeight / 2;
+        var height, trackHeight;
+        if(!this.opposate) {
+            height = this.conf.chartHeight - 22;
+            trackHeight = this.conf.trackHeight;
+        }
+        else {
+            height = (this.conf.chartHeight - 22) / 2;
+            trackHeight = this.conf.trackHeight / 2;
         }
         if(!this.scales[name]){
             this.scales[name] = new DashboardChartScale(name);
             this.scales[name].height = height;
             this.scales[name].trackHeight = trackHeight;
         }
-        if(options){
+        if(options) {
             this.scales[name].set(options);
             if(options.reversed === 'true'){
-                if(options.orient && options.orient === 'right' && !this.current['right']['opposate']){
+                if(options.orient && options.orient === 'right' && !this.current['right']['opposate']) {
                     this.current['right']['opposate'] = name;
                     this._enableSwitchButton('right','opposate',name);
-                }else if(!this.current['left']['opposate'] && options.orient !== 'right'){
+                }
+                else if(!this.current['left']['opposate'] && options.orient !== 'right') {
                     this.current['left']['opposate'] = name;
                     this._enableSwitchButton('left','opposate',name);
                 }
-            }else if(options.orient && options.orient === 'right' && !this.current['right']['top']){
+            }
+            else if(options.orient && options.orient === 'right' && !this.current['right']['top']) {
                 this.current['right']['top'] = name;
                 this._enableSwitchButton('right','top',name);
-            }else if(options.orient === 'left' && !this.current['left']['top']){
+            }
+            else if(options.orient === 'left' && !this.current['left']['top']) {
                 this.current['left']['top'] = name;
                 this._enableSwitchButton('left','top',name);
             }
@@ -652,7 +662,7 @@ define(['jquery',
         }
         this.scales[name].build(this.conf.log);
         return this.scales[name];
-    }
+    };
 
     /**
      * Build d3 scales, which are used for convertion between date/value and coord.
@@ -663,7 +673,7 @@ define(['jquery',
         this.axis.x2 = d3.time.scale().range([0, this.conf.width]);
         for(var i in this.scales)
             this.scales[i].build(this.conf.log);
-    }
+    };
 
     /**
      * Deffine the domain for each scale.
@@ -695,13 +705,13 @@ define(['jquery',
 
         //predict
         var predict = this.predict.getAll(x.max);
-        for(var d in data){
+        for(d in data){
             if(predict[d]){
-                var scale = this.scales[this.probes[d].scale];
+                scale = this.scales[this.probes[d].scale];
                 var min = false;
                 var max = false;
                 for(var p in predict[d]){
-                    for(var i in predict[d][p]){
+                    for(i in predict[d][p]){
                         var v = predict[d][p][i].y;
                         min = (typeof(min) === 'boolean' || v < min) ? v : min;
                         max = (typeof(max) === 'boolean' || v > max) ? v : max;
@@ -741,7 +751,7 @@ define(['jquery',
         this.buildAxis();
         //update date forms
         this.updateDateForms(this.axis.x2.domain()[0], this.axis.x2.domain()[1]);
-    }
+    };
 
     /**
      * Called on resize event
@@ -751,9 +761,8 @@ define(['jquery',
     DashboardChart.prototype.updateBoxSize = function(width,height){
         var oldWidth = this.conf.width;
         var chartMargin = this.conf.chartMargin;
-        var trackMargin = this.conf.trackMargin;
 
-        if(width && height){
+        if(width && height) {
             this.conf.containerHeight = DashboardManager.getPartHeight(height);
             this.conf.containerWidth = DashboardManager.getPartWidth(width);
         }
@@ -796,20 +805,22 @@ define(['jquery',
         this.container.context.attr('transform','translate('+ this.conf.trackMargin.left +','+ this.conf.trackMargin.top  +')');
 
         //scales
-        if(!this.opposate){
-            var height = this.conf.chartHeight - 22;
-            var trackHeight = this.conf.trackHeight;
-        }else{
-            var height = (this.conf.chartHeight - 22) / 2;
-            var trackHeight = this.conf.trackHeight / 2;
+        var trackHeight = 0;
+        if(!this.opposate) {
+            height = this.conf.chartHeight - 22;
+            trackHeight = this.conf.trackHeight;
         }
-        for(var s in this.scales){
+        else {
+            height = (this.conf.chartHeight - 22) / 2;
+            trackHeight = this.conf.trackHeight / 2;
+        }
+        for(var s in this.scales) {
             this.scales[s].height = height;
             this.scales[s].trackHeight = trackHeight;
         }
 
         //panel, force close event to reinitialize panel size
-        if(!this.panelUp){
+        if(!this.panelUp) {
             this.panelUp = true;
             this.tooglePanel();
         }
@@ -860,7 +871,6 @@ define(['jquery',
             var stacked = {};
             for(var p in data){
                 var probe = this.probes[p];
-                var scale = this.scales[probe.scale];
                 if(!probe.stacked && typeof this.content[p] !== 'undefined')
                     this.content[p].redraw(data[p].values);
                 else{
@@ -868,11 +878,11 @@ define(['jquery',
                     stacked[probe.scale][p]= data[p];
                 }
             }
-            for(var s in stacked){
+            for(s in stacked){
                 var stackedData = DashboardProbes.getStackedData(stacked[s],data);
                 if(stackedData.length){
                     var i = 0;
-                    for(var p in stacked[s]){
+                    for(p in stacked[s]){
                         if(this.content[p])
                             this.content[p].redraw(stackedData[i]);
                         i++;
@@ -887,82 +897,83 @@ define(['jquery',
      * @param {DOMElement} container - Main container DOMElement
      * TODO: Refactor
      */
-    DashboardChart.prototype.buildContainers = function(container){
-        $(container).addClass('basicchart');
-        var svg = d3.select(container).append("svg")
-            .attr("width", this.conf.width + this.conf.chartMargin.left + this.conf.chartMargin.right)
-            .attr("height", this.conf.chartHeight + this.conf.chartMargin.top + this.conf.chartMargin.bottom)
+    DashboardChart.prototype.buildContainers = function(container) {
+        var $container = jQuery(container);
+        $container.addClass('basicchart');
+        var svg = d3.select(container).append('svg')
+            .attr('width', this.conf.width + this.conf.chartMargin.left + this.conf.chartMargin.right)
+            .attr('height', this.conf.chartHeight + this.conf.chartMargin.top + this.conf.chartMargin.bottom)
             .attr('class', 'basicchart');
 
         //clipPath defs
-        var defs = svg.append("defs");
-        defs.append("clipPath")
-            .attr("id", "clip_"+this.id)
-            .append("rect")
-            .attr("width", this.conf.width)
-            .attr("height", this.conf.chartHeight);
+        var defs = svg.append('defs');
+        defs.append('clipPath')
+            .attr('id', 'clip_'+this.id)
+            .append('rect')
+            .attr('width', this.conf.width)
+            .attr('height', this.conf.chartHeight);
 
-        defs.append("defs").append("clipPath")
-            .attr("id", "clip_top_"+this.id)
-            .append("rect")
-            .attr("width", this.conf.width)
-            .attr("height", (this.conf.chartHeight - 22 )/ 2);
+        defs.append('defs').append('clipPath')
+            .attr('id', 'clip_top_'+this.id)
+            .append('rect')
+            .attr('width', this.conf.width)
+            .attr('height', (this.conf.chartHeight - 22 )/ 2);
 
-        defs.append("defs").append("clipPath")
-            .attr("id", "clip_bottom_"+this.id)
-            .append("rect")
-            .attr("width", this.conf.width)
-            .attr("height", (this.conf.chartHeight - 22 )/ 2)
-            .attr("y", (this.conf.chartHeight - 22 )/ 2);
+        defs.append('defs').append('clipPath')
+            .attr('id', 'clip_bottom_'+this.id)
+            .append('rect')
+            .attr('width', this.conf.width)
+            .attr('height', (this.conf.chartHeight - 22 )/ 2)
+            .attr('y', (this.conf.chartHeight - 22 )/ 2);
 
 
         //commands and datepicker selectors
-        this.container.commands = $(container).parent().find('.widget-commands');
+        this.container.commands = $container.parent().find('.widget-commands');
         this.container.date = {
-            'from': $(container).parent().find('.datePicker.from'),
-            'until': $(container).parent().find('.datePicker.until'),
+            'from': $container.parent().find('.datePicker.from'),
+            'until': $container.parent().find('.datePicker.until'),
         };
 
-        var fromCalendar = new Calendar(this.container.date.from, this.updateFromDate.bind(this), $(container));
-        var untilCalendar = new Calendar(this.container.date.until, this.updateUntilDate.bind(this), $(container));
+        new Calendar(this.container.date.from, this.updateFromDate.bind(this), $container);
+        new Calendar(this.container.date.until, this.updateUntilDate.bind(this), $container);
 
         //prevent drag into the svg to trigger the drag event from gridster
         container.addEventListener('mousedown',function(e){
             e.stopPropagation();
         },false);
 
-        var grid = svg.append("g")
-            .attr("transform", "translate(" + this.conf.chartMargin.left + "," + this.conf.chartMargin.top + ")");
+        var grid = svg.append('g')
+            .attr('transform', 'translate(' + this.conf.chartMargin.left + ',' + this.conf.chartMargin.top + ')');
         this.container.grid = grid;
 
         // Focus is the top chart (the zoomed-in one)
-        var focus = svg.append("g")
-            .attr("transform", "translate(" + this.conf.chartMargin.left + "," + this.conf.chartMargin.top + ")")
-            .attr("class", "parts-focus");
+        var focus = svg.append('g')
+            .attr('transform', 'translate(' + this.conf.chartMargin.left + ',' + this.conf.chartMargin.top + ')')
+            .attr('class', 'parts-focus');
 
-        focus.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + this.conf.chartHeight + ")");
+        focus.append('g')
+            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,' + this.conf.chartHeight + ')');
 
-        focus.append("g")
-            .attr("class", "y axis");
+        focus.append('g')
+            .attr('class', 'y axis');
 
-        focus.append("g")
-            .attr("class", "y axis reversed");
+        focus.append('g')
+            .attr('class', 'y axis reversed');
 
-        focus.append("g")
-            .attr("class", "y axis right")
-            .attr("transform","translate("+this.conf.width+",0)");
+        focus.append('g')
+            .attr('class', 'y axis right')
+            .attr('transform','translate('+this.conf.width+',0)');
 
-        focus.append("g")
-            .attr("class", "y axis right reversed")
-            .attr("transform","translate("+this.conf.width+",0)");
+        focus.append('g')
+            .attr('class', 'y axis right reversed')
+            .attr('transform','translate('+this.conf.width+',0)');
 
         this.container.focus = focus;
 
         //logs and infobox
         var logs = svg.append('g').attr('class','logs')
-            .attr("clip-path", "url(#clip_"+this.id+")")
+            .attr('clip-path', 'url(#clip_'+this.id+')')
             .attr('transform','translate('+this.conf.chartMargin.left+','+this.conf.chartMargin.top+')');
         logs.append('rect')
             .attr('width',this.conf.width - 4)
@@ -978,9 +989,12 @@ define(['jquery',
         var cursorListener = container.getElementsByClassName('parts-focus')[0];
         cursorListener.addEventListener('mousemove',function(e){
             var offset = e.target.offsetLeft || 0, parent = e.target;
-            while(parent = parent.parentNode)
+
+            while(parent) {
                 if(parent.offsetLeft && !isNaN(parent.offsetLeft))
                     offset+= parent.offsetLeft;
+                parent = parent.parentNode;
+            }
 
             var date = this.axis.x.invert(e.pageX - offset - this.conf.chartMargin.left);
             this.cursorPos = date;
@@ -988,40 +1002,40 @@ define(['jquery',
         }.bind(this),true);
 
         // Context displays the overview chart
-        var context = svg.append("g")
-            .attr("transform", "translate(" + this.conf.trackMargin.left + "," + this.conf.trackMargin.top + ")");
+        var context = svg.append('g')
+            .attr('transform', 'translate(' + this.conf.trackMargin.left + ',' + this.conf.trackMargin.top + ')');
 
         // X axis legend for the overview
-        context.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + this.conf.trackHeight + ")");
+        context.append('g')
+            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,' + this.conf.trackHeight + ')');
 
         //legend
-        var legend = svg.append("g")
-            .attr("transform", "translate("+this.conf.chartMargin.left+"," + (this.conf.containerHeight - 42) + ")");
+        var legend = svg.append('g')
+            .attr('transform', 'translate('+this.conf.chartMargin.left+',' + (this.conf.containerHeight - 42) + ')');
         this.container.legend = legend;
 
         // Zooming cursor on the overview
         var brush = d3.svg.brush()
             .x(this.axis.x2)
-            .on("brush", this.brushed.bind(this),true);
-        brush.on("brushstart",function(e){
+            .on('brush', this.brushed.bind(this),true);
+        brush.on('brushstart',function() {
             var context = this.axis.x.domain();
             var focus = this.axis.x2.domain();
-            DashboardProbes.worker.postMessage([8,{
+            DashboardProbes.worker.postMessage([8, {
                 'probes': this.probes,
                 'contextTimeline': [context[0].getTime(),context[1].getTime()],
                 'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
                 'mode': this.conf.mode
             },this.id]);
         }.bind(this));
-        brush.on("brushend",function(e){
+        brush.on('brushend',function() {
             var context = this.axis.x2.domain();
             var focus = this.axis.x.domain();
             this.needAutoScale = true;
 
             //... Dunno why in some case the pointer-event is stuck to "none".
-            this.container.context.select('.x.brush').attr("style","pointer-events:all;");
+            this.container.context.select('.x.brush').attr('style','pointer-events:all;');
 
             //save brush state
             var data = {
@@ -1044,17 +1058,17 @@ define(['jquery',
         }.bind(this));
 
         this.container.brush = brush;
-        context.append("g")
-            .attr("class", "x brush")
+        context.append('g')
+            .attr('class', 'x brush')
             .call(brush)
-            .selectAll("rect")
-            .attr("y", -6)
-            .attr("height", this.conf.trackHeight + 7);
+            .selectAll('rect')
+            .attr('y', -6)
+            .attr('height', this.conf.trackHeight + 7);
 
         //focus zooming cursor
         brush = d3.svg.brush()
             .x(this.axis.x)
-            .on("brushend", function(e){
+            .on('brushend', function() {
                 var max = this.axis.x.domain();
                 if(brush.empty())
                     return;
@@ -1070,7 +1084,7 @@ define(['jquery',
                     this.content[c].redraw();
                 this.drawLogs();
 
-                this.container.focus.select(".x.axis").call(this.axis.xAxis);
+                this.container.focus.select('.x.axis').call(this.axis.xAxis);
                 this.drawGrid();
 
                 brush.clear();
@@ -1100,18 +1114,18 @@ define(['jquery',
 
             }.bind(this),true);
         this.container.focusBrush = brush;
-        focus.append("g")
-            .attr("class", "x brush")
+        focus.append('g')
+            .attr('class', 'x brush')
             .call(brush)
-            .selectAll("rect")
-            .attr("y", -6)
-            .attr("height", this.conf.chartHeight + 7);
+            .selectAll('rect')
+            .attr('y', -6)
+            .attr('height', this.conf.chartHeight + 7);
 
         //wheel zoom
         focus.on('wheel',this.zoom.bind(this));
 
         this.container.context = context;
-    }
+    };
 
     /**
      * Build a scale-switch button
@@ -1127,17 +1141,24 @@ define(['jquery',
             .attr('class','chartButton')
             .attr('transform','translate('+left+','+top+')');
 
+        var unit = (current) ? this.scales[current].unit : false;
         button.append('rect')
             .attr('width','80')
             .attr('height','20')
             .attr('fill','#000')
             .attr('data-tooltip','Unit displayed on this scale, click to switch to the next one.')
             .attr('stroke','#57b4dc');
-        if(!current) button.attr('style','display: none;');
-        var unit = (current) ? this.scales[current].unit : false;
-        var text = button.append('text').text(unit).attr('fill','#57b4dc').attr('text-anchor','middle').attr('x',41).attr('y',12).attr('pointer-events','none');
+        if(!current) 
+            button.attr('style','display: none;');
+        button.append('text')
+              .text(unit)
+              .attr('fill','#57b4dc')
+              .attr('text-anchor','middle')
+              .attr('x',41)
+              .attr('y',12)
+              .attr('pointer-events','none');
 
-        button.on('click',function(e){
+        button.on('click',function() {
             this.switchScale(orient,direction);
         }.bind(this));
 
@@ -1158,7 +1179,7 @@ define(['jquery',
         }
         container.attr('style','');
         container.select('text').text(this.scales[name].unit);
-    }
+    };
 
     /**
      * Build global commands (log, aggregation mode etc...)
@@ -1187,8 +1208,8 @@ define(['jquery',
         var actionsMenu = this.container.main.parent().find('.actions.dropmenu ul');
 
         //reset
-        var button = $('<li class="reset">reset</li>');
-        button.click(function(e){
+        var button = jQuery('<li class="reset">reset</li>');
+        button.click(function() {
             this.conf.brushstart = false;
             this.conf.brushend = false;
             this.container.brush.clear();
@@ -1221,37 +1242,37 @@ define(['jquery',
         actionsMenu.prepend(button);
 
         //clone
-        var button = $('<li class="clone">duplicate</li>');
-        button.click(function(e){
+        button = jQuery('<li class="clone">duplicate</li>');
+        button.click(function() {
             this.toogleDupPanel();
         }.bind(this));
         actionsMenu.prepend(button);
 
         //edit
-        var button = $('<li class="edit">edit</li>');
-        button.click(function(e){
+        button = jQuery('<li class="edit">edit</li>');
+        button.click(function() {
             this.toogleEditPanel();
         }.bind(this));
         actionsMenu.prepend(button);
 
         //add
-        var button = $('<li class="add">add</li>');
-        button.click(function(e){
+        button = jQuery('<li class="add">add</li>');
+        button.click(function() {
             this.toogleAddPanel();
         }.bind(this));
         actionsMenu.prepend(button);
 
         //commands
         //rescale
-        var button = $('<span class="rescale" title="Fit scales verticaly" data-tooltip="Fit scales verticaly"></span>');
+        button = jQuery('<span class="rescale" title="Fit scales verticaly" data-tooltip="Fit scales verticaly"></span>');
         button.click(this.autoScale.bind(this));
         container.append(button);
 
         //log
         var style = (this.conf.log) ? 'enabled':'disabled';
-        var button = $('<button class="log '+style+'" data-tooltip="Set to logarithm mode">log</button>')
+        button = jQuery('<button class="log '+style+'" data-tooltip="Set to logarithm mode">log</button>');
 
-        button.click(function(e){
+        button.click(function() {
             this.conf.log = !this.conf.log;
             var style = (this.conf.log) ? 'enabled':'disabled';
             this.buildScale();
@@ -1278,10 +1299,10 @@ define(['jquery',
 
         //mode
         var modes = ['max','min','avg'];
-        var button = $('<button class="mode" data-tooltip="Set aggregation rules"></button>');
+        button = jQuery('<button class="mode" data-tooltip="Set aggregation rules"></button>');
         button.text(this.conf.mode);
 
-        button.on('click',function(e){
+        button.on('click',function() {
             var index = modes.indexOf(this.conf.mode);
             index++;
             if(index === modes.length)
@@ -1300,7 +1321,7 @@ define(['jquery',
 
             DashboardManager.savePartData({
                 'id': this.id,
-                'conf': JSON.stringify({"mode": this.conf.mode})
+                'conf': JSON.stringify({'mode': this.conf.mode})
             });
         }.bind(this));
         container.append(button);
@@ -1448,6 +1469,7 @@ define(['jquery',
     DashboardChart.prototype.draw = function(data){
         var probes= this.probes;
         var predicted = this.predict.getAll(Date.now());
+        var scale, p, probe, id, type, color, values;
 
         if(!Object.keys(probes).length)
             return;
@@ -1455,13 +1477,14 @@ define(['jquery',
 
         //set the domain
         //TODO: we should set domains only when we received new data from the server or with aggregation events (and no-max mode).
-        for(var p in data){
-            if(probes[p].stacked){
+        for(p in data) {
+            if(probes[p].stacked) {
                 stacked[probes[p].scale] = stacked[probes[p].scale] || {};
                 stacked[probes[p].scale][p] = probes[p];
             }
         }
-        for(var s in stacked){
+
+        for(var s in stacked) {
             stacked[s]._stackedData = DashboardProbes.getStackedData(stacked[s],data);
             if(stacked[s]._stackedData.length)
                 this.scales[s].updateDomain(stacked[s]._stackedData[stacked[s]._stackedData.length - 1]);
@@ -1469,17 +1492,17 @@ define(['jquery',
 
         //draw probes
         var errors = [];
-        for(var p in data){
-            if(data[p].error){
-                if(!!this._pending)
+        for(p in data) {
+            if(data[p].error) {
+                if(this._pending)
                     errors.push(data[p]);
                 continue;
             }
-            var probe = probes[p];
+            probe = probes[p];
             if(!probe)
                 continue;
-            var id = p;
-            var scale = probe.scale || 'default';
+            id = p;
+            scale = probe.scale || 'default';
             if(probe.stacked) continue;
 
             if(p in this.content){
@@ -1487,9 +1510,9 @@ define(['jquery',
                 continue;
             }
 
-            var type = probe.type || "area";
-            var color = probe.color || "red";
-            var values = data[p].values;
+            type = probe.type || 'area';
+            color = probe.color || 'red';
+            values = data[p].values;
 
             switch(type){
             case 'column':
@@ -1517,47 +1540,47 @@ define(['jquery',
         this.drawLogs();
 
         //draw stacked charts
-        for(var s in stacked){
+        for(s in stacked){
             var stackedData = stacked[s]._stackedData;
             var stackedPredict = [];
-            var scale = this.scales[s];
+            scale = this.scales[s];
             if(predicted)
-                for(var p in stacked[s])
+                for(p in stacked[s])
                     if(p in predicted)
                         stackedPredict.push(predicted[p]);
 
             var layoutPredict = d3.layout.stack();
 
             if(stackedData.length){
+                var i = 0;
                 if(predicted){
-                    for(var i in stackedPredict[0]){
+                    for(i in stackedPredict[0]){
                         var tmp = [];
                         for(var predict in stackedPredict)
                             tmp.push(stackedPredict[predict][i]);
 
                         tmp = layoutPredict(tmp);
 
-                        for(var predict in stackedPredict)
+                        for(predict in stackedPredict)
                             stackedPredict[predict][i] = tmp[predict];
                     }
                 }
 
                 //draw probes
-                var i = 0;
-                for(var p in stacked[s]){
+                for(p in stacked[s]){
                     if(p === '_stackedData')
                         continue;
-                    var probe = stacked[s][p];
-                    var id = p;
+                    probe = stacked[s][p];
+                    id = p;
 
                     if(p in this.content){
                         this.content[p].redraw();
                         continue;
                     }
 
-                    var type = probe.type || "column";
-                    var color = probe.color || "red";
-                    var values = stackedData[i];
+                    type = probe.type || 'column';
+                    color = probe.color || 'red';
+                    values = stackedData[i];
 
                     switch(type){
                     case 'column':
@@ -1572,7 +1595,6 @@ define(['jquery',
                     //draw predicted data
                     if(predicted && p in predicted){
                         this.addPredict(stackedPredict[i],color,values,scale.y,p);
-
                     }
                     i++;
                 }
@@ -1656,9 +1678,11 @@ define(['jquery',
             'order': Number(this.probes[p].order),
             'name': 'chart_'+p.split(Config.separator()).join('_')
         });
-        this.container.focus.selectAll('.ordered').data(data,function(d,e){
+        this.container.focus.selectAll('.ordered').data(data,function(d) {
             return  d ? d.name : this.id;
-        }).sort(function(d,e){ return d.order - e.order;});
+        }).sort(function(d,e) {
+            return d.order - e.order;
+        });
     };
 
     /**
@@ -1670,13 +1694,13 @@ define(['jquery',
         var width = alert.length * 8;
         var height = 30;
 
-        if(container.empty()){
-            var container = this.container.focus.append('g')
+        if(container.empty()) {
+            container = this.container.focus.append('g')
                 .attr('class','alert')
                 .attr('style','cursor:pointer;')
                 .attr('transform','translate('+((this.conf.width - width) /2)+','+(this.conf.chartHeight/2 + 20)+')');
 
-            var bg = container.append('rect')
+            container.append('rect')
                 .attr('width', width)
                 .attr('height',height)
                 .attr('fill','black')
@@ -1685,7 +1709,8 @@ define(['jquery',
             container.on('click',function(){
                 container.remove();
             });
-        }else{
+        }
+        else {
             if(alert === container.select('text').text())
                 return;
             height +=20;
@@ -1693,7 +1718,7 @@ define(['jquery',
                 container.select('rect').attr('width',width);
             container.select('rect').attr('height',height);
         }
-        var text = container.append('text')
+        container.append('text')
             .attr('text-anchor','left')
             .attr('x', 5)
             .attr('y',height/2)
@@ -1763,59 +1788,58 @@ define(['jquery',
      */
     DashboardChart.prototype.placeLogs = function(logs){
         var container = this.container.logs;
-        var containerWidth = this.conf.width;
         var height = this.conf.chartHeight;
 
         var contextContainer = this.container.context.select('.logs');
         if(contextContainer.empty()) contextContainer = this.container.context.append('g').attr('class','logs');
-        var logBox = container.selectAll("g.box").data(logs);
+        var logBox = container.selectAll('g.box').data(logs);
 
         logBox.exit().remove();
         var newBox = logBox.enter().append('g')
             .attr('class','box')
             .attr('style','cursor:pointer;');
         newBox.append('rect')
-            .attr("x",9)
-            .attr("y",0)
-            .attr("width",0)
+            .attr('x',9)
+            .attr('y',0)
+            .attr('width',0)
             .attr('height',height)
             .attr('class','logs-bar');
 
         newBox.append('circle')
-            .attr("cx", 10)
-            .attr("cy", height - 12)
-            .attr("r",10)
-            .attr("stroke","black");
+            .attr('cx', 10)
+            .attr('cy', height - 12)
+            .attr('r',10)
+            .attr('stroke','black');
 
         newBox.append('text')
-            .attr("x",10.5)
-            .attr("y", height - 7)
+            .attr('x',10.5)
+            .attr('y', height - 7)
             .attr('font-size',15)
             .attr('font-weight','bolder')
-            .attr("text-anchor","middle")
-            .attr("fill","white")
+            .attr('text-anchor','middle')
+            .attr('fill','white')
             .text('!');
         newBox.append('title');
 
         newBox.on('click', function(d){
             this.toogleLogsPanel(d);
         }.bind(this));
-        newBox.on('mouseover',function(d){
+        newBox.on('mouseover',function(){
             d3.select(this).select('rect').attr('width',2);
         });
-        newBox.on('mouseout',function(d){
+        newBox.on('mouseout',function(){
             d3.select(this).select('rect').attr('width',0);
         });
 
 
         logBox.select('title').text(function(d){
-            return d.warnings+" warnings and "+d.errors+" errors";
+            return d.warnings+' warnings and '+d.errors+' errors';
         });
 
         logBox.attr('transform',function(d){ return 'translate('+(this.axis.x(new Date(d.min)) - 10)+',0)';}.bind(this));
 
-        logBox.select('circle').attr("fill", '#E63C3E');
-        logBox.select('rect').attr("fill", '#E63C3E');
+        logBox.select('circle').attr('fill', '#E63C3E');
+        logBox.select('rect').attr('fill', '#E63C3E');
     };
 
     /**
@@ -1840,7 +1864,7 @@ define(['jquery',
 
         this.drawLogs();
         //performance hit here, maybe find an other way to update the xAxis
-        this.container.focus.select(".x.axis").call(this.axis.xAxis);
+        this.container.focus.select('.x.axis').call(this.axis.xAxis);
         this.drawGrid();
         //this.updateDateForms(this.axis.x.domain()[0], this.axis.x.domain()[1]);
     };
@@ -1859,7 +1883,7 @@ define(['jquery',
         }
         for(var legend in this.legends){
             if(!this.probes[legend]){
-                console.log(this.id,legend,this.probes,this.legends);
+                //console.log(this.id,legend,this.probes,this.legends);
                 continue;
             }
             var unit = this.units.get(this.scales[this.probes[legend].scale].unit);
@@ -1928,8 +1952,8 @@ define(['jquery',
         if(!data.length)
             return;
         var separator = Config.separator();
-        var y = y || this.scales['default'].y;
-        var y2 = y2 || this.scales['default'].y2;
+        y = y || this.scales['default'].y;
+        y2 = y2 || this.scales['default'].y2;
         var x = this.axis.x;
         var x2 = this.axis.x2;
 
@@ -1939,58 +1963,65 @@ define(['jquery',
             clippath = (reverse) ? 'url(#clip_bottom_'+this.id+')':'url(#clip_top_'+this.id+')';
 
         // Fill the container
-        var g = this.container.focus.insert("g",":first-child")
-            .attr("clip-path", clippath)
-            .attr("class","chart ordered focus_"+probe)
-            .attr("id","chart_"+probe.split(separator).join('_'));
+        var g = this.container.focus.insert('g',':first-child')
+            .attr('clip-path', clippath)
+            .attr('class','chart ordered focus_'+probe)
+            .attr('id','chart_'+probe.split(separator).join('_'));
 
-        var g2 = this.container.context.insert("g",":first-child")
-            .attr("class","chart context_"+probe);
+        var g2 = this.container.context.insert('g',':first-child')
+            .attr('class','chart context_'+probe);
 
         var paths = this._getPathList(data);
 
         //line used by predict path also so mandatory on each chart
-        var line = d3.svg.line()
-            .x(function(d){ return x(d.x)})
-            .y(function(d){ return y(d.y)});
+        d3.svg.line()
+            .x(function(d){ 
+                return x(d.x);
+            }).y(function(d){
+                return y(d.y);
+            });
 
         // Create the area generator for the main graph...
         var area = d3.svg.area()
             .x(function (d) { return x(d.x); })
-            .y0(function(d){ return y(d.y0) || this.conf.chartHeight }.bind(this))
-            .y1(function (d) { return y((d.y0 || 0) + d.y); });
+            .y0(function(d){ 
+                return y(d.y0) || this.conf.chartHeight;
+            }.bind(this))
+            .y1(function (d) { 
+                return y((d.y0 || 0) + d.y);
+            });
 
         // ... and for the tracker
         var area2 = d3.svg.area()
             .x(function (d) { return x2(d.x); })
-            .y0(function(d){ return y2(d.y0) || this.conf.chartHeight }.bind(this))
+            .y0(function(d){ return y2(d.y0) || this.conf.chartHeight; }.bind(this))
             .y1(function (d) { return y2(d.y0 + d.y); });
 
-        var path = g.selectAll("path").data(paths).enter();
-        path.append("path")
+        var path = g.selectAll('path').data(paths).enter();
+        path.append('path')
             .datum(function(d){ return d;})
-            .attr("data-id",probe)
-            .attr("stroke", color)
-            .attr("fill", color)
-            .attr("fill-opacity", 0.4)
-            .attr("d", area)
-            .attr("class",'main');
+            .attr('data-id',probe)
+            .attr('stroke', color)
+            .attr('fill', color)
+            .attr('fill-opacity', 0.4)
+            .attr('d', area)
+            .attr('class','main');
 
-        var path2 = g2.selectAll("path").data(paths).enter();
-        path2.append("path")
+        var path2 = g2.selectAll('path').data(paths).enter();
+        path2.append('path')
             .datum(function(d){ return d;})
-            .attr("data-id",probe)
-            .attr("stroke", color)
-            .attr("fill", color)
-            .attr("fill-opacity", 0.4)
-            .attr("d", area2);
+            .attr('data-id',probe)
+            .attr('stroke', color)
+            .attr('fill', color)
+            .attr('fill-opacity', 0.4)
+            .attr('d', area2);
 
-        var dots =  this.container.focus.append("g")
-            .attr("clip-path", clippath)
-            .attr("class","chart dots focus_"+probe)
-            .attr("id","dots_"+probe.split(separator).join('_'));
+        var dots =  this.container.focus.append('g')
+            .attr('clip-path', clippath)
+            .attr('class','chart dots focus_'+probe)
+            .attr('id','dots_'+probe.split(separator).join('_'));
 
-        dots.selectAll(".dots")
+        dots.selectAll('.dots')
             .data(data)
             .enter().append('circle')
             .attr('class','dots')
@@ -2000,15 +2031,15 @@ define(['jquery',
             .attr('fill',color)
             .attr('stroke','black')
             .attr('data-title', probe)
-            .attr('data-date', function(d){ return d.x.toLocaleString()})
-            .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                         this.units.get(this.scales[this.probes[probe].scale].unit)
-                                                                        )}.bind(this));
+            .attr('data-date', function(d){ return d.x.toLocaleString(); })
+            .attr('data-value',function(d){ 
+                return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
+            }.bind(this));
 
         this.content[probe] = {
             redraw: function(data){
                 if(data){
-                    var d = dots.selectAll(".dots").data(data);
+                    var d = dots.selectAll('.dots').data(data);
                     d.exit().remove();
                     d.enter().append('circle')
                         .attr('class','dots')
@@ -2018,39 +2049,40 @@ define(['jquery',
                     d.attr('cy',function(d){ return y(d.y0 + d.y);})
                         .attr('cx',function(d){ return x(d.x);})
                         .attr('data-title', probe)
-                        .attr('data-date', function(d){ return d.x.toLocaleString()})
-                        .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                                     this.units.get(this.scales[this.probes[probe].scale].unit)
-                                                                                    )}.bind(this));
+                        .attr('data-date', function(d){ return d.x.toLocaleString(); })
+                        .attr('data-value',function(d){ 
+                            return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
+                        }.bind(this));
 
                     var paths = this._getPathList(data);
-                    var p = g.selectAll("path.main").data(paths);
-                    p.enter().append("path")
+                    var p = g.selectAll('path.main').data(paths);
+                    p.enter().append('path')
                         .datum(function(d){ return d;})
-                        .attr("data-id",probe)
-                        .attr("stroke", color)
-                        .attr("class",'main')
-                        .attr("fill", color)
-                        .attr("fill-opacity", 0.4);
+                        .attr('data-id',probe)
+                        .attr('stroke', color)
+                        .attr('class','main')
+                        .attr('fill', color)
+                        .attr('fill-opacity', 0.4);
                     p.exit().remove();
-                    p.attr("d",area);
+                    p.attr('d',area);
 
                     //redraw predicted charts if any
                     if(this.predictData[probe])
                         this.addPredict(this.predictData[probe],color,data,y,probe);
-                }else{
-                    g.selectAll('path.main').attr("d", area);
+                }
+                else {
+                    g.selectAll('path.main').attr('d', area);
                     dots.selectAll('.dots')
-                        .attr("cx",function(d){ return x(d.x);});
+                        .attr('cx',function(d){ return x(d.x);});
 
                     dots.selectAll('.predictDot')
-                        .attr("cx",function(d){ return x(d.x);});
-                    g.selectAll('path.predict').attr("d", d3.svg.line()
-                                                     .x(function(d){ return x(d.x)})
-                                                     .y(function(d){ return y((d.y0 || 0) + d.y)}));
-                    g.selectAll('path.mean').attr("d", d3.svg.line()
-                                                  .x(function(d){ return x(d.x)})
-                                                  .y(function(d){ return y((d.y0 || 0) + d.y)}));
+                        .attr('cx',function(d){ return x(d.x);});
+                    g.selectAll('path.predict').attr('d', d3.svg.line()
+                                                     .x(function(d){ return x(d.x); })
+                                                     .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                    g.selectAll('path.mean').attr('d', d3.svg.line()
+                                                  .x(function(d){ return x(d.x); })
+                                                  .y(function(d){ return y((d.y0 || 0) + d.y); }));
 
                 }
             }.bind(this)
@@ -2068,8 +2100,8 @@ define(['jquery',
     DashboardChart.prototype.addLine = function(probe,data,color,y, y2){
         if(!data.length)
             return;
-        var y = y || this.scales['default'].y;
-        var y2 = y2 || this.scales['default'].y2;
+        y = y || this.scales['default'].y;
+        y2 = y2 || this.scales['default'].y2;
         var x = this.axis.x;
         var x2 = this.axis.x2;
         var separator = Config.separator();
@@ -2079,18 +2111,18 @@ define(['jquery',
         if(this.opposate)
             clippath = (reverse) ? 'url(#clip_bottom_'+this.id+')':'url(#clip_top_'+this.id+')';
 
-        var g = this.container.focus.insert("g",":first-child")
-            .attr("clip-path", clippath)
-            .attr("class","chart ordered line focus_"+probe)
-            .attr("id","chart_"+probe.split(separator).join('_'));
+        var g = this.container.focus.insert('g',':first-child')
+            .attr('clip-path', clippath)
+            .attr('class','chart ordered line focus_'+probe)
+            .attr('id','chart_'+probe.split(separator).join('_'));
 
-        var g2 = this.container.context.insert("g",":first-child")
-            .attr("class","chart line context_"+probe);
+        var g2 = this.container.context.insert('g',':first-child')
+            .attr('class','chart line context_'+probe);
 
-        var dots =  this.container.focus.append("g")
-            .attr("clip-path", clippath)
-            .attr("class","chart dots focus_"+probe)
-            .attr("id","dots_"+probe.split(separator).join('_'));
+        var dots =  this.container.focus.append('g')
+            .attr('clip-path', clippath)
+            .attr('class','chart dots focus_'+probe)
+            .attr('id','dots_'+probe.split(separator).join('_'));
 
         var paths = this._getPathList(data);
 
@@ -2106,25 +2138,25 @@ define(['jquery',
             .y(function (d) { return y2(d.y); });
 
         // Fill the container
-        var path = g.selectAll("path").data(paths).enter();
-        path.append("path")
+        var path = g.selectAll('path').data(paths).enter();
+        path.append('path')
             .datum(function(d){ return d;})
-            .attr("data-id",probe)
-            .attr("stroke", color)
-            .attr("fill",'none')
-            .attr("d", line)
+            .attr('data-id',probe)
+            .attr('stroke', color)
+            .attr('fill','none')
+            .attr('d', line)
             .attr('class','main');
 
         // Display all the data into the overview
-        var path2 = g2.selectAll("path").data(paths).enter();
-        path2.append("path")
+        var path2 = g2.selectAll('path').data(paths).enter();
+        path2.append('path')
             .datum(function(d){ return d;})
             .attr('data-id',probe)
-            .attr("stroke", color)
-            .attr("fill",'none')
-            .attr("d", line2);
+            .attr('stroke', color)
+            .attr('fill','none')
+            .attr('d', line2);
 
-        dots.selectAll(".dots")
+        dots.selectAll('.dots')
             .data(data)
             .enter().append('circle')
             .attr('class','dots')
@@ -2134,15 +2166,15 @@ define(['jquery',
             .attr('fill',color)
             .attr('stroke','black')
             .attr('data-title', probe)
-            .attr('data-date', function(d){ return d.x.toLocaleString()})
-            .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                         this.units.get(this.scales[this.probes[probe].scale].unit)
-                                                                        )}.bind(this));
+            .attr('data-date', function(d){ return d.x.toLocaleString(); })
+            .attr('data-value',function(d){ 
+                return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
+            }.bind(this));
 
         this.content[probe] = {
             redraw: function(data){
                 if(data){
-                    var d = dots.selectAll(".dots").data(data);
+                    var d = dots.selectAll('.dots').data(data);
                     d.exit().remove();
                     d.enter().append('circle')
                         .attr('class','dots')
@@ -2152,39 +2184,39 @@ define(['jquery',
                     d.attr('cy',function(d){ return y(d.y0 + d.y);})
                         .attr('cx',function(d){ return x(d.x);})
                         .attr('data-title', probe)
-                        .attr('data-date', function(d){ return d.x.toLocaleString()})
-                        .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                                     this.units.get(this.scales[this.probes[probe].scale].unit)
-                                                                                    )}.bind(this));
+                        .attr('data-date', function(d){ return d.x.toLocaleString(); })
+                        .attr('data-value',function(d){ 
+                            return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit)); 
+                        }.bind(this));
 
                     var paths = this._getPathList(data);
-                    var p = g.selectAll("path.main").data(paths);
-                    p.enter().append("path")
+                    var p = g.selectAll('path.main').data(paths);
+                    p.enter().append('path')
                         .datum(function(d){ return d;})
-                        .attr("data-id",probe)
-                        .attr("class",'main')
-                        .attr("stroke", color)
-                        .attr("fill",'none');
+                        .attr('data-id',probe)
+                        .attr('class','main')
+                        .attr('stroke', color)
+                        .attr('fill','none');
                     p.exit().remove();
-                    p.attr("d",line);
+                    p.attr('d',line);
 
                     //redraw predicted charts if any
                     if(this.predictData[probe])
                         this.addPredict(this.predictData[probe],color,data,y,probe);
 
                 } else{
-                    g.selectAll('path.main').attr("d", line);
+                    g.selectAll('path.main').attr('d', line);
                     dots.selectAll('.dots')
-                        .attr("cx",function(d){ return x(d.x);});
+                        .attr('cx',function(d){ return x(d.x);});
 
                     dots.selectAll('.predictDot')
-                        .attr("cx",function(d){ return x(d.x);});
-                    g.selectAll('path.predict').attr("d", d3.svg.line()
-                                                     .x(function(d){ return x(d.x)})
-                                                     .y(function(d){ return y((d.y0 || 0) + d.y)}));
-                    g.selectAll('path.mean').attr("d", d3.svg.line()
-                                                           .x(function(d){ return x(d.x)})
-                                                           .y(function(d){ return y((d.y0 || 0) + d.y)}));
+                        .attr('cx',function(d){ return x(d.x);});
+                    g.selectAll('path.predict').attr('d', d3.svg.line()
+                                                     .x(function(d){ return x(d.x); })
+                                                     .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                    g.selectAll('path.mean').attr('d', d3.svg.line()
+                                                           .x(function(d){ return x(d.x); })
+                                                           .y(function(d){ return y((d.y0 || 0) + d.y); }));
 
                 }
             }.bind(this)
@@ -2208,8 +2240,8 @@ define(['jquery',
 
         var separator = Config.separator();
         var x= this.axis.x;
-        var g = this.container.focus.select('#chart_'+probe.split(separator).join("_"));
-        var gDots = this.container.focus.select('#dots_'+probe.split(separator).join("_"));
+        var g = this.container.focus.select('#chart_'+probe.split(separator).join('_'));
+        var gDots = this.container.focus.select('#dots_'+probe.split(separator).join('_'));
 
         //link with the last available value
         var len = data.length;
@@ -2251,7 +2283,7 @@ define(['jquery',
                 Math.round(green * 0.8),',',
                 Math.round(blue * 0.8),')'
             ),
-            'type': "lower 95"
+            'type': 'lower 95'
         });
         //upper 80
         areas.push({
@@ -2261,7 +2293,7 @@ define(['jquery',
                 Math.min(Math.round(green * 0.6),255),',',
                 Math.min(Math.round(blue * 0.6),255),')'
             ),
-            'type': "upper 80"
+            'type': 'upper 80'
         });
         //upper 95
         areas.push({
@@ -2276,8 +2308,8 @@ define(['jquery',
 
         //line used by predict path also so mandatory on each chart
         var line = d3.svg.line()
-            .x(function(d){ return x(d.x)})
-            .y(function(d){ return y((d.y0 || 0) + d.y)});
+            .x(function(d){ return x(d.x); })
+            .y(function(d){ return y((d.y0 || 0) + d.y); });
 
         var path = g.selectAll('path.predict').data(areas);
         path.exit().remove();
@@ -2287,14 +2319,14 @@ define(['jquery',
             .attr('fill-opacity',0.7)
             .attr('class','predict');
         path.datum(function(d){ return d.area;})
-            .attr('d',function(d) { return line(d) + "Z"; });
+            .attr('d',function(d) { return line(d) + 'Z'; });
 
-        var path = g.select('path.mean');
+        path = g.select('path.mean');
         if(path.empty()) path = g.append('path').attr('stroke',color).attr('class','mean').attr('fill','none');
         path.datum(predict[2]).attr('d',line);
 
         //dots
-        var dots = gDots.selectAll("circle.predictDot").data(predict[2]);
+        var dots = gDots.selectAll('circle.predictDot').data(predict[2]);
         dots.exit().remove();
         dots.enter().append('circle')
             .attr('class','predictDot')
@@ -2302,14 +2334,14 @@ define(['jquery',
             .attr('stroke','black')
             .attr('r',3)
             .attr('z-index','1');
-        dots.attr('cx',function(d){ return x(d.x)})
-            .attr('cy',function(d){ return y((d.y0 || 0) + d.y)})
+        dots.attr('cx',function(d){ return x(d.x); })
+            .attr('cy',function(d){ return y((d.y0 || 0) + d.y); })
             .attr('data-title', probe)
-            .attr('data-date', function(d){ return new Date(d.x).toLocaleString()})
-            .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                         this.units.get(this.scales[this.probes[probe].scale].unit)
-                                                                        )}.bind(this));
-    }
+            .attr('data-date', function(d){ return new Date(d.x).toLocaleString(); })
+            .attr('data-value',function(d){ 
+                return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
+            }.bind(this));
+    };
 
     /**
      * add a column graph to the chart
@@ -2323,13 +2355,13 @@ define(['jquery',
         if(!data.length)
             return;
         var x = this.axis.x;
-        var y = y || this.scales['default'].y;
-        var y2 = y2 || this.scales['default'].y2;
+        y = y || this.scales['default'].y;
+        y2 = y2 || this.scales['default'].y2;
 
         //line used by predict path also so mandatory on each chart
-        var line = d3.svg.line()
-            .x(function(d){ return x(d.x)})
-            .y(function(d){ return y(d.y)});
+        d3.svg.line()
+            .x(function(d){ return x(d.x); })
+            .y(function(d){ return y(d.y); });
 
         var reverse = (y(2) > y(1));
         var clippath = 'url(#clip_'+this.id+')';
@@ -2352,19 +2384,19 @@ define(['jquery',
         var col2width = this.axis.x2(interval) - this.axis.x2(0);
         var separator = Config.separator();
 
-        var focusGroup = this.container.focus.insert('g',":first-child")
+        var focusGroup = this.container.focus.insert('g',':first-child')
             .attr('class','columns ordered')
             .attr('clip-path',clippath)
-            .attr("id","chart_"+probe.split(separator).join('_'));;
-        var contextGroup = this.container.context.insert('g',":first-child")
+            .attr('id','chart_'+probe.split(separator).join('_'));
+        var contextGroup = this.container.context.insert('g',':first-child')
             .attr('class','columns')
             .attr('clip-path','url(#clip_'+this.id+')');
         var dots = this.container.focus.append('g')
             .attr('class','chart dots focus_'+probe)
             .attr('clip-path',clippath)
-            .attr("id","dots_"+probe.split(separator).join('_'));
+            .attr('id','dots_'+probe.split(separator).join('_'));
 
-        dots.selectAll(".dots")
+        dots.selectAll('.dots')
             .data(data)
             .enter().append('circle')
             .attr('class','dots')
@@ -2377,13 +2409,13 @@ define(['jquery',
             .attr('fill',color)
             .attr('stroke','black')
             .attr('data-title', probe)
-            .attr('data-date', function(d){ return d.x.toLocaleString()})
-            .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                         this.units.get(this.scales[this.probes[probe].scale].unit)
-                                                                        )}.bind(this));
+            .attr('data-date', function(d){ return d.x.toLocaleString(); })
+            .attr('data-value',function(d){ 
+                return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
+            }.bind(this));
 
-        var bars = focusGroup.selectAll(".bar").data(data).enter();
-        var bars2 = contextGroup.selectAll(".bar").data(data).enter();
+        var bars = focusGroup.selectAll('.bar').data(data).enter();
+        var bars2 = contextGroup.selectAll('.bar').data(data).enter();
 
         var getY = function(d){
             var top = y(d.y0 + d.y);
@@ -2415,23 +2447,23 @@ define(['jquery',
             return size;
         };
 
-        bars.append("rect")
-            .attr("x", function(d){ return this.axis.x(d.x) - colwidth/2; }.bind(this))
-            .attr("y", getY)
-            .attr("width", colwidth)
-            .attr("height", getHeight)
-            .attr("stroke", color)
-            .attr("fill", color)
-            .attr("fill-opacity", 0.4);
+        bars.append('rect')
+            .attr('x', function(d){ return this.axis.x(d.x) - colwidth/2; }.bind(this))
+            .attr('y', getY)
+            .attr('width', colwidth)
+            .attr('height', getHeight)
+            .attr('stroke', color)
+            .attr('fill', color)
+            .attr('fill-opacity', 0.4);
 
-        bars2.append("rect")
-            .attr("x", function(d){ return this.axis.x2(d.x) - col2width/2; }.bind(this))
-            .attr("y", getContextY)
-            .attr("width", col2width)
-            .attr("height", getContextHeight)
-            .attr("stroke", color)
-            .attr("fill", color)
-            .attr("fill-opacity", 0.4);
+        bars2.append('rect')
+            .attr('x', function(d){ return this.axis.x2(d.x) - col2width/2; }.bind(this))
+            .attr('y', getContextY)
+            .attr('width', col2width)
+            .attr('height', getContextHeight)
+            .attr('stroke', color)
+            .attr('fill', color)
+            .attr('fill-opacity', 0.4);
 
         this.content[probe] = {
             redraw: function(data){
@@ -2439,17 +2471,17 @@ define(['jquery',
                     interval = getInterval(data);
                     colwidth = this.axis.x(interval) - this.axis.x(0);
 
-                    var r = focusGroup.selectAll("rect").data(data);
+                    var r = focusGroup.selectAll('rect').data(data);
                     r.exit().remove();
-                    r.enter().append("rect")
-                        .attr("stroke", color)
-                        .attr("fill", color)
-                        .attr("fill-opacity", 0.4)
-                        .append("title").text(function(d){ return probe + " : " + d.y; });
-                    r.attr("x", function(d){ return this.axis.x(d.x) - colwidth/2; }.bind(this))
-                        .attr("y", getY)
-                        .attr("width", colwidth)
-                        .attr("height", getHeight)
+                    r.enter().append('rect')
+                        .attr('stroke', color)
+                        .attr('fill', color)
+                        .attr('fill-opacity', 0.4)
+                        .append('title').text(function(d){ return probe + ' : ' + d.y; });
+                    r.attr('x', function(d){ return this.axis.x(d.x) - colwidth/2; }.bind(this))
+                        .attr('y', getY)
+                        .attr('width', colwidth)
+                        .attr('height', getHeight);
 
                     var d = dots.selectAll('.dots').data(data);
                     d.exit().remove();
@@ -2458,35 +2490,36 @@ define(['jquery',
                         .attr('r',3)
                         .attr('fill',color)
                         .attr('stroke','black');
-                    d.attr("cx",function(d){ return x(d.x);})
+                    d.attr('cx',function(d){ return x(d.x);})
                         .attr('cy',function(d){ return y(d.y0 + d.y);})
                         .attr('data-title', probe)
-                        .attr('data-date', function(d){ return d.x.toLocaleString()})
-                        .attr('data-value',function(d){ return this.units.unitFormat(d.y,
-                                                                                     this.units.get(this.scales[this.probes[probe].scale].unit)
-                                                                                    )}.bind(this));
+                        .attr('data-date', function(d){ return d.x.toLocaleString(); })
+                        .attr('data-value',function(d){ 
+                            return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit)); 
+                        }.bind(this));
 
                     //redraw predicted charts if any
                     if(this.predictData[probe])
                         this.addPredict(this.predictData[probe],color,data,y,probe);
-                }else{
+                }
+                else {
                     colwidth = this.axis.x(interval) - this.axis.x(0);
-                    focusGroup.selectAll("rect")
-                        .attr("x", function(d){ return this.axis.x(d.x) - colwidth / 2;}.bind(this))
-                        .attr("width", colwidth);
+                    focusGroup.selectAll('rect')
+                        .attr('x', function(d){ return this.axis.x(d.x) - colwidth / 2;}.bind(this))
+                        .attr('width', colwidth);
                     dots.selectAll('.dots')
-                        .attr("cx",function(d){ return x(d.x);});
+                        .attr('cx',function(d){ return x(d.x);});
 
-                    focusGroup.selectAll('path.predict').attr("d", d3.svg.line()
-                                                              .x(function(d){ return x(d.x)})
-                                                              .y(function(d){ return y((d.y0 || 0) + d.y)}));
-                    focusGroup.selectAll('path.mean').attr("d", d3.svg.line()
-                                                              .x(function(d){ return x(d.x)})
-                                                              .y(function(d){ return y((d.y0 || 0) + d.y)}));
+                    focusGroup.selectAll('path.predict').attr('d', d3.svg.line()
+                                                              .x(function(d){ return x(d.x); })
+                                                              .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                    focusGroup.selectAll('path.mean').attr('d', d3.svg.line()
+                                                              .x(function(d){ return x(d.x); })
+                                                              .y(function(d){ return y((d.y0 || 0) + d.y); }));
 
                     dots.selectAll('.predictDot')
-                        .attr("cx",function(d){ return x(d.x);});
-                 }
+                        .attr('cx',function(d){ return x(d.x);});
+                }
             }.bind(this)
         };
     };
@@ -2525,7 +2558,7 @@ define(['jquery',
                 var axis = this.container.focus.select('.y.axis.reversed')[0][0];
                 while(axis.firstChild) axis.removeChild(axis.firstChild);
 
-                var axis = this.container.focus.select('.y.axis.right.reversed')[0][0];
+                axis = this.container.focus.select('.y.axis.right.reversed')[0][0];
                 while(axis.firstChild) axis.removeChild(axis.firstChild);
 
             }
@@ -2540,7 +2573,7 @@ define(['jquery',
      * @return {DOMElement} container - THe select element
      */
     DashboardChart.prototype.buildMetricForm = function(name){
-        var container = $('<p style="margin: 0.5em 0;"><label>Probe :</label></p>');
+        var container = jQuery('<p style="margin: 0.5em 0;"><label>Probe :</label></p>');
         var metrics = DashboardProbes.getMetrics();
         if(metrics)
             this.appendMetricSelect(metrics, container, name);
@@ -2568,7 +2601,7 @@ define(['jquery',
     DashboardChart.prototype.appendMetricSelect = function(metrics, container, name){
         if(container.find('.spinner'))
             container.find('.spinner').remove();
-        var select = $('<select name="'+name+'" class="formButton select" ></select>');
+        var select = jQuery('<select name="'+name+'" class="formButton select" ></select>');
 
         // Get all the metric names
         var names = Object.keys(metrics);
@@ -2580,7 +2613,7 @@ define(['jquery',
         });
 
         for(var i in names) {
-            var option = $('<option value="' + names[i] + '">' + names[i] + '</option>');
+            var option = jQuery('<option value="' + names[i] + '">' + names[i] + '</option>');
             select.append(option);
         }
 
@@ -2604,9 +2637,11 @@ define(['jquery',
               else
                 select.append($('<option value="*">All(*)</option>'));
             */
-        }else
+        }
+        else {
             select.append('<option value="">None available</option>');
-    }
+        }
+    };
 
     /**
      * Clean all old metrics select.
@@ -2614,7 +2649,7 @@ define(['jquery',
      */
     DashboardChart.prototype.cleanMetricsSelect = function(select){
         while(select.nextElementSibling) select.parentNode.removeChild(select.nextElementSibling);
-    }
+    };
 
     /**
      * Return or create if not exist the scale
@@ -2624,8 +2659,8 @@ define(['jquery',
      */
     DashboardChart.prototype.getScale = function(unit,orient,reversed){
         if(!unit) return false;
-        var orient = orient || 'left';
-        var reversed = reversed || false;
+        orient = orient || 'left';
+        reversed = reversed || false;
         var result = false;
         for(var s in this.scales){
             var scale = this.scales[s];
@@ -2658,12 +2693,14 @@ define(['jquery',
             for(var d in this.current[o])
                 if(!this.scales[this.current[o][d]]) this.switchScale(o,d);
 
+        var axis;
+
         //check if we no longer need to be in right mode
         if(!this.current['right']['top'] && !this.current['right']['opposate']){
-            var axis = this.container.focus.select('.y.axis.right.reversed')[0][0];
+            axis = this.container.focus.select('.y.axis.right.reversed')[0][0];
             while(axis.firstChild) axis.removeChild(axis.firstChild);
 
-            var axis = this.container.focus.select('.y.axis.right')[0][0];
+            axis = this.container.focus.select('.y.axis.right')[0][0];
             while(axis.firstChild) axis.removeChild(axis.firstChild);
         }
 
@@ -2677,20 +2714,20 @@ define(['jquery',
                 this.scales[s].trackHeight = trackHeight;
             }
 
-            var axis = this.container.focus.select('.y.axis.reversed')[0][0];
+            axis = this.container.focus.select('.y.axis.reversed')[0][0];
             while(axis.firstChild) axis.removeChild(axis.firstChild);
 
-            var axis = this.container.focus.select('.y.axis.right.reversed')[0][0];
+            axis = this.container.focus.select('.y.axis.right.reversed')[0][0];
             while(axis.firstChild) axis.removeChild(axis.firstChild);
 
         }
 
         //check left axis
         if(!this.current['left']['top'] && !this.current['left']['opposate']){
-            var axis = this.container.focus.select('.y.axis.reversed')[0][0];
+            axis = this.container.focus.select('.y.axis.reversed')[0][0];
             while(axis.firstChild) axis.removeChild(axis.firstChild);
 
-            var axis = this.container.focus.select('.y.axis')[0][0];
+            axis = this.container.focus.select('.y.axis')[0][0];
             while(axis.firstChild) axis.removeChild(axis.firstChild);
         }
 
@@ -2729,7 +2766,7 @@ define(['jquery',
     DashboardChart.prototype.toogleLogsPanel = function(d){
         this.buildLogsPanel(d);
         this.tooglePanel(true);
-    }
+    };
 
     /**
      * Show the dup panel
@@ -2737,7 +2774,7 @@ define(['jquery',
     DashboardChart.prototype.toogleDupPanel = function(){
         this.buildDupPanel();
         this.tooglePanel(true);
-    }
+    };
 
 
     /**
@@ -2746,7 +2783,7 @@ define(['jquery',
     DashboardChart.prototype.toogleEditPanel = function(){
         this.buildEditPanel();
         this.tooglePanel(true);
-    }
+    };
 
     /**
      * Show the add panel form
@@ -2754,16 +2791,16 @@ define(['jquery',
     DashboardChart.prototype.toogleAddPanel = function(){
         this.buildAddPanel();
         this.tooglePanel(true);
-    }
+    };
 
     /**
      * Construct duplicate panel
      */
     DashboardChart.prototype.buildDupPanel = function(){
-        var container = $('<div class="dupPanel"></div>');
-        var title = $('<h3>Copy widget</h3>');
-        var submit = $('<button id="dup_submit">copy</button>');
-        var replaceHosts = $('<div><label>Replace hosts</label></div>');
+        var container = jQuery('<div class="dupPanel"></div>');
+        var title = jQuery('<h3>Copy widget</h3>');
+        var submit = jQuery('<button id="dup_submit">copy</button>');
+        var replaceHosts = jQuery('<div><label>Replace hosts</label></div>');
         var hosts = {};
         var metrics = DashboardProbes.getMetrics();
         var currentConf = DashboardManager.currentParts[this.id];
@@ -2772,21 +2809,22 @@ define(['jquery',
             'probes': JSON.parse(JSON.stringify(currentConf.conf.probes)),
             'scales': currentConf.conf.scales
         };
+        var h;
 
         //list used hosts
         for(var p in currentConf.conf.probes){
-            var h = DashboardProbes.extractHost(p);
+            h = DashboardProbes.extractHost(p);
             if(!hosts[h]) hosts[h] = h;
         }
 
         //Create select host element
-        var hostSelect = $('<select></select>');
-        for(var h in metrics){
-            hostSelect.append($('<option value="'+h+'">'+h+'</option>'))
-        };
+        var hostSelect = jQuery('<select></select>');
+        for(h in metrics){
+            hostSelect.append(jQuery('<option value="'+h+'">'+h+'</option>'));
+        }
 
         //build replace host part
-        for(var h in hosts){
+        for(h in hosts){
             var clone = hostSelect.clone(true);
             clone.attr('name',h);
             for(var s in clone[0].options){
@@ -2799,13 +2837,13 @@ define(['jquery',
                 var host = e.target.getAttribute('name');
                 hosts[host] = e.target.options[e.target.selectedIndex].value;
             });
-            var p = $('<p>');
-            p.append($('<span>'+h+'</span>')).append(clone);
+            p = jQuery('<p>');
+            p.append(jQuery('<span>'+h+'</span>')).append(clone);
             replaceHosts.append(p);
         }
 
         //Submit action
-        submit.click(function(e){
+        submit.click(function(){
             //replace hosts
             var tmp = {};
             for(var h in hosts){
@@ -2843,19 +2881,19 @@ define(['jquery',
 
         //Construct and apply DOM tree
         container.append(title);
-        container.append(replaceHosts)
+        container.append(replaceHosts);
         container.append(submit);
         this.appendToPanel(container);
-    }
+    };
 
     /**
      * Construct log panel
      * @param {Object} data - Logs data
      */
     DashboardChart.prototype.buildLogsPanel = function(data){
-        var container = $('<div class="logPanel"></div>');
+        var container = jQuery('<div class="logPanel"></div>');
 
-        var logContainer = $('<p class="logContainer legend"></p>');
+        var logContainer = jQuery('<p class="logContainer legend"></p>');
         logContainer.append('<span class="date">Date</span>');
         logContainer.append('<span class="host">Host</span>');
         logContainer.append('<span class="service">Service</span>');
@@ -2863,11 +2901,11 @@ define(['jquery',
         logContainer.append('<span class="output">Output</span>');
         container.append(logContainer);
 
-        for(var i = 0, len = data.logs.length;i<len;i++){
+        for(var i = 0, len = data.logs.length;i<len;i++) {
             var log = data.logs[i];
             var date = new Date(log['time']);
 
-            logContainer = $('<p class="logContainer log '+((log['state'] > 1)? "error":"warning")+'"></p>');
+            logContainer = jQuery('<p class="logContainer log '+((log['state'] > 1)? 'error':'warning')+'"></p>');
             logContainer.append('<span class="date">'+(date.toLocaleDateString().concat(' ',date.toLocaleTimeString()))+'</span>');
             logContainer.append('<span class="host">'+log['host_name']+'</span>');
             logContainer.append('<span class="service">'+(log['sertvice_description'] || '')+'</span>');
@@ -2877,7 +2915,7 @@ define(['jquery',
         }
 
         this.appendToPanel(container);
-    }
+    };
 
     /**
      * Construct add panel
@@ -2886,8 +2924,7 @@ define(['jquery',
         var id = this.id;
         var probes = this.probes;
         var units = this.units.units;
-        var scales = this.scales;
-        var container = $('<div class="addprobe"></div>');
+        var container = jQuery('<div class="addprobe"></div>');
 
         //choose an unused color by default
         var getNextUnusedColor = function(){
@@ -2908,12 +2945,11 @@ define(['jquery',
         var nextColor = getNextUnusedColor();
 
         //containers
-        var id = this.id;
-        var addForm = $('<form name="add_chart_form_'+id+'" ></form>');
-        addForm.append($('<h3>Add probe</h3>'));
-        var probeSelection = $('<div class="column"></div>');
-        var probePosition = $('<div class="column"></div>');
-        var settings = $('<div class="column"></div>');
+        var addForm = jQuery('<form name="add_chart_form_'+id+'" ></form>');
+        addForm.append(jQuery('<h3>Add probe</h3>'));
+        var probeSelection = jQuery('<div class="column"></div>');
+        var probePosition = jQuery('<div class="column"></div>');
+        var settings = jQuery('<div class="column"></div>');
 
         //probe
         probeSelection.append(this.buildMetricForm('server'));
@@ -2927,25 +2963,25 @@ define(['jquery',
 
         //add unit
         if(Config.isAdmin()){
-            var add = $('<p><button class="add">Add unit</button></p>');
+            var add = jQuery('<p><button class="add">Add unit</button></p>');
             add.on('click',function(e){
                 e.preventDefault();
                 var target = e.target.getBoundingClientRect();
                 var units = this.units;
 
-                $.ajax("/units/add").success(function(e){
-                    var form = $(e);
-                    var popin = $('<div class="popin" style="top:'+(target.top - 200)+'px;left:'+target.left+'px;"></div>');
-                    var close = $('<button class="close" title="close"></button>');
+                jQuery.ajax('/units/add').success(function(e){
+                    var form = jQuery(e);
+                    var popin = jQuery('<div class="popin" style="top:'+(target.top - 200)+'px;left:'+target.left+'px;"></div>');
+                    var close = jQuery('<button class="close" title="close"></button>');
                     close.on('click',function(){ popin.remove(); });
-                    var title = $('<h3>Add unit</h3>');
+                    var title = jQuery('<h3>Add unit</h3>');
                     popin.append(close);
                     popin.append(title);
 
                     form.find('.submit').on('click',function(e){
                         e.preventDefault();
 
-                        $.ajax('/units/add',{
+                        jQuery.ajax('/units/add',{
                             'type':'POST',
                             'data': {
                                 'name': document.forms.add_unit.name.value,
@@ -2961,35 +2997,35 @@ define(['jquery',
 
                             document.forms['add_chart_form_'+id].unit.appendChild(option);
                             popin.remove();
-                        }.bind({"units": units})).error(function(e){
+                        }.bind({'units': units})).error(function(e){
                             var response = e.responseJSON;
                             var li = false;
                             popin.find('.errors').empty();
-                            for(var label in response){
+                            for(var label in response) {
                                 li = popin.find('.errors.'+label);
                                 for(var i = 0, len = response[label].length; i<len; i++)
                                     li.append('<li>'+response[label][i]+'</li>');
-                            };
+                            }
                         });
 
                         return false;
                     });
 
                     popin.append(form);
-                    $('body').append(popin);
+                    jQuery('body').append(popin);
                 });
             }.bind(this));
             probePosition.append(add);
         }
 
         //chart type and color
-        settings.append('<label>Chart type : </label>')
+        settings.append('<label>Chart type : </label>');
         settings.append(form.typeAddSelect());
-        settings.append('<label>Chart color : </label>')
+        settings.append('<label>Chart color : </label>');
         settings.append(form.colorAddBox(nextColor));
-        var subcontainer = $('<div class="submit-container"></div>')
-        var subandclose = $('<button class="submit" data-tooltip="Add probes and close this panel">Add and close</button>');
-        var submit = $('<button class="submit" id="add_chart_submit" data-tooltip="Add a new chart to this widget">Add</button>');
+        var subcontainer = jQuery('<div class="submit-container"></div>');
+        var subandclose = jQuery('<button class="submit" data-tooltip="Add probes and close this panel">Add and close</button>');
+        var submit = jQuery('<button class="submit" id="add_chart_submit" data-tooltip="Add a new chart to this widget">Add</button>');
         subcontainer.append(subandclose);
         subcontainer.append(submit);
 
@@ -3019,11 +3055,12 @@ define(['jquery',
             var scale= this.getScale(unit, orient, direction, false);
 
             var query = '';
+            var i, len;
             if(form[1].value === color)
                 query = form.server.value;
             else{
                 var separator = Config.separator();
-                for(var i=0, len = form['server'].length; i < len; i++) {
+                for(i = 0, len = form['server'].length; i < len; i++) {
                     if(i) query += separator;
                     query += form[i].value;
                 }
@@ -3035,7 +3072,7 @@ define(['jquery',
             var probeList = [query];
 
             var addCount = 0;
-            for(var i in probeList) {
+            for(i in probeList) {
                 if(this.probes[name]) continue;
                 addCount++;
             }
@@ -3044,7 +3081,7 @@ define(['jquery',
                 var warned = subcontainer.data('warned');
                 if(!warned) {
                     subcontainer.data('warned', 1);
-                    subcontainer.prepend($('<div class="submit-warning">You are going to add '+addCount+' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser!</p></div>'));
+                    subcontainer.prepend(jQuery('<div class="submit-warning">You are going to add '+addCount+' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser!</p></div>'));
                     return false;
                 } 
                 else {
@@ -3053,7 +3090,7 @@ define(['jquery',
                 }
             }
 
-            for(var i in probeList) {
+            for(i in probeList) {
                 var name = probeList[i];
                 var order = ++this.counter;
 
@@ -3067,7 +3104,8 @@ define(['jquery',
                     'order': order,
                     'scale': scale,
                     'stacked': false
-                }
+                };
+
                 //save the new conf localy to avoid an other getConf request
                 this.probes[name] = data.conf.probes[name];
                 DashboardProbes.addProbe(name);
@@ -3076,15 +3114,15 @@ define(['jquery',
                     'color': this.probes[name].color
                 });
                 //draw the legend and resize the box
-                var setLegend = function(){
+                var setLegend = function() {
                     var check = this.legendManager.redraw();
-                    if(!check){
+                    if(!check) {
                         setTimeout(setLegend.bind(this),1000);
                         return;
                     }
                     if(this.legendManager.getCurrentHeight() > 42)
                         this.updateBoxSize();
-                }
+                };
                 setLegend.call(this);
             }
             if(!addCount) return false;
@@ -3109,11 +3147,14 @@ define(['jquery',
         subandclose.click(function(){
             var form = document['add_chart_form_'.concat(this.id)];
             var query = '';
-            if(form[1].value === form.color.value)
+            var i, len;
+            if(form[1].value === form.color.value) {
                 query = form.server.value;
-            else{
-                for(var i=0, len = form['server'].length; i<len; i++){
-                    if(i) query = query.concat(Config.separator());
+            }
+            else {
+                for(i = 0, len = form['server'].length; i < len; i++){
+                    if(i) 
+                        query = query.concat(Config.separator());
                     query = query.concat(form[i].value);
                 }
             }
@@ -3122,7 +3163,7 @@ define(['jquery',
             //var probeList = DashboardProbes.getProbeList(query);
             var probeList = [query];
             var addCount = 0;
-            for(var i in probeList){
+            for(i in probeList){
                 if(this.probes[name]) continue;
                 addCount++;
             }
@@ -3131,7 +3172,7 @@ define(['jquery',
                 var warned = subcontainer.data('warned');
                 if(!warned){
                     subcontainer.data('warned', 1);
-                    subcontainer.prepend($('<div class="submit-warning">You are going to add ' + addCount + ' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser.</p></div>'));
+                    subcontainer.prepend(jQuery('<div class="submit-warning">You are going to add ' + addCount + ' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser.</p></div>'));
                     return false;
                 }
             }
@@ -3141,7 +3182,7 @@ define(['jquery',
 
         container.append(addForm);
         this.appendToPanel(container);
-    }
+    };
 
     /**
      * Return probes by scales (every probe from the same scale can be stacked)
@@ -3161,20 +3202,19 @@ define(['jquery',
     /**
      * Construct the edit panel
      */
-    DashboardChart.prototype.buildEditPanel = function(){
-        var id = this.id;
+    DashboardChart.prototype.buildEditPanel = function() {
         var probes = this.probes;
         var units = this.units.units;
         var scales = this.scales;
-        var container = $('<div class="editPanel"></div>');
-        container.append($('<h3>Probes settings</h3>'));
+        var container = jQuery('<div class="editPanel"></div>');
+        container.append(jQuery('<h3>Probes settings</h3>'));
         var groups = this.getStackableGroups();
         for(var g in groups){
-            var groupContainer = $('<p class="editGroup"></p>');
+            var groupContainer = jQuery('<p class="editGroup"></p>');
             groupContainer.append('<label style="vertical-align:middle;font-weight:bold;text-shadow: -2px 2px black;color:#57b4dc;">'+g+'</label>');
             if(groups[g].length > 1){
                 var mode = probes[groups[g][0]].stacked;
-                var stackButton = $('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton" data-tooltip="Stack/Unstack all probes from this scale.">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
+                var stackButton = jQuery('<button data-group="'+g+'" style="float: right;margin-right:2em;" class="stack disabled formButton" data-tooltip="Stack/Unstack all probes from this scale.">'+ ((mode) ? 'Unstack all':'Stack all') +'</button>');
                 stackButton.click(function(e){
                     e.preventDefault();
                     var gr = e.target.getAttribute('data-group');
@@ -3220,7 +3260,7 @@ define(['jquery',
                 var scale = scales[probe.scale];
                 var unit = scale.unit;
 
-                var probeContainer = $('<p class="editContent"></p>');
+                var probeContainer = jQuery('<p class="editContent"></p>');
                 probeContainer.append('<label style="display: table-cell;text-shadow: -2px 2px black;">' + 
                                       groups[g][p].split(separator).join('.') + 
                                       '</label>');
@@ -3246,7 +3286,7 @@ define(['jquery',
      */
     DashboardChart.prototype.flushPanel = function(){
         this.panelContainer.empty();
-        var close = $('<button class="close" title="Close the panel"></button>');
+        var close = jQuery('<button class="close" title="Close the panel"></button>');
         close.on('click',function(){this.tooglePanel();}.bind(this));
         this.panelContainer.append(close);
     };
@@ -3255,8 +3295,8 @@ define(['jquery',
      * Build the panel container
      */
     DashboardChart.prototype.buildPanel = function(){
-        var container = $('<div class="panel"></div>');
-        var close = $('<button class="close" title="Close the panel"></button>');
+        var container = jQuery('<div class="panel"></div>');
+        var close = jQuery('<button class="close" title="Close the panel"></button>');
         close.on('click',function(){this.tooglePanel();}.bind(this));
         container.append(close);
         this.container.main.append(container);
@@ -3325,10 +3365,10 @@ define(['jquery',
         DashboardManager.savePartData({
             'id': this.id,
             'conf': JSON.stringify({
-                "fromdate": context,
-                "untildate": end,
-                "brushstart": false,
-                "brushend": false
+                'fromdate': context,
+                'untildate': end,
+                'brushstart': false,
+                'brushend': false
             })
         });
         //update globale timeline
@@ -3357,9 +3397,9 @@ define(['jquery',
         DashboardManager.savePartData({
             'id': this.id,
             'conf': JSON.stringify({
-                "untildate": context,
-                "brushstart": false,
-                "brushend": false
+                'untildate': context,
+                'brushstart': false,
+                'brushend': false
             })
         });
         //update globale timeline
@@ -3402,20 +3442,21 @@ define(['jquery',
         var lastData = this.currentData;
         var domain = this.axis.x.domain();
         var predict = this.predict.getAll(Date.now());
+        var val, s, min, max;
 
         //get all max values
         var tmpMaxScales = {};
         for(var p in lastData){
             if(!this.probes[p]){
-                console.log(p,this.probes);
+                //console.log(p,this.probes);
                 continue;
             }
-            var s = this.probes[p].scale;
+            s = this.probes[p].scale;
             if(!tmpMaxScales[s]) tmpMaxScales[s] = { 'min': false, 'max': 0};
-            var max = 0;
-            var min = false;
+            max = 0;
+            min = false;
             for(var v in lastData[p].values){
-                var val = lastData[p].values[v].y + lastData[p].values[v].y0;
+                val = lastData[p].values[v].y + lastData[p].values[v].y0;
                 max = (max < val) ? val : max;
                 if(typeof min === 'boolean') min = val;
                 else min = (min > val) ? val : min;
@@ -3424,9 +3465,9 @@ define(['jquery',
             //parse predicted data if any
             if(predict && predict[p]){
                 for(var d in predict[p]){
-                    for(var v in predict[p][d]){
+                    for(v in predict[p][d]){
                         if(predict[p][d][v].x > domain[1].getTime() || predict[p][d][v].x < domain[0].getTime()) continue;
-                        var val = predict[p][d][v].y;
+                        val = predict[p][d][v].y;
                         max = (max < val) ? val : max;
                         min = (min > val) ? val : min;
                     }
@@ -3438,11 +3479,11 @@ define(['jquery',
             else if(min < tmpMaxScales[s].min) tmpMaxScales[s].min = min;
         }
         //apply new domains
-        for(var s in this.scales){
+        for(s in this.scales){
             if(!tmpMaxScales[s]) continue;
             var y = this.scales[s].y;
-            var max = tmpMaxScales[s].max;
-            var min = (log) ? tmpMaxScales[s].min : 0;
+            max = tmpMaxScales[s].max;
+            min = (log) ? tmpMaxScales[s].min : 0;
             if(!log && min > tmpMaxScales[s].min) min = tmpMaxScales[s].min;
             if(log && !min) min = 0.0001;
             if(max){
@@ -3572,7 +3613,7 @@ define(['jquery',
             this.content[c].redraw();
         this.drawLogs();
 
-        this.container.focus.select(".x.axis").call(this.axis.xAxis);
+        this.container.focus.select('.x.axis').call(this.axis.xAxis);
         this.drawGrid();
 
         this.container.brush.extent(range);

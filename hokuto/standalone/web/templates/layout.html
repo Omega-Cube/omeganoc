@@ -31,7 +31,11 @@
       {% else%}
       var onoc_main_modules = [];
       {% endif %}
-      var $URL_ROOT = {{ request.url_root|tojson|safe }};
+      window.ONOC = window.ONOC || {};
+      window.ONOC.is_admin = ('{{ current_user.is_super_admin }}' === 'True') ? true : false;
+      window.ONOC.shinken_contact = '{{current_user.shinken_contact}}';
+      window.ONOC.separator = '{{separator}}';
+      window.ONOC.url_root = {{ request.url_root|tojson|safe }};
     </script>
 
     {% block head %}
@@ -165,9 +169,5 @@
   </body>
   {# Setup some environment variable, beware that none of this value are secure and should only be used to ease navigation and display. #}
   <script type="text/javascript">
-    window.ONOC = window.ONOC || {};
-    window.ONOC.is_admin = ('{{ current_user.is_super_admin }}' === 'True') ? true : false;
-    window.ONOC.shinken_contact = '{{current_user.shinken_contact}}';
-    window.ONOC.separator = '{{separator}}';
   </script>
 </html>

@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * This file is part of Omega Noc
  * Copyright Omega Noc (C) 2014 Omega Cube and contributors
@@ -25,7 +27,7 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
         this.name = fullName;
         this.graph = graph;
 
-        this.getCommandsForNode = function (node) {
+        this.getCommandsForNode = function () {
             return [{
                 image: 'link-to.png',
                 label: 'Create a new link from this node',
@@ -116,7 +118,7 @@ define(['graph.type.base', 'graph.state'], function (base, GraphState) {
             data[key] = null;
             GraphState.save(selfRef.name, data);
         };
-    }
+    };
 
     LogicalHost.prototype = base;
 
