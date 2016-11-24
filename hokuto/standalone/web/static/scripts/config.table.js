@@ -226,7 +226,7 @@ define([
      */
     function _search(search,tmp,key,binary) {
         if(binary[0]) _search(search,tmp,key,binary[0]);
-        if(binary[1][key].search(search) != -1) tmp.push(binary[1]);
+        if(binary[1][key].search(search) !== -1) tmp.push(binary[1]);
         if(binary[2]) _search(search,tmp,key,binary[2]);
         return tmp;
     }
@@ -261,7 +261,7 @@ define([
             var urldel = createurl('/config/delete/' + urlparams);
             var url = createurl('/config/' + urlparams);
             //if service the url is different (???)
-            if(typeName == 'service') {
+            if(typeName === 'service') {
                 var url_end = '';
                 if('host_name' in results[i] && results[i].host_name)
                     url_end += '$' + results[i].host_name;
@@ -309,7 +309,7 @@ define([
         jQuery('.configlist-title .search').val('');
 
         // Remove the trailing s if it's there
-        if(hash.charAt(hash.length - 1) == 's')
+        if(hash.charAt(hash.length - 1) === 's')
             hash = hash.substr(0, hash.length - 1);
 
         typeName = hash;

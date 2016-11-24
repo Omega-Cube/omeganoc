@@ -72,7 +72,7 @@ define(['jquery'], function (jQuery) {
         }
 
         this.getData = function (callback) {
-            if (cache == null) {
+            if (cache === null) {
                 this.forceUpdate(callback);
             }
             else {

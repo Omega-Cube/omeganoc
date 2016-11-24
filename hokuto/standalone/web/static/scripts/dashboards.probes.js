@@ -238,7 +238,7 @@ define([
         removeSignature : function(sig){
             for(var i in this.worker._listeners){
                 for(var j in this.worker._listeners[i]){
-                    if(this.worker._listeners[i][j][0] == sig)
+                    if(this.worker._listeners[i][j][0] === sig)
                         this.worker._listeners[i].splice(j,1);
                 }
             }

@@ -343,33 +343,34 @@ define([
             DashboardProbes.worker.on('predict',function(data){
                 this.predict.set(data);
                 //update scale domains
-                for(var p in data){
-                    if(!data[p]) continue;
+                for(var entry in data){
+                    if(!data[entry]) continue;
                     var range = [false,false];
-                    for(var d in data[p].values){
-                        if(data[p].values[d][1] > range[1]) range[1] = data[p].values[d][1];
-                        if(typeof range[0] === 'boolean' || range[0] > data[p].values[d][3]) range[0] = data[p].values[d][3];
+                    for(var d in data[entry].values){
+                        if(data[entry].values[d][1] > range[1]) range[1] = data[entry].values[d][1];
+                        if(typeof range[0] === 'boolean' || range[0] > data[entry].values[d][3]) range[0] = data[entry].values[d][3];
                     }
-                    this.scales[this.probes[p].scale].updateDomain({'range': range});
+                    this.scales[this.probes[entry].scale].updateDomain({'range': range});
                 }
                 this.redraw();
             }.bind(this),this.id);
             DashboardProbes.worker.on('get', function(data){
                 var stacked = {};
                 var probes = this.probes;
+                var entry;
                 this.buildScale();
                 this.setDomain(data);
-                for(var p in data){
-                    if(!data[p] || !probes[p]) continue;
-                    if(probes[p].stacked){
-                        stacked[probes[p].scale] = stacked[probes[p].scale] || {};
-                        stacked[probes[p].scale][p] = probes[p];
+                for(entry in data) {
+                    if(!data[entry] || !probes[entry]) continue;
+                    if(probes[entry].stacked){
+                        stacked[probes[entry].scale] = stacked[probes[entry].scale] || {};
+                        stacked[probes[entry].scale][entry] = probes[entry];
                     }
                 }
-                for(var s in stacked){
-                    stacked[s]._stackedData = DashboardProbes.getStackedData(stacked[s],data);
-                    if(stacked[s]._stackedData.length)
-                        this.scales[s].updateDomain(stacked[s]._stackedData[stacked[s]._stackedData.length - 1]);
+                for(entry in stacked) {
+                    stacked[entry]._stackedData = DashboardProbes.getStackedData(stacked[entry],data);
+                    if(stacked[entry]._stackedData.length)
+                        this.scales[entry].updateDomain(stacked[entry]._stackedData[stacked[entry]._stackedData.length - 1]);
                 }
     
                 this.redraw(data);
@@ -392,20 +393,21 @@ define([
             }.bind(this), this.id);
             DashboardProbes.worker.on('aggregate',function(data){
                 var stacked = {};
-                for(var p in data){
-                    var probe = this.probes[p];
+                var entry;
+                for(entry in data){
+                    var probe = this.probes[entry];
                     if(probe.stacked){
                         stacked[probe.scale] = stacked[probe.scale] || {};
-                        stacked[probe.scale][p] = data[p];
+                        stacked[probe.scale][entry] = data[entry];
                     }
                 }
                 //TODO: Add a method to generate stacked arrays to prevent DRY.
-                for(var s in stacked){
-                    var stackedData = DashboardProbes.getStackedData(stacked[s],data);
+                for(entry in stacked) {
+                    var stackedData = DashboardProbes.getStackedData(stacked[entry],data);
                     if(stackedData.length){
                         var i = 0;
-                        for(p in stacked[s]){
-                            data[p].values = stackedData[i];
+                        for(var sEntry in stacked[entry]){
+                            data[sEntry].values = stackedData[i];
                             //if(this.content[p])
                             //    this.content[p].redraw(stackedData[i]);
                             i++;
@@ -413,9 +415,9 @@ define([
                     }
                 }
                 //prevent any glitch if the worker havn't returned all probes for any reason
-                for(p in this.currentData) {
-                    if(!data[p]){
-                        data[p] = this.currentData[p];
+                for(entry in this.currentData) {
+                    if(!data[entry]){
+                        data[entry] = this.currentData[entry];
                     }
                 }
                 this.currentData = data;
@@ -454,7 +456,7 @@ define([
                     if(end > domain[1])
                         this.updateUntilDate(end.getTime());
                     domain = this.axis.x2.domain();
-                    if(start != domain[0] || end != domain[1]){
+                    if(start !== domain[0] || end !== domain[1]){
                         this.container.brush.extent([start,end]);
                         this.container.context.call(this.container.brush);
                         //check if require to update scale range
@@ -802,7 +804,7 @@ define([
         this.container.focus.select('.y.axis.right.reversed').attr('transform','translate('+ this.conf.width +',0)');
 
         //context
-        this.container.context.attr('transform','translate('+ this.conf.trackMargin.left +','+ this.conf.trackMargin.top  +')');
+        this.container.context.attr('transform','translate(' + this.conf.trackMargin.left + ',' + this.conf.trackMargin.top + ')');
 
         //scales
         var trackHeight = 0;
@@ -826,7 +828,7 @@ define([
         }
 
         //commands
-        this.container.commands.attr('transform','translate('+(this.conf.containerWidth - this.conf.chartMargin.left - 85)+',0)');
+        this.container.commands.attr('transform','translate(' + (this.conf.containerWidth - this.conf.chartMargin.left - 85)+',0)');
 
         //focus logs
         this.container.logs.attr('transform','translate('+this.conf.chartMargin.left+','+this.conf.chartMargin.top+')');
@@ -836,8 +838,8 @@ define([
         this.container.logs.selectAll('.logs-bar').attr('height',this.conf.chartHeight - 23);
 
         //switchButtons
-        this.container.scales.left.opposate.attr('transform','translate(-88,'+( this.conf.chartHeight + 8  )+')');
-        this.container.scales.right.opposate.attr('transform','translate('+(this.conf.width + 8 )+','+( this.conf.chartHeight + 8 )+')');
+        this.container.scales.left.opposate.attr('transform','translate(-88,'+( this.conf.chartHeight + 8) + ')');
+        this.container.scales.right.opposate.attr('transform','translate('+(this.conf.width + 8 )+','+( this.conf.chartHeight + 8)+')');
         this.container.scales.right.top.attr('transform','translate('+(this.conf.width + 8)+',-28)');
 
         //alert if any active
@@ -1020,18 +1022,18 @@ define([
             .x(this.axis.x2)
             .on('brush', this.brushed.bind(this),true);
         brush.on('brushstart',function() {
-            var context = this.axis.x.domain();
-            var focus = this.axis.x2.domain();
+            var xDomain = this.axis.x.domain();
+            var x2Domain = this.axis.x2.domain();
             DashboardProbes.worker.postMessage([8, {
                 'probes': this.probes,
-                'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                'contextTimeline': [xDomain[0].getTime(), xDomain[1].getTime()],
+                'focusTimeline': [x2Domain[0].getTime(), x2Domain[1].getTime()],
                 'mode': this.conf.mode
             },this.id]);
         }.bind(this));
         brush.on('brushend',function() {
-            var context = this.axis.x2.domain();
-            var focus = this.axis.x.domain();
+            var x2Domain = this.axis.x2.domain();
+            var xDomain = this.axis.x.domain();
             this.needAutoScale = true;
 
             //... Dunno why in some case the pointer-event is stuck to "none".
@@ -1049,12 +1051,10 @@ define([
 
             DashboardProbes.worker.postMessage([8,{
                 'probes': this.probes,
-                'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                'contextTimeline': [x2Domain[0].getTime(),x2Domain[1].getTime()],
+                'focusTimeline': [xDomain[0].getTime(),xDomain[1].getTime()],
                 'mode': this.conf.mode
             },this.id]);
-
-
         }.bind(this));
 
         this.container.brush = brush;
@@ -1269,12 +1269,10 @@ define([
         container.append(button);
 
         //log
-        var style = (this.conf.log) ? 'enabled':'disabled';
-        button = jQuery('<button class="log '+style+'" data-tooltip="Set to logarithm mode">log</button>');
+        button = jQuery('<button class="log ' + (this.conf.log ? 'enabled':'disabled') + '" data-tooltip="Set to logarithm mode">log</button>');
 
         button.click(function() {
             this.conf.log = !this.conf.log;
-            var style = (this.conf.log) ? 'enabled':'disabled';
             this.buildScale();
             this.setDomain(this.data);
             this.redraw();
@@ -1288,7 +1286,7 @@ define([
                 'mode': this.conf.mode
             },this.id]);
 
-            this.container.commands.find('.log').attr('class','log '+style);
+            this.container.commands.find('.log').attr('class','log ' + (this.conf.log ? 'enabled':'disabled'));
 
             DashboardManager.savePartData({
                 'id': this.id,
@@ -1676,10 +1674,10 @@ define([
         var data = [];
         for(var p in this.probes) data.push({
             'order': Number(this.probes[p].order),
-            'name': 'chart_'+p.split(Config.separator()).join('_')
+            'name': 'chart_' + p.split(Config.separator()).join('_')
         });
         this.container.focus.selectAll('.ordered').data(data,function(d) {
-            return  d ? d.name : this.id;
+            return d ? d.name : this.id;
         }).sort(function(d,e) {
             return d.order - e.order;
         });
@@ -1752,14 +1750,16 @@ define([
 
                     var orphan = true;
                     for(var i in stacked){
-                        if(log.time >= stacked[i].min && log.time <= stacked[i].max){
-                            //sorry...
-                            if((function(l,s){
-                                for(var j = 0, len =s.length;j<len;j++)
-                                    if(l.time === s[j].time && l.host_name === s[j].host_name && l.service_description === s[j].service_description)
-                                        return false;
-                                return true;
-                            })(log,stacked[i].logs)){
+                        if(log.time >= stacked[i].min && log.time <= stacked[i].max) {
+                            var hasMatch = true;
+                            for(var j = 0, len = stacked[i].logs.length; j<len; j++) {
+                                if(log.time === stacked[i].logs[j].time && log.host_name === stacked[i].logs[j].host_name && log.service_description === stacked[i].logs[j].service_description) {
+                                    hasMatch = false;
+                                    break;
+                                }
+                            }
+
+                            if(hasMatch) {
                                 stacked[i].logs.push(log);
                                 if(log.state === 1) stacked[i].warnings++;
                                 else if(log.state === 2) stacked[i].errors++;
@@ -2016,7 +2016,7 @@ define([
             .attr('fill-opacity', 0.4)
             .attr('d', area2);
 
-        var dots =  this.container.focus.append('g')
+        var dots = this.container.focus.append('g')
             .attr('clip-path', clippath)
             .attr('class','chart dots focus_'+probe)
             .attr('id','dots_'+probe.split(separator).join('_'));
@@ -2037,27 +2037,26 @@ define([
             }.bind(this));
 
         this.content[probe] = {
-            redraw: function(data){
-                if(data){
-                    var d = dots.selectAll('.dots').data(data);
+            redraw: function(redrawData) {
+                if(redrawData) {
+                    var d = dots.selectAll('.dots').data(redrawData);
                     d.exit().remove();
                     d.enter().append('circle')
                         .attr('class','dots')
                         .attr('r',3)
                         .attr('fill',color)
                         .attr('stroke','black');
-                    d.attr('cy',function(d){ return y(d.y0 + d.y);})
-                        .attr('cx',function(d){ return x(d.x);})
+                    d.attr('cy',function(dot){ return y(dot.y0 + dot.y);})
+                        .attr('cx',function(dot){ return x(dot.x);})
                         .attr('data-title', probe)
-                        .attr('data-date', function(d){ return d.x.toLocaleString(); })
-                        .attr('data-value',function(d){ 
-                            return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
+                        .attr('data-date', function(dot){ return dot.x.toLocaleString(); })
+                        .attr('data-value',function(dot){ 
+                            return this.units.unitFormat(dot.y, this.units.get(this.scales[this.probes[probe].scale].unit));
                         }.bind(this));
 
-                    var paths = this._getPathList(data);
-                    var p = g.selectAll('path.main').data(paths);
+                    var p = g.selectAll('path.main').data(this._getPathList(redrawData));
                     p.enter().append('path')
-                        .datum(function(d){ return d;})
+                        .datum(function(dot){ return dot;})
                         .attr('data-id',probe)
                         .attr('stroke', color)
                         .attr('class','main')
@@ -2068,21 +2067,21 @@ define([
 
                     //redraw predicted charts if any
                     if(this.predictData[probe])
-                        this.addPredict(this.predictData[probe],color,data,y,probe);
+                        this.addPredict(this.predictData[probe],color,redrawData,y,probe);
                 }
                 else {
                     g.selectAll('path.main').attr('d', area);
                     dots.selectAll('.dots')
-                        .attr('cx',function(d){ return x(d.x);});
+                        .attr('cx',function(dot){ return x(dot.x);});
 
                     dots.selectAll('.predictDot')
-                        .attr('cx',function(d){ return x(d.x);});
+                        .attr('cx',function(dot){ return x(dot.x);});
                     g.selectAll('path.predict').attr('d', d3.svg.line()
-                                                     .x(function(d){ return x(d.x); })
-                                                     .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                                                     .x(function(dot){ return x(dot.x); })
+                                                     .y(function(dot){ return y((dot.y0 || 0) + dot.y); }));
                     g.selectAll('path.mean').attr('d', d3.svg.line()
-                                                  .x(function(d){ return x(d.x); })
-                                                  .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                                                  .x(function(dot){ return x(dot.x); })
+                                                  .y(function(dot){ return y((dot.y0 || 0) + dot.y); }));
 
                 }
             }.bind(this)
@@ -2119,7 +2118,7 @@ define([
         var g2 = this.container.context.insert('g',':first-child')
             .attr('class','chart line context_'+probe);
 
-        var dots =  this.container.focus.append('g')
+        var dots = this.container.focus.append('g')
             .attr('clip-path', clippath)
             .attr('class','chart dots focus_'+probe)
             .attr('id','dots_'+probe.split(separator).join('_'));
@@ -2156,6 +2155,7 @@ define([
             .attr('fill','none')
             .attr('d', line2);
 
+        // TODO: This is WAY too similar to the end of addArea; refactoring needed
         dots.selectAll('.dots')
             .data(data)
             .enter().append('circle')
@@ -2172,27 +2172,26 @@ define([
             }.bind(this));
 
         this.content[probe] = {
-            redraw: function(data){
-                if(data){
-                    var d = dots.selectAll('.dots').data(data);
+            redraw: function(redrawData){
+                if(redrawData){
+                    var d = dots.selectAll('.dots').data(redrawData);
                     d.exit().remove();
                     d.enter().append('circle')
                         .attr('class','dots')
                         .attr('r',3)
                         .attr('fill',color)
                         .attr('stroke','black');
-                    d.attr('cy',function(d){ return y(d.y0 + d.y);})
-                        .attr('cx',function(d){ return x(d.x);})
+                    d.attr('cy',function(dot){ return y(dot.y0 + dot.y);})
+                        .attr('cx',function(dot){ return x(dot.x);})
                         .attr('data-title', probe)
-                        .attr('data-date', function(d){ return d.x.toLocaleString(); })
-                        .attr('data-value',function(d){ 
-                            return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit)); 
+                        .attr('data-date', function(dot){ return dot.x.toLocaleString(); })
+                        .attr('data-value',function(dot){ 
+                            return this.units.unitFormat(dot.y, this.units.get(this.scales[this.probes[probe].scale].unit)); 
                         }.bind(this));
 
-                    var paths = this._getPathList(data);
-                    var p = g.selectAll('path.main').data(paths);
+                    var p = g.selectAll('path.main').data(this._getPathList(redrawData));
                     p.enter().append('path')
-                        .datum(function(d){ return d;})
+                        .datum(function(dot){ return dot;})
                         .attr('data-id',probe)
                         .attr('class','main')
                         .attr('stroke', color)
@@ -2202,21 +2201,22 @@ define([
 
                     //redraw predicted charts if any
                     if(this.predictData[probe])
-                        this.addPredict(this.predictData[probe],color,data,y,probe);
+                        this.addPredict(this.predictData[probe],color,redrawData,y,probe);
 
-                } else{
+                } 
+                else {
                     g.selectAll('path.main').attr('d', line);
                     dots.selectAll('.dots')
-                        .attr('cx',function(d){ return x(d.x);});
+                        .attr('cx',function(dot){ return x(dot.x);});
 
                     dots.selectAll('.predictDot')
-                        .attr('cx',function(d){ return x(d.x);});
+                        .attr('cx',function(dot){ return x(dot.x);});
                     g.selectAll('path.predict').attr('d', d3.svg.line()
-                                                     .x(function(d){ return x(d.x); })
-                                                     .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                                                     .x(function(dot){ return x(dot.x); })
+                                                     .y(function(dot){ return y((dot.y0 || 0) + dot.y); }));
                     g.selectAll('path.mean').attr('d', d3.svg.line()
-                                                           .x(function(d){ return x(d.x); })
-                                                           .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                                                           .x(function(dot){ return x(dot.x); })
+                                                           .y(function(dot){ return y((dot.y0 || 0) + dot.y); }));
 
                 }
             }.bind(this)
@@ -2364,19 +2364,19 @@ define([
             .y(function(d){ return y(d.y); });
 
         var reverse = (y(2) > y(1));
-        var clippath = 'url(#clip_'+this.id+')';
+        var clippath = 'url(#clip_' + this.id + ')';
         if(this.opposate)
-            clippath = (reverse) ? 'url(#clip_bottom_'+this.id+')':'url(#clip_top_'+this.id+')';
+            clippath = (reverse) ? 'url(#clip_bottom_' + this.id + ')':'url(#clip_top_' + this.id + ')';
 
-        var getInterval = function(data){
-            var interval = false;
-            for(var i = 0, len = data.length;i<len - 1;i++){
-                if((!i || data[i].start === false) && data[i+1].start === false){
-                    if(typeof interval === 'boolean' || data[i+1].x - data[i].x < interval)
-                        interval = data[i+1].x - data[i].x;
+        var getInterval = function(input) {
+            var result = Number.MAX_VALUE;
+            for(var i = 0, len = input.length;i<len - 1;i++) {
+                if((!i || input[i].start === false) && input[i+1].start === false) {
+                    if(input[i+1].x - input[i].x < result)
+                        result = input[i+1].x - input[i].x;
                 }
             }
-            return interval;
+            return result;
         };
 
         var interval = getInterval(data);
@@ -2466,59 +2466,59 @@ define([
             .attr('fill-opacity', 0.4);
 
         this.content[probe] = {
-            redraw: function(data){
-                if(data){
-                    interval = getInterval(data);
+            redraw: function(redrawData) {
+                if(redrawData){
+                    interval = getInterval(redrawData);
                     colwidth = this.axis.x(interval) - this.axis.x(0);
 
-                    var r = focusGroup.selectAll('rect').data(data);
+                    var r = focusGroup.selectAll('rect').data(redrawData);
                     r.exit().remove();
                     r.enter().append('rect')
                         .attr('stroke', color)
                         .attr('fill', color)
                         .attr('fill-opacity', 0.4)
-                        .append('title').text(function(d){ return probe + ' : ' + d.y; });
-                    r.attr('x', function(d){ return this.axis.x(d.x) - colwidth/2; }.bind(this))
+                        .append('title').text(function(dot){ return probe + ' : ' + dot.y; });
+                    r.attr('x', function(dot){ return this.axis.x(dot.x) - colwidth/2; }.bind(this))
                         .attr('y', getY)
                         .attr('width', colwidth)
                         .attr('height', getHeight);
 
-                    var d = dots.selectAll('.dots').data(data);
+                    var d = dots.selectAll('.dots').data(redrawData);
                     d.exit().remove();
                     d.enter().append('circle')
                         .attr('class','dots')
                         .attr('r',3)
                         .attr('fill',color)
                         .attr('stroke','black');
-                    d.attr('cx',function(d){ return x(d.x);})
-                        .attr('cy',function(d){ return y(d.y0 + d.y);})
+                    d.attr('cx',function(dot){ return x(dot.x);})
+                        .attr('cy',function(dot){ return y(dot.y0 + dot.y);})
                         .attr('data-title', probe)
-                        .attr('data-date', function(d){ return d.x.toLocaleString(); })
-                        .attr('data-value',function(d){ 
-                            return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit)); 
+                        .attr('data-date', function(dot){ return dot.x.toLocaleString(); })
+                        .attr('data-value',function(dot){ 
+                            return this.units.unitFormat(dot.y, this.units.get(this.scales[this.probes[probe].scale].unit)); 
                         }.bind(this));
 
                     //redraw predicted charts if any
                     if(this.predictData[probe])
-                        this.addPredict(this.predictData[probe],color,data,y,probe);
+                        this.addPredict(this.predictData[probe], color, redrawData, y, probe);
                 }
                 else {
                     colwidth = this.axis.x(interval) - this.axis.x(0);
                     focusGroup.selectAll('rect')
-                        .attr('x', function(d){ return this.axis.x(d.x) - colwidth / 2;}.bind(this))
+                        .attr('x', function(dot){ return this.axis.x(dot.x) - colwidth / 2;}.bind(this))
                         .attr('width', colwidth);
                     dots.selectAll('.dots')
-                        .attr('cx',function(d){ return x(d.x);});
+                        .attr('cx',function(dot){ return x(dot.x);});
 
                     focusGroup.selectAll('path.predict').attr('d', d3.svg.line()
-                                                              .x(function(d){ return x(d.x); })
-                                                              .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                                                              .x(function(dot){ return x(dot.x); })
+                                                              .y(function(dot){ return y((dot.y0 || 0) + dot.y); }));
                     focusGroup.selectAll('path.mean').attr('d', d3.svg.line()
-                                                              .x(function(d){ return x(d.x); })
-                                                              .y(function(d){ return y((d.y0 || 0) + d.y); }));
+                                                              .x(function(dot){ return x(dot.x); })
+                                                              .y(function(dot){ return y((dot.y0 || 0) + dot.y); }));
 
                     dots.selectAll('.predictDot')
-                        .attr('cx',function(d){ return x(d.x);});
+                        .attr('cx',function(dot){ return x(dot.x);});
                 }
             }.bind(this)
         };
@@ -2581,11 +2581,11 @@ define([
             this.toogleSpinner(container);
             container.find('.spinner').attr('style','position: initial;vertical-align: middle;margin-left: 1em;');
             var check = function(){
-                var metrics = DashboardProbes.getMetrics();
-                if(!metrics)
-                    setTimeout(check,1000/60);
+                var allMetrics = DashboardProbes.getMetrics();
+                if(!allMetrics)
+                    setTimeout(check,1000/60); //TODO : Find a better way to wait for the metrics to be ready
                 else
-                    this.appendMetricSelect(metrics,container,name);
+                    this.appendMetricSelect(allMetrics,container,name);
             }.bind(this);
             setTimeout(check,1000/60);
         }
@@ -2846,12 +2846,13 @@ define([
         submit.click(function(){
             //replace hosts
             var tmp = {};
-            for(var h in hosts){
-                for(var p in conf.probes){
-                    var j = DashboardProbes.extractHost(p);
-                    if( j !== h) continue;
-                    var i = p.replace(j,'');
-                    tmp[hosts[h].concat(i)] = conf.probes[p];
+            for(var hostname in hosts) {
+                for(var probename in conf.probes) {
+                    var j = DashboardProbes.extractHost(probename);
+                    if( j === hostname) {
+                        var i = probename.replace(j, '');
+                        tmp[hosts[hostname].concat(i)] = conf.probes[probename];
+                    }
                 }
             }
 
@@ -2873,9 +2874,10 @@ define([
             if(currentConf.conf.untildate) partData.conf.untildate = currentConf.conf.untildate;
 
             //Finally create it
-            Widget.getWidgetById(currentConf.widget, function(widget){
-                if(!widget) return;
-                DashboardManager.addWidget(partData, widget);
+            Widget.getWidgetById(currentConf.widget, function(widget) {
+                if(widget) {
+                    DashboardManager.addWidget(partData, widget);
+                }
             });
         });
 
@@ -2945,7 +2947,7 @@ define([
         var nextColor = getNextUnusedColor();
 
         //containers
-        var addForm = jQuery('<form name="add_chart_form_'+id+'" ></form>');
+        var addForm = jQuery('<form name="add_chart_form_' + id + '" ></form>');
         addForm.append(jQuery('<h3>Add probe</h3>'));
         var probeSelection = jQuery('<div class="column"></div>');
         var probePosition = jQuery('<div class="column"></div>');
@@ -2962,24 +2964,24 @@ define([
         probePosition.append(form.unitSelect(false, false, units));
 
         //add unit
-        if(Config.isAdmin()){
+        if(Config.isAdmin()) {
             var add = jQuery('<p><button class="add">Add unit</button></p>');
-            add.on('click',function(e){
-                e.preventDefault();
-                var target = e.target.getBoundingClientRect();
-                var units = this.units;
+            add.on('click',function(evt) {
+                evt.preventDefault();
+                var target = evt.target.getBoundingClientRect();
+                var currentUnits = this.units;
 
-                jQuery.ajax('/units/add').success(function(e){
-                    var form = jQuery(e);
-                    var popin = jQuery('<div class="popin" style="top:'+(target.top - 200)+'px;left:'+target.left+'px;"></div>');
+                jQuery.ajax('/units/add').success(function(addResult){
+                    var newForm = jQuery(addResult);
+                    var popin = jQuery('<div class="popin" style="top:' + (target.top - 200) + 'px;left:' + target.left + 'px;"></div>');
                     var close = jQuery('<button class="close" title="close"></button>');
                     close.on('click',function(){ popin.remove(); });
                     var title = jQuery('<h3>Add unit</h3>');
                     popin.append(close);
                     popin.append(title);
 
-                    form.find('.submit').on('click',function(e){
-                        e.preventDefault();
+                    newForm.find('.submit').on('click',function(clickEvt){
+                        clickEvt.preventDefault();
 
                         jQuery.ajax('/units/add',{
                             'type':'POST',
@@ -2989,7 +2991,7 @@ define([
                                 'factor': document.forms.add_unit.factor.value
                             }
                         }).success(function(u){
-                            units.add(u.name, u);
+                            currentUnits.add(u.name, u);
                             var option = document.createElement('option');
                             option.setAttribute('value',u.name);
                             option.setAttribute('selected','selected');
@@ -2997,8 +2999,8 @@ define([
 
                             document.forms['add_chart_form_'+id].unit.appendChild(option);
                             popin.remove();
-                        }.bind({'units': units})).error(function(e){
-                            var response = e.responseJSON;
+                        }.bind({'units': currentUnits})).error(function(addError) { // TODO : Is the bind necessary ?
+                            var response = addError.responseJSON;
                             var li = false;
                             popin.find('.errors').empty();
                             for(var label in response) {
@@ -3011,7 +3013,7 @@ define([
                         return false;
                     });
 
-                    popin.append(form);
+                    popin.append(newForm);
                     jQuery('body').append(popin);
                 });
             }.bind(this));
@@ -3043,26 +3045,26 @@ define([
                 }
             };
 
-            var form = document['add_chart_form_'.concat(this.id)];
+            var clickedForm = document['add_chart_form_' + this.id];
 
-            var color= form.color.value;
-            var type= form.type.value;
+            var color= clickedForm.color.value;
+            var type= clickedForm.type.value;
 
             //scale
-            var unit = form.unit.value;
-            var orient= form.orient.value;
-            var direction= form.reversed.value;
+            var unit = clickedForm.unit.value;
+            var orient= clickedForm.orient.value;
+            var direction= clickedForm.reversed.value;
             var scale= this.getScale(unit, orient, direction, false);
 
             var query = '';
             var i, len;
-            if(form[1].value === color)
-                query = form.server.value;
+            if(clickedForm[1].value === color)
+                query = clickedForm.server.value;
             else{
                 var separator = Config.separator();
-                for(i = 0, len = form['server'].length; i < len; i++) {
+                for(i = 0, len = clickedForm['server'].length; i < len; i++) {
                     if(i) query += separator;
-                    query += form[i].value;
+                    query += clickedForm[i].value;
                 }
             }
 
@@ -3073,15 +3075,16 @@ define([
 
             var addCount = 0;
             for(i in probeList) {
-                if(this.probes[name]) continue;
-                addCount++;
+                if(!this.probes[i]) {
+                    addCount++;
+                }
             }
 
             if(addCount > 10) {
                 var warned = subcontainer.data('warned');
                 if(!warned) {
                     subcontainer.data('warned', 1);
-                    subcontainer.prepend(jQuery('<div class="submit-warning">You are going to add '+addCount+' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser!</p></div>'));
+                    subcontainer.prepend(jQuery('<div class="submit-warning">You are going to add ' + addCount + ' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser!</p></div>'));
                     return false;
                 } 
                 else {
@@ -3136,26 +3139,26 @@ define([
                     'probes': probeList,
                     'start' : (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
                 },this.id]);
-                form.color.value = getNextUnusedColor();
+                clickedForm.color.value = getNextUnusedColor();
                 settings.find('.color').find('.selected').attr('class','');
-                settings.find('.color').find('[data-value="'+form.color.value+'"]').attr('class','selected');
+                settings.find('.color').find('[data-value="' + clickedForm.color.value + '"]').attr('class','selected');
             }.bind(this));
 
             return true;
         }.bind(this));
 
         subandclose.click(function(){
-            var form = document['add_chart_form_'.concat(this.id)];
+            var clickedForm = document['add_chart_form_'.concat(this.id)];
             var query = '';
             var i, len;
-            if(form[1].value === form.color.value) {
-                query = form.server.value;
+            if(clickedForm[1].value === clickedForm.color.value) {
+                query = clickedForm.server.value;
             }
             else {
-                for(i = 0, len = form['server'].length; i < len; i++){
+                for(i = 0, len = clickedForm['server'].length; i < len; i++){
                     if(i) 
                         query = query.concat(Config.separator());
-                    query = query.concat(form[i].value);
+                    query = query.concat(clickedForm[i].value);
                 }
             }
             if(!query) return false;
@@ -3187,7 +3190,7 @@ define([
     /**
      * Return probes by scales (every probe from the same scale can be stacked)
      */
-    DashboardChart.prototype.getStackableGroups = function(){
+    DashboardChart.prototype.getStackableGroups = function() {
         var results = {};
         var probes = this.probes;
         for(var p in probes){
@@ -3197,7 +3200,7 @@ define([
             results[scale].push(p);
         }
         return results;
-    },
+    };
 
     /**
      * Construct the edit panel

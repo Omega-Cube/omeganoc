@@ -238,7 +238,7 @@ define([
                 if (selection.indexOf(node.text) === -1) {
                     if (node.original.isa === 'service')
                         selection.push(node.original.serviceId);
-                    else if(node.original.isa == 'host')
+                    else if(node.original.isa === 'host')
                         selection.push(node.text);
                 }
             }

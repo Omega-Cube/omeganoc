@@ -161,7 +161,7 @@ define([
                 DashboardsManager._setDashboardTitle(dashboardName);
                 DashboardsManager._showDashboardControls(true);
             }, function (errorCode, errorText) {
-                if (errorCode == 404) {
+                if (errorCode === 404) {
                     DashboardsManager._setNoDashboardMessage('The specified dashboard could not be found on the server');
                 }
                 else {
@@ -388,7 +388,7 @@ define([
                 var pid = parseInt(jqe.attr('data-part-id'), 10);
                 var curPos = DashboardsManager.getPartPosition(jqe);
                 var pData = DashboardsManager.currentParts[pid] || {};
-                if (pData.col != curPos.col || pData.row != curPos.row) {
+                if (pData.col !== curPos.col || pData.row !== curPos.row) {
                     // Apply and save
                     // TODO : Replace this with a single-request
 
@@ -413,7 +413,7 @@ define([
                 var pid = parseInt(jqe.attr('data-part-id'), 10);
                 var curPos = DashboardsManager.getPartPosition(jqe);
                 var pData = DashboardsManager.currentParts[pid] || {};
-                if (pData.width != curPos.width || pData.height != curPos.height) {
+                if (pData.width !== curPos.width || pData.height !== curPos.height) {
                     // Apply and save
                     // TODO : Replace this with a single-request batched save
                     pData.width = curPos.width;
@@ -444,7 +444,7 @@ define([
             if(!partData.id && !partData.conf)
                 return false;
             jQuery.post(url, partData, function (data) {
-                if (data.original_id != data.saved_id) {
+                if (data.original_id !== data.saved_id) {
                     DashboardsManager._applyDefinitivePartId(data.original_id, data.saved_id);
                     partData.id = data.saved_id;
                 }
@@ -516,7 +516,7 @@ define([
             var entries = jQuery('#menu-dashboards-list a');
             entries.each(function (i, elm) {
                 var jqElm = jQuery(elm);
-                if (jqElm.text() == oldName) {
+                if (jqElm.text() === oldName) {
                     jqElm.text(newName);
                     jqElm.attr('href', createUrl('/dashboards') + '#' + encodeURIComponent(newName));
                 }
@@ -531,7 +531,7 @@ define([
             var entries = jQuery('#menu-dashboards-list a');
             entries.each(function (i, elm) {
                 var jqElm = jQuery(elm);
-                if (jqElm.text() == name) {
+                if (jqElm.text() === name) {
                     jqElm.remove();
                 }
             });

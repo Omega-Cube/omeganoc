@@ -50,7 +50,7 @@ require(['jquery', 'console', 'onoc.createurl'], function (jQuery, Console, crea
         var entries = jQuery('#menu-dashboards-list a');
         entries.each(function (i, elm) {
             var jqElm = jQuery(elm);
-            if (jqElm.text() == oldName) {
+            if (jqElm.text() === oldName) {
                 jqElm.text(newName);
                 jqElm.attr('href', createUrl('/dashboards') + '#' + encodeURIComponent(newName));
             }
@@ -65,7 +65,7 @@ require(['jquery', 'console', 'onoc.createurl'], function (jQuery, Console, crea
         var entries = jQuery('#menu-dashboards-list a');
         entries.each(function (i, elm) {
             var jqElm = jQuery(elm);
-            if (jqElm.text() == name) {
+            if (jqElm.text() === name) {
                 jqElm.remove();
             }
         });

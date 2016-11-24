@@ -371,7 +371,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop, S
         });
 
         $overviewSelector.mousemove(function (e) {
-            if (selfRef.currentMouseOperation == Bubbles.MOUSE_OPERATION_OVERVIEW_PANNING) {
+            if (selfRef.currentMouseOperation === Bubbles.MOUSE_OPERATION_OVERVIEW_PANNING) {
                 var deltaX = selfRef.mousex - e.clientX;
                 var deltaY = selfRef.mousey - e.clientY;
 
@@ -1263,7 +1263,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop, S
         },
 
         _updateGroupSelection: function (group, isSelected) {
-            if (isSelected == group.selected)
+            if (isSelected === group.selected)
                 return;
 
             for (var id in group.nodes) {
@@ -1387,7 +1387,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop, S
         // are up to date
         updateAllNodesPositions: function() {
             for (var n in this.graph.nodes) {
-                if(n.x != n.renderX || n.y != n.renderY) {
+                if(n.x !== n.renderX || n.y !== n.renderY) {
                     n.x = n.renderX;
                     n.y = n.renderY;
                     n.updateBbox();
@@ -1463,13 +1463,13 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop, S
 
         panScreen: function (keycode, panCoef) {
             // If the right arrow is pressed
-            if (keycode == 39) this.pan(panCoef, 0);
+            if (keycode === 39) this.pan(panCoef, 0);
                 // If the left arrow is pressed
-            else if (keycode == 37) this.pan(-panCoef, 0);
+            else if (keycode === 37) this.pan(-panCoef, 0);
                 // If the up arrow is pressed
-            else if (keycode == 38) this.pan(0, -panCoef);
+            else if (keycode === 38) this.pan(0, -panCoef);
                 // If the down arrow is pressed
-            else if (keycode == 40) this.pan(0, panCoef);
+            else if (keycode === 40) this.pan(0, panCoef);
         },
 
         moveSelectedNodesWithArrows: function (keycode, moveCoef) {
@@ -1739,7 +1739,7 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop, S
 
             this.commandBg.mouseout(function (e) {
                 e = jQuery.event.fix(e);
-                if (e.relatedTarget.getAttribute('class') != 'command-icon')
+                if (e.relatedTarget.getAttribute('class') !== 'command-icon')
                     selfRef.hideCommands();
 
                 /*

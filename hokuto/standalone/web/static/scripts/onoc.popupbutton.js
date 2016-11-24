@@ -26,7 +26,7 @@ define(['jquery'], function(jQuery) {
             var type = jqThis.data('popup-button');
             var parent = jqThis.parent();
             
-            if(type == 'click') {
+            if(type === 'click') {
                 parent.click(function(e) {
                     jqThis.show();
                     e.preventDefault();

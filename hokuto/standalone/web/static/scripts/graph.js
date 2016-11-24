@@ -82,7 +82,7 @@ define([
                 for(var j in graph.edges) {
                     var e = graph.edges[j];
                     // Only save user created nodes
-                    if(e.shinken_type == 'user_created') {
+                    if(e.shinken_type === 'user_created') {
                         data['link:' + e.source.id + ':' + e.target.id] = 'virtual';
                     }
                 }
@@ -175,7 +175,7 @@ define([
                         }
 
                         if(OVERVIEW_KEY in graph.meta) {
-                            Grapher._renderer.setOverviewVisibility(graph.meta[OVERVIEW_KEY] == 'collapsed' ? false : true, !firstDisplay);
+                            Grapher._renderer.setOverviewVisibility(graph.meta[OVERVIEW_KEY] === 'collapsed' ? false : true, !firstDisplay);
                         }
                         
                         _updateMenu(graphName);
@@ -255,7 +255,7 @@ define([
                 var node = Grapher._renderer.graph.nodes[name];
                 if (node.shinken_type === 'host') {
                     var curState = States.getHostState(node.id);
-                    if (!node.state || node.state.state != curState.state) {
+                    if (!node.state || node.state.state !== curState.state) {
                         // The host changed state
                         Grapher._renderer.updateNodeState(node, curState);
                     }
@@ -263,7 +263,7 @@ define([
                 else if (node.shinken_type === 'service') {
                     var nameParts = node.id.split('$');
                     var curSvcState = States.getServicesStates(nameParts[0], nameParts[1]);
-                    if (!node.state || node.state.state != curSvcState.state) {
+                    if (!node.state || node.state.state !== curSvcState.state) {
                         // The service changed state
                         Grapher._renderer.updateNodeState(node, curSvcState);
                     }
@@ -277,7 +277,7 @@ define([
                 var group = Grapher._renderer.graph.groups[groupName];
                 // All groups are hosts
                 var curHostState = States.getHostState(group.id);
-                if (!group.state || group.state.state != curHostState.state)
+                if (!group.state || group.state.state !== curHostState.state)
                     Grapher._renderer.updateGroupState(group, curHostState);
             }
         },
@@ -300,7 +300,7 @@ define([
         // Get the link and the string after the hash (if there is any)
         var hashLink = window.location.hash;
 
-        if (hashLink == '') {
+        if (hashLink === '') {
             window.location.hash = '#physical.hosts';
             // The graph will be loaded by the hash changed event, triggered by this previous line
         }
@@ -362,9 +362,9 @@ define([
             else {
                 // Validate
                 // TODO : Check that the name does not already exist
-                if(newBox.val().search(/^[a-zA-Z0-9_\. \-]+$/i) == -1) {
+                if(newBox.val().search(/^[a-zA-Z0-9_\. \-]+$/i) === -1) {
                     // Invalid
-                    if(newBox.val().length == 0) {
+                    if(newBox.val().length === 0) {
                         jQuery('#newSaveName-validation').text('Enter a name').show();
                     }
                     else {
@@ -407,7 +407,7 @@ define([
                 jqThis.parent().parent().remove();
                 jQuery('li.save-entry').each(function() {
                     var jqSaveLink = jQuery(this);
-                    if(jqSaveLink.find('a').data('savename') == loadName) {
+                    if(jqSaveLink.find('a').data('savename') === loadName) {
                         jqSaveLink.remove();
                         return false;
                     }

@@ -262,7 +262,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
             container.on('click',function(e){
                 e.preventDefault();
                 var newval = Boolean(e.target.dataset.value);
-                if(newval == select[0].selectedIndex) return;
+                if(newval === select[0].selectedIndex) return;
 
                 select[0].selectedIndex = (newval) ? 1 : 0;
                 container.find('.selected').attr('class','');
@@ -294,7 +294,7 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
             button.text(function(){
                 var result = values[0];
                 if(values.indexOf(current) !== -1)
-                    result =  values[values.indexOf(current)];
+                    result = values[values.indexOf(current)];
                 return result.charAt(0).toUpperCase().concat(result.slice(1));
             });
 
