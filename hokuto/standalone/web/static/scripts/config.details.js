@@ -18,45 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery', 'console', 'libs/select2', 'libs/jquery.validate'], function(jQuery, Console){
+define(['jquery', 'config.infobar', 'libs/select2', 'libs/jquery.validate'], function(jQuery, initInfobar){
     jQuery(function() {
-        jQuery('#conf-apply-changes').click(function() {
-            jQuery.ajax('/config/apply', {
-                'method': 'POST',
-            }).success(function(response) {
-                if(!response.success) {
-                    alert(response.error);
-                } 
-                else {
-                    alert('Shinken will restart with the new configuration in less than one minute.');
-                }
-            }).error(function(response) {
-                Console.error('The configuration service responded to the apply call with an error: ' + response);
-                alert('An error occured; Maybe try again later ?');
-            });
-        });
-
-        jQuery('#conf-reset-changes').click(function(){
-            jQuery.ajax('/config/reset',{
-                'method': 'DELETE',
-            }).success(function() {
-                document.location.reload();
-            }).error(function(response){
-                Console.error('The configuration service responded to the reset call with an error: ' + response);
-                alert('An error occured; Maybe try again later ?');
-            });
-        });
-
-        jQuery('#conf-lock').click(function(){
-            jQuery.ajax('/config/lock').success(function(){
-                document.location.reload();
-            }).error(function(response) {
-                Console.error('The configuration service responded to the lock call with an error: ' + response);
-                alert('An error occured; Maybe try again later ?');
-
-            });
-        });
-
+        initInfobar();
         
         // Select2 lists
         jQuery('select[multiple]').select2({

@@ -21,8 +21,10 @@
 define([
     'jquery', 
     'onoc.createurl', 
-    'console', 
-    'libs/jquery.hashchange'], function(jQuery, createurl, Console) {
+    'config.infobar',
+    'console',
+    'config.service',
+    'libs/jquery.hashchange'], function(jQuery, createurl, initInfobar, Console, ConfigService) {
 
     var _binarytree = [];
     var _data = false;
@@ -183,10 +185,6 @@ define([
         }
     };
 
-    function _applyCurrentHash() {
-        _applyHash(window.location.hash.substr(1));
-    }
-
     /**
      * Set the create button url to follow hash change
      **/
@@ -329,75 +327,39 @@ define([
         _applyCreateUrl(hash);
 
         //fetch data and fill list
-        var serviceUrl = createurl('/config/list/' + struct.id + (isTemplate ? 'templates' : 's'));
-        jQuery.get(serviceUrl).success(function(response) {
-            if(response.success) {
-                _data = _sort(response.data,struct.key);
+        ConfigService.list(struct.id, isTemplate).then(function(data) {
+            _data = _sort(data,struct.key);
 
-                //setup title
-                var title = (_data.length > 1) ? struct.names : struct.name;
-                if(isTemplate) title += ' ' + 'template';
-                title += ' (' + _data.length + ')';
-                listtitle.text(title);
-                listdescription.text(struct.description);
+            //setup title
+            var title = (_data.length > 1) ? struct.names : struct.name;
+            if(isTemplate) title += ' template';
+            title += ' (' + _data.length + ')';
+            listtitle.text(title);
+            listdescription.text(struct.description);
 
-                var legend = (isTemplate) ? ['name']: struct.default_columns;
-                _fillLegend(legend);
+            var legend = (isTemplate) ? ['name']: struct.default_columns;
+            _fillLegend(legend);
 
-                //fill list
-                if(_data.length) {
-                    _fillTable(_data);
-                }
-                else {
-                    var li = jQuery('<li class="empty">There is currently no ' + (typeName + ((isTemplate) ? ' template ' : '')) + ' defined!</li>');
-                    listcontent.append(li);
-                }
+            //fill list
+            if(_data.length) {
+                _fillTable(_data);
             }
-        }).error(function(response) {
-            Console.error('An error was returned by the config/list service: ', response);
-            alert('An error occured while loading the page. Maybe try again later?');
+            else {
+                var li = jQuery('<li class="empty">There is currently no ' + (typeName + ((isTemplate) ? ' template ' : '')) + ' defined!</li>');
+                listcontent.append(li);
+            }
+        }).catch(function() {
+            alert('An error occured while loading the configuration. Maybe try again later?');
         });
+    }
+
+    function _applyCurrentHash() {
+        _applyHash(window.location.hash.substr(1));
     }
 
     jQuery(function(){
         //actions
-        jQuery('#conf-apply-changes').click(function() {
-            jQuery.ajax('/config/apply',{
-                'method': 'POST',
-            }).success(function(response){
-                if(!response.success){
-                    alert(response.error);
-                }else{
-                    if(response.service_changed) {
-                        alert('Shinken will restart with the new configuration in less than one minute.\nBe aware that you have changed some services names, if you don\'t want to lose their data you have to move them manually from /opt/graphite/storage/whisper.');
-                    }
-                    else {
-                        alert('Shinken will restart with the new configuration in less than one minute.');
-                    }
-                }
-            }).error(function(response) {
-                Console.error('An error was returned by the config/apply service: ', response);
-                alert('An error occured while loading the page. Maybe try again later?');
-            });
-        });
-        jQuery('#conf-reset-changes').click(function() {
-            jQuery.ajax('/config/reset',{
-                'method': 'DELETE',
-            }).success(function(){
-                document.location.reload();
-            }).error(function(response){
-                Console.error('An error was returned by the config/reset service: ', response);
-                alert('An error occured while loading the page. Maybe try again later?');
-            });
-        });
-        jQuery('#conf-lock').click(function(){
-            jQuery.ajax('/config/lock').success(function() {
-                document.location.reload();
-            }).error(function(response){
-                Console.error('An error was returned by the config/lock service: ', response);
-                alert('An error occured while loading the page. Maybe try again later?');
-            });
-        });
+        initInfobar();
         jQuery('.configlist-title .search').on('input',function(e) {
             var key = e.target.value;
             var results = _search(key,[],struct.key,_binarytree);
