@@ -41,6 +41,7 @@ define([
             createurl, 
             popupButton) {
     var OVERVIEW_KEY = 'overview_visibility';
+
     var Grapher = {
         // Holds the currently displayed graph type identifier
         _currentType: '',
@@ -176,6 +177,10 @@ define([
                             Grapher._renderer.setOverviewVisibility(graph.meta[OVERVIEW_KEY] === 'collapsed' ? false : true, !firstDisplay);
                         }
                         
+                        // We know that _updateMenu will be declared by the time we reach this line
+                        // and can't reorganize the declarations as we have a circular dependency between
+                        // _updateMenu and Grapher
+                        // eslint-disable-next-line no-use-before-define
                         _updateMenu(graphName);
                     }
                 });
@@ -281,48 +286,26 @@ define([
         },
     };
 
-    jQuery(document).ready(function () {
-        popupButton();
-        _fillLayoutMenu();
-        _fillLoadSaveMenu();
+    var _menuGraphType = '';
+
+    function _clearLoadSaveMenu() {
+        jQuery('li.load-entry').remove();
+        jQuery('li.save-entry').remove();
+    }
     
-        // Initialize the global message display
-        jQuery('#graph-big-msg').onocMessage();
-
-        Grapher.showGlobalMessage('Loading...');
-
-        jQuery(window).hashchange(function () {
-            Grapher.applyCurrentHash();
-        });
-
-        // Get the link and the string after the hash (if there is any)
-        var hashLink = window.location.hash;
-
-        if (hashLink === '') {
-            window.location.hash = '#physical.hosts';
-            // The graph will be loaded by the hash changed event, triggered by this previous line
+    
+    // Checks if saves actually exists, and shows / hides UI elementsthat says that no save exists
+    function _updateNoSaveDisplay() {
+        if(jQuery('li.load-entry').length > 0) {
+            jQuery('li.no-load-entry').hide();
+            Console.log('hide');
         }
         else {
-            // Load this graph
-            Grapher.applyCurrentHash();
+            jQuery('li.no-load-entry').show();
+            Console.log('show');
         }
-
-        new StructureTree(document.getElementById('treeview-container'), 80);
-
-        initInfoPanel(document.querySelector('.column-content.props'));
-    });
-    
-    function _fillLayoutMenu() {
-        var container = jQuery('ul[data-layout-list]');
-        _createLayoutMenuEntry(container, 'Circular', 'circular');
-        _createLayoutMenuEntry(container, 'Hierarchical uncentered', 'sugiyama');
-        _createLayoutMenuEntry(container, 'Hierarchical centered', 'reingold-tilford');
-        _createLayoutMenuEntry(container, 'Spring', 'spring');
-        _createLayoutMenuEntry(container, 'Horizontal groups', 'grouping');
-        _createLayoutMenuEntry(container, 'Circular tree', 'circular-tree');
-        _createLayoutMenuEntry(container, 'Clustered', 'sfdp');
     }
-
+    
     function _createLayoutMenuEntry(container, displayName, layoutName) {
         // Create the <a> element
         var link = jQuery('<a href="#" data-layout="' + layoutName + '">' + displayName + '</a>');
@@ -337,8 +320,61 @@ define([
         container.append(link);
     }
 
-    var _menuGraphType = '';
+    function _fillLayoutMenu() {
+        var container = jQuery('ul[data-layout-list]');
+        _createLayoutMenuEntry(container, 'Circular', 'circular');
+        _createLayoutMenuEntry(container, 'Hierarchical uncentered', 'sugiyama');
+        _createLayoutMenuEntry(container, 'Hierarchical centered', 'reingold-tilford');
+        _createLayoutMenuEntry(container, 'Spring', 'spring');
+        _createLayoutMenuEntry(container, 'Horizontal groups', 'grouping');
+        _createLayoutMenuEntry(container, 'Circular tree', 'circular-tree');
+        _createLayoutMenuEntry(container, 'Clustered', 'sfdp');
+    }
+
+
     
+    function _createLoadSaveMenuEntry(name) {
+        // Load entry
+        var link = jQuery('<a href="#"></a>').text(name).data('loadname', name).click(function(e) {
+            Grapher.loadAndShowGraph(Grapher._currentType, jQuery(this).data('loadname'));
+            e.preventDefault();
+        });
+        var removeIcon = jQuery('<img src="' + createurl('static/images/picture_delete.png') + '" alt="Delete" title="Delete this save" class="remove-icon" />');
+        removeIcon.click(function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // Do not propagate to the container link
+            var jqThis = jQuery(this);
+            var loadName = jqThis.parent().data('loadname');
+            
+            if(confirm('Do you want to remove the save named "' + loadName + '" ?')) {
+                // Remove !
+                Grapher.deleteSave(loadName);
+                // Remove the menu entries
+                jqThis.parent().parent().remove();
+                jQuery('li.save-entry').each(function() {
+                    var jqSaveLink = jQuery(this);
+                    if(jqSaveLink.find('a').data('savename') === loadName) {
+                        jqSaveLink.remove();
+                        return false;
+                    }
+                });
+                
+                _updateNoSaveDisplay();
+            }
+        });
+        link.append(removeIcon);
+        link = link.wrap('<li class="load-entry"></li>').parent();
+        jQuery('#loadmenu').append(link);
+        
+        // Save entry
+        link = jQuery('<a href="#"></a>').text(name).data('savename', name).click(function(e) {
+            Grapher.saveAllGraphAs(jQuery(this).data('savename'));
+            e.preventDefault();
+        });
+        link = link.wrap('<li class="save-entry"></li>').parent();
+        jQuery('#savemenu').append(link);
+    }
+
     function _fillLoadSaveMenu() {
         // Setup the new save textbox
         var newBox = jQuery('#newSaveName');
@@ -385,53 +421,7 @@ define([
         });
     }
     
-    function _createLoadSaveMenuEntry(name) {
-        // Load entry
-        var link = jQuery('<a href="#"></a>').text(name).data('loadname', name).click(function(e) {
-            Grapher.loadAndShowGraph(Grapher._currentType, jQuery(this).data('loadname'));
-            e.preventDefault();
-        });
-        var removeIcon = jQuery('<img src="' + createurl('static/images/picture_delete.png') + '" alt="Delete" title="Delete this save" class="remove-icon" />');
-        removeIcon.click(function(e) {
-            e.preventDefault();
-            e.stopPropagation(); // Do not propagate to the container link
-            var jqThis = jQuery(this);
-            var loadName = jqThis.parent().data('loadname');
-            
-            if(confirm('Do you want to remove the save named "' + loadName + '" ?')) {
-                // Remove !
-                Grapher.deleteSave(loadName);
-                // Remove the menu entries
-                jqThis.parent().parent().remove();
-                jQuery('li.save-entry').each(function() {
-                    var jqSaveLink = jQuery(this);
-                    if(jqSaveLink.find('a').data('savename') === loadName) {
-                        jqSaveLink.remove();
-                        return false;
-                    }
-                });
-                
-                _updateNoSaveDisplay();
-            }
-        });
-        link.append(removeIcon);
-        link = link.wrap('<li class="load-entry"></li>').parent();
-        jQuery('#loadmenu').append(link);
-        
-        // Save entry
-        link = jQuery('<a href="#"></a>').text(name).data('savename', name).click(function(e) {
-            Grapher.saveAllGraphAs(jQuery(this).data('savename'));
-            e.preventDefault();
-        });
-        link = link.wrap('<li class="save-entry"></li>').parent();
-        jQuery('#savemenu').append(link);
-    }
-    
-    function _clearLoadSaveMenu() {
-        jQuery('li.load-entry').remove();
-        jQuery('li.save-entry').remove();
-    }
-    
+
     function _updateMenu(graphname) {
         var graphtype = graphname;
         var sep = graphtype.indexOf('$');
@@ -452,18 +442,37 @@ define([
             });
         }
     }
+
+    jQuery(document).ready(function () {
+        popupButton();
+        _fillLayoutMenu();
+        _fillLoadSaveMenu();
     
-    // Checks if saves actually exists, and shows / hides UI elementsthat says that no save exists
-    function _updateNoSaveDisplay() {
-        if(jQuery('li.load-entry').length > 0) {
-            jQuery('li.no-load-entry').hide();
-            Console.log('hide');
+        // Initialize the global message display
+        jQuery('#graph-big-msg').onocMessage();
+
+        Grapher.showGlobalMessage('Loading...');
+
+        jQuery(window).hashchange(function () {
+            Grapher.applyCurrentHash();
+        });
+
+        // Get the link and the string after the hash (if there is any)
+        var hashLink = window.location.hash;
+
+        if (hashLink === '') {
+            window.location.hash = '#physical.hosts';
+            // The graph will be loaded by the hash changed event, triggered by this previous line
         }
         else {
-            jQuery('li.no-load-entry').show();
-            Console.log('show');
+            // Load this graph
+            Grapher.applyCurrentHash();
         }
-    }
-    
+
+        new StructureTree(document.getElementById('treeview-container'), 80);
+
+        initInfoPanel(document.querySelector('.column-content.props'));
+    });
+
     return Grapher;
 });
