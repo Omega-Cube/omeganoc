@@ -24,10 +24,11 @@ define([
     'dashboards.widget', 
     'console', 
     'onoc.createurl', 
+    'topmenu',
     'dashboards.timeline', 
     'libs/gridster', 
     'libs/jquery.hashchange', 
-    'onoc.message'], function (jQuery, Widget, Console, createUrl, DashboardTimeline) {
+    'onoc.message'], function (jQuery, Widget, Console, createUrl, TopMenu, DashboardTimeline) {
     /**
      * Manages the user's dashboards data and display
      * @property {Gridster} gridster         - Handle parts size and position
@@ -272,7 +273,7 @@ define([
             DashboardsManager._setDashboardTitle(newName);
 
             // Rename in the main menu
-            DashboardsManager._editTopMenuEntry(DashboardsManager.currentDashboard, newName);
+            TopMenu.dashboards.rename(DashboardsManager.currentDashboard, newName);
 
             DashboardsManager.currentDashboard = newName;
 
@@ -479,62 +480,11 @@ define([
                 count++;
             });
             if(!count) {
-                DashboardsManager._deleteTopMenuEntry(DashboardsManager.currentDashboard);
+                TopMenu.dashboards.delete(DashboardsManager.currentDashboard);
             }
 
             DashboardsManager._showDashboardControls(false);
             //TODO: flush worker too
-        },
-
-        /**
-         * Adds a new link in the "Dashboards" drop down menu
-         * @param {String} name
-         */
-        _addTopMenuEntry: function (name) {
-            var entryContainer = jQuery('#menu-dashboards-list');
-
-            // Before adding the new entry, make sure that it does not contain the "no dashboards yet" entry
-            // remove it if it's here
-            var noentry = entryContainer.find('li.no-dashboard');
-            noentry.remove();
-
-            // We can now add the link
-            var link = jQuery('<a></a>');
-            link.text(name);
-            link.attr('href', createUrl('/dashboards') + '#' + encodeURIComponent(name));
-            var li = link.wrap('<li />').parent();
-            entryContainer.append(li);
-            return link;
-        },
-
-        /**
-         * Edit an entry from the Dashboards dropdown menu
-         * @param {String} oldName
-         * @param {String} newName
-         */
-        _editTopMenuEntry: function (oldName, newName) {
-            var entries = jQuery('#menu-dashboards-list a');
-            entries.each(function (i, elm) {
-                var jqElm = jQuery(elm);
-                if (jqElm.text() === oldName) {
-                    jqElm.text(newName);
-                    jqElm.attr('href', createUrl('/dashboards') + '#' + encodeURIComponent(newName));
-                }
-            });
-        },
-
-        /**
-         * Delete an entry from the Dashboards dropdown menu
-         * @param {String} name
-         */
-        _deleteTopMenuEntry: function (name) {
-            var entries = jQuery('#menu-dashboards-list a');
-            entries.each(function (i, elm) {
-                var jqElm = jQuery(elm);
-                if (jqElm.text() === name) {
-                    jqElm.remove();
-                }
-            });
         },
         
         /**
@@ -565,7 +515,7 @@ define([
                         'type': 'DELETE'
                     }).success(function(){
                         target.parent().remove();
-                        DashboardsManager._deleteTopMenuEntry(name);
+                        TopMenu.dashboards.delete(name);
                     }).error(function(e){
                         Console.error('An error occured while trying to delete the dashboard: ' + e);
                     });
