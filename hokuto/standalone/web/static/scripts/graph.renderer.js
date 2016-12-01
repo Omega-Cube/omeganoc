@@ -1377,7 +1377,8 @@ function (jQuery, Tooltip, Grapher, Console, createUrl, loadCss, registerLoop, S
             node.x = node.renderX;
             node.y = node.renderY;
             node.updateBbox();
-            var Grapher = require('graph');
+            if(!Grapher)
+                Grapher = require('graph');
             Grapher.saveOneNodeCoordinates(node);
         },
         

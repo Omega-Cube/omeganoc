@@ -61,7 +61,7 @@ module.exports = {
         "no-catch-shadow": [ "error" ],
         "no-shadow-restricted-names": [ "error" ],
         "no-shadow": [ "error" ],
-        "no-use-before-define": [ "error" ],
+        //"no-use-before-define": [ "error" ],
         "header/header": [ 2, "block", [
             '',
             ' * This file is part of Omega Noc',
