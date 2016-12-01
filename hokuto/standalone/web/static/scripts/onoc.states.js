@@ -91,7 +91,7 @@ define(['jquery', 'onoc.createurl', 'console'], function(jQuery, createUrl, Cons
                 jQuery(document).trigger('updated.states.onoc');
                 setTimeout(this.fetchCurrentStates.bind(this), this.cooldown);
             }.bind(this)).error(function(jqxhr, message) {
-                Console.warning('States request failed (' + message + '), maybe shinken or hokuto is down.');
+                Console.warn('States request failed (' + message + '), maybe shinken or hokuto is down.');
                 setTimeout(this.fetchCurrentStates.bind(this), this.cooldown);
             }.bind(this));
         },
