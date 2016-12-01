@@ -17,6 +17,9 @@
  */
 'use strict';
 
+// This is the only script allowed to directly access the console
+/* eslint-disable no-console */
+
 define(function() {
     var result = {
         // This object creates an interoperability layer

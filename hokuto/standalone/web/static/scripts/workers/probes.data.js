@@ -20,8 +20,9 @@
 define([
     'onoc.createurl', 
     'onoc.xhr', 
+    'console',
     'workers/probes.log', 
-    'workers/probes.probe'], function(createUrl, OnocXhr, Log, Probe) {
+    'workers/probes.probe'], function(createUrl, OnocXhr, Console, Log, Probe) {
     var separator = '[SEP]';
 
     /**
@@ -39,7 +40,7 @@ define([
          * Add a new probe
          * @param {Array} data - [{String} probe name, {Number} check interval]
          */
-        addProbe: function(data){
+        addProbe: function(data) {
             var probe = data[0];
             var interval = data[1];
             if(typeof probe !== 'string'){

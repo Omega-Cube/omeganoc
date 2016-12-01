@@ -18,6 +18,13 @@
 'use strict';
 
 define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console, Config) {
+    /**
+     * A class that creates a Web Worker using the Omega Noc infrastructure,
+     * and provides tools to communicate with it
+     * @constructor
+     * @param {String} workerFile The name of the module containing the worker's entry point
+     * @param {Function} callback A function that will be called when the worker sends a message to this client.
+     */
     var WorkerClient = function(workerFile, callback) {
         this.worker = new Worker(createUrl('static/scripts/workers/onoc.js'));
         this.worker._client = this;
@@ -42,57 +49,101 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
         this.onMessageCallback = callback.bind(this);
     };
 
-    // Processes messages sent by the worker
+    /**
+     * Main entry point for messages sent by the worker
+     * @param {MessageEvent} evt The received message event
+     */
     WorkerClient.prototype.processMessage = function(evt) {
         // Note : in this method 'this' contains the Worker instance
         var client = this._client;
-        if(Array.isArray(evt.data) && evt.data.length === 2 && evt.data[0] === 'ready') {
+        if(!client._tryProcessReadyMessage(evt.data) && !client._tryProcessConsoleMessage(evt.data)) {
+            // Forward other messages to the worker user
+            // TODO: Add bind(client) after we rewrote the callers
+            client.onMessageCallback(evt.data);
+        }
+    };
+
+    /**
+     * Checks if the provided message is a worker state message, and processes it if it is the case
+     * @param {Array} data The data received from the worker
+     * @returns {Boolean} True if the message was a worker state message and was handled, false otherwise
+     */
+    WorkerClient.prototype._tryProcessReadyMessage = function(data) {
+        if(Array.isArray(data) && data.length === 2 && data[0] === 'ready')
+        { 
             // Ready state change : changes the internal state of the worker
-            switch(evt.data[1]) {
+            switch(data[1]) {
             case 0:
-                if(client.readyState === -1) {
+                if(this.readyState === -1) {
                     // Configure the worker
-                    this.postMessage([
-                        client.workerFile,
+                    this.worker.postMessage([
+                        this.workerFile,
                         Config.baseUrl(),
                         Config.separator(),
                         Config.isAdmin(),
                         Config.shinkenContact()
                     ]);
-                    client.readyState = 0;
+                    this.readyState = 0;
                 }
                 else {
-                    Console.error('Illegal worker state change: going from "' + client.readyState + '" to 0');
+                    Console.error('Illegal worker state change: going from "' + this.readyState + '" to 0');
                 }
                 break;
             case 1:
-                if(client.readyState === 0) {
+                if(this.readyState === 0) {
                     // Send any queued message now that the worker is ready to receive them
-                    while(client.outMessageQueue.length > 0) {
-                        this.postMessage(client.outMessageQueue.shift());
+                    while(this.outMessageQueue.length > 0) {
+                        this.worker.postMessage(this.outMessageQueue.shift());
                     }
-                    client.readyState = 1;
+                    this.readyState = 1;
                 }
                 else {
-                    Console.error('Illegal worker state change: going from "' + client.readyState + '" to 1');
+                    Console.error('Illegal worker state change: going from "' + this.readyState + '" to 1');
                 }
                 break;
             default:
-                Console.error('Illegal state change: new state "' + evt.data[1] + '" unknown');
+                Console.error('Illegal state change: new state "' + data[1] + '" unknown');
                 break;
             }
+
+            return true;
         }
-        else if (evt.data) {
-            // Forward other messages to the worker user
-            client.onMessageCallback(evt.data);
-        }
+        else return false;
     };
 
+    /**
+     * Checks if the provided message is a console message, and processes it if it is the case
+     * @param {Array} data The data received from the worker
+     * @returns {Boolean} True if the message was a console message and was handled, false otherwise
+     */
+    WorkerClient.prototype._tryProcessConsoleMessage = function(data) {
+        if(Array.isArray(data) && data.length === 2) {
+            switch(data[0]) {
+            case 'log':
+            case 'info':
+            case 'warn':
+            case 'error':
+                Console[data[0]](data[1]);
+                return true;
+            default:
+                return false;
+            }
+        }
+        else return false;
+    };
+
+    /**
+     * Handler function for the worker's error event
+     */
     WorkerClient.prototype.processError = function() {
         Console.error('An error occured while initializing a worker');
     };
 
-    // Sends a message to the worker
+    /**
+     * This function can be used to send a message to the worker.
+     * Use it like you would use the native postMessage function
+     * @param {Object} data The payload that should be sent to the worker
+     */
     WorkerClient.prototype.postMessage = function(data) {
         if(this.readyState === 1) {
             // Directly send the message

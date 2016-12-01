@@ -32,7 +32,14 @@
 
 importScripts('../libs/require.js');
 
-require.config({ baseUrl: '../' });
+require.config({ 
+    baseUrl: '../',
+    map: {
+        '*': {
+            'console': 'workers/console' // Use the worker version of the console module
+        }
+    } 
+});
 require(['onoc.config', 'workers/workerdata'], function(Config, WorkerData) {
     WorkerData.pick(function(data) {
         // Write configuration
