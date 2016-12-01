@@ -1045,7 +1045,7 @@ define([
             };
             DashboardManager.savePartData({
                 'id': this.id,
-                'conf': JSON.stringify(data)
+                'conf': data
             });
 
             DashboardProbes.worker.postMessage([8,{
@@ -1108,7 +1108,7 @@ define([
                 };
                 DashboardManager.savePartData({
                     'id': this.id,
-                    'conf': JSON.stringify(data)
+                    'conf': data
                 });
 
             }.bind(this),true);
@@ -1234,7 +1234,7 @@ define([
             };
             DashboardManager.savePartData({
                 'id': this.id,
-                'conf': JSON.stringify(data)
+                'conf': data
             });
 
         }.bind(this));
@@ -1289,7 +1289,7 @@ define([
 
             DashboardManager.savePartData({
                 'id': this.id,
-                'conf': JSON.stringify({ 'log': this.conf.log})
+                'conf': { 'log': this.conf.log}
             });
         }.bind(this));
         container.append(button);
@@ -1318,7 +1318,7 @@ define([
 
             DashboardManager.savePartData({
                 'id': this.id,
-                'conf': JSON.stringify({'mode': this.conf.mode})
+                'conf': {'mode': this.conf.mode}
             });
         }.bind(this));
         container.append(button);
@@ -1616,11 +1616,10 @@ define([
         }
         this.counter = counter;
         //save new probes order conf
-        var data = {
+        DashboardManager.savePartData({
             'id': this.id,
-            'conf': JSON.stringify(conf)
-        };
-        DashboardManager.savePartData(data);
+            'conf': conf
+        });
         this.orderProbes();
     };
 
@@ -3128,13 +3127,12 @@ define([
                 setLegend.call(this);
             }
             if(!addCount) return false;
-            data.conf = JSON.stringify(data.conf);
 
             //show the spinner if needed
             this.toogleSpinner(this.container.main);
 
-            DashboardManager.savePartData(data,function(){
-                DashboardProbes.worker.postMessage([3,{
+            DashboardManager.savePartData(data, function() {
+                DashboardProbes.worker.postMessage([3, {
                     'probes': probeList,
                     'start' : (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
                 },this.id]);
@@ -3236,7 +3234,6 @@ define([
                         }
                     }
 
-                    query.conf = JSON.stringify(query.conf);
                     DashboardManager.savePartData(query);
                     this.buildScale();
                     this.setDomain(this.data);
@@ -3337,7 +3334,6 @@ define([
             }
         };
         conf.conf.scales[name] = data;
-        conf.conf = JSON.stringify(conf.conf);
         DashboardManager.savePartData(conf);
     };
 
@@ -3366,12 +3362,12 @@ define([
         DashboardProbes.worker.postMessage([7,{'probes': this.probes, 'start': this.conf.fromDate.getTime(), 'end': end },this.id]);
         DashboardManager.savePartData({
             'id': this.id,
-            'conf': JSON.stringify({
+            'conf': {
                 'fromdate': context,
                 'untildate': end,
                 'brushstart': false,
                 'brushend': false
-            })
+            }
         });
         //update globale timeline
         if(this.conf.fromDate)
@@ -3398,11 +3394,11 @@ define([
         DashboardProbes.worker.postMessage([7,{'probes': this.probes, 'start': this.axis.x2.domain()[0].getTime(),'end': context},this.id]);
         DashboardManager.savePartData({
             'id': this.id,
-            'conf': JSON.stringify({
+            'conf': {
                 'untildate': context,
                 'brushstart': false,
                 'brushend': false
-            })
+            }
         });
         //update globale timeline
         if(this.conf.untilDate)
@@ -3647,7 +3643,7 @@ define([
                 };
                 DashboardManager.savePartData({
                     'id': this.id,
-                    'conf': JSON.stringify(data)
+                    'conf': data
                 });
             }.bind(this),5000);
         }

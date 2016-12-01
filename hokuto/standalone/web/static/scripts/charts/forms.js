@@ -49,8 +49,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                         }
                     };
                     query.conf.probes[probe] = {'scale': newVal};
-                    //TODO
-                    query.conf = JSON.stringify(query.conf);
                     DashboardManager.savePartData(query);
 
                     this.setDomain(this.data);
@@ -114,8 +112,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     }
                 };
                 query.conf.probes[probe] = {'scale': newVal};
-                //TODO
-                query.conf = JSON.stringify(query.conf);
                 DashboardManager.savePartData(query);
                 this.setDomain(this.data);
                 if(!this.scales[scale.name].boundedProbe){
@@ -213,8 +209,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     }
                 };
                 query.conf.probes[probe] = {'scale': newVal};
-                //TODO
-                query.conf = JSON.stringify(query.conf);
                 DashboardManager.savePartData(query);
 
                 this.setDomain(this.data);
@@ -316,7 +310,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     }
                 };
                 query.conf.probes[probe] = {'type': newVal};
-                query.conf = JSON.stringify(query.conf);
                 DashboardManager.savePartData(query);
                 this.redraw();
 
@@ -389,7 +382,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                         }
                     };
                     query.conf.probes[probe] = {'stacked': newVal};
-                    query.conf = JSON.stringify(query.conf);
                     DashboardManager.savePartData(query);
                     this.buildScale();
                     this.setDomain(this.data);
@@ -454,7 +446,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     }
                 };
                 query.conf.probes[probe] = {'color': newVal};
-                query.conf = JSON.stringify(query.conf);
                 DashboardManager.savePartData(query);
                 this.redraw();
                 this.legendManager.setColor(probe,newVal);

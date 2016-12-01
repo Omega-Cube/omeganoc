@@ -77,8 +77,8 @@ define([
 
             jQuery(window).resize(function () {
                 // Update gridster's grid to match the new window dimentions
-                var cols = Math.floor((jQuery('#content').width()) / 70);
-                DashboardsManager.gridster.cols = cols;
+                var colCount = Math.floor((jQuery('#content').width()) / 70);
+                DashboardsManager.gridster.cols = colCount;
                 DashboardsManager.gridster.recalculate_faux_grid();
             });
 
@@ -97,6 +97,7 @@ define([
 
             // Listen for URL changes
             jQuery(window).hashchange(function () {
+                // TODO: fix
                 //ok this is very very nasty but there is tons of glitch and issue with dashboards unload atm (workers and gridster don't flush their data correctly)
                 //so it's better to reload the header between each dashboard than bringing memory leaks, bad formating and other glitch that will force to reload anyway.
                 location.reload(true);
@@ -216,12 +217,8 @@ define([
             partData.id = DashboardsManager._createTemporaryID();
             partData.dashboard = DashboardsManager.currentDashboard;
 
-            //GRUICK!
-            partData.conf = JSON.stringify(partData.conf);
-            DashboardsManager.savePartData(partData,function(partData) {
-                if(partData.conf)
-                    partData.conf = JSON.parse(partData.conf);
-                DashboardsManager._createPart(partData, widget,false);
+            DashboardsManager.savePartData(partData, function(savedData) {
+                DashboardsManager._createPart(savedData, widget,false);
                 DashboardsManager._scanChangedPositions();
             });
         },
@@ -435,21 +432,34 @@ define([
 
         /**
          * Save part configuration
-         * @param {Object} partData   - Part config
-         * @param {Function} callback
+         * @param {Object} partData The part configuration objet to save.
+         * @param {Function} callback Optionnal. Callback called when the server has done saving the data, and will receive the saved object (potentially changed by the server logic) as a parameter.
          */
-        savePartData: function (partData,callback) {
+        savePartData: function (partData, callback) {
             var url = createUrl('/dashboards/part');
             if(!partData.id && !partData.conf)
-                return false;
+                return;
+
+            var originalConf = null;
+            if(partData.conf) {
+                originalConf = partData.conf;
+                partData.conf = JSON.stringify(partData.conf);
+            }
+
             jQuery.post(url, partData, function (data) {
                 if (data.original_id !== data.saved_id) {
                     DashboardsManager._applyDefinitivePartId(data.original_id, data.saved_id);
                     partData.id = data.saved_id;
                 }
+                if(data.conf)
+                    data.conf = JSON.parse(data.conf);
+
                 if(callback)
                     callback(partData);
             }, 'json');
+
+            if(originalConf)
+                partData.conf = originalConf;
         },
 
         /**

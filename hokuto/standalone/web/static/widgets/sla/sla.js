@@ -296,17 +296,17 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
      * @param {DOMElement} container - The content container
      */
     Sla.prototype.buildContainer = function(container){
-        var svg = d3.select(container).append("svg")
-            .attr("width", this.conf.width)
-            .attr("height", this.conf.height)
-            .attr("class","svg");
+        var svg = d3.select(container).append('svg')
+            .attr('width', this.conf.width)
+            .attr('height', this.conf.height)
+            .attr('class','svg');
 
-        svg.append("defs").append("clipPath")
-            .attr("id", "clip_"+this.id)
-            .append("rect")
-            .attr("width", this.conf.width - 20)
-            .attr("height", this.conf.height)
-            .attr("x", 20);
+        svg.append('defs').append('clipPath')
+            .attr('id', 'clip_'+this.id)
+            .append('rect')
+            .attr('width', this.conf.width - 20)
+            .attr('height', this.conf.height)
+            .attr('x', 20);
 
         var focus = svg.append('g')
             .attr('class','focus')
@@ -317,16 +317,15 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
 
         var brush = d3.svg.brush()
             .x(this.scales.x2)
-            .on("brush", this.brushed.bind(this))
-            .on("brushend", function(){
+            .on('brush', this.brushed.bind(this))
+            .on('brushend', function(){
                 var data = {
                     'id': this.id
                 };
-                var conf = {
+                data.conf = {
                     'brushstart' : (this.conf.brush.start.getTime() !== this.scales.x2.domain()[0].getTime()) ? Math.round(this.conf.brush.start.getTime() / 1000) : false,
                     'brushend' : (this.conf.brush.end.getTime() !== this.scales.x2.domain()[1].getTime()) ? Math.round(this.conf.brush.end.getTime() / 1000) : false
-                }
-                data.conf = JSON.stringify(conf);
+                };
                 DashboardManager.savePartData(data);
             }.bind(this));
 
@@ -378,7 +377,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             if(this.host){
                 for(var i in this.containers.hosts[0].options){
                     if(this.containers.hosts[0].options[i].value === this.host){
-                        this.containers.hosts[0].options[i].selected = "1";
+                        this.containers.hosts[0].options[i].selected = '1';
                         break;
                     }
                 }
@@ -389,7 +388,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
                 if(this.service){
                     for(var i in this.containers.services[0].options){
                         if(this.containers.services[0].options[i].value === this.service){
-                            this.containers.services[0].options[i].selected = "1";
+                            this.containers.services[0].options[i].selected = '1';
                             break;
                         }
                     }
@@ -421,8 +420,8 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         //parts
         this.conf.statsheight = this.params.statsHeight;
         this.conf.timelineheight = height - this.params.statsHeight;
-        this.containers.svg.attr("width", this.conf.width)
-            .attr("height", this.conf.height);
+        this.containers.svg.attr('width', this.conf.width)
+            .attr('height', this.conf.height);
         this.containers.svg.select('.brush .background').attr('width',this.conf.width);
 
         //scales
@@ -449,8 +448,8 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             .attr('x', brushPosX * this.conf.width/oldWidth);
 
         //clippath
-        this.containers.svg.select('clipPath').attr("width", this.conf.width - 20).attr("height", this.conf.timelineheight)
-            .select('rect').attr("width", this.conf.width - 20).attr("height", this.conf.timelineheight).attr('x',20);
+        this.containers.svg.select('clipPath').attr('width', this.conf.width - 20).attr('height', this.conf.timelineheight)
+            .select('rect').attr('width', this.conf.width - 20).attr('height', this.conf.timelineheight).attr('x',20);
 
         //redraw
         if(this.data.timeline)
@@ -518,7 +517,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             for(var i = 0, len = newStates.length; i<len; i++){
                 var state = $('<option value="'+i+'">'+newStates[i]+'</option>');
                 if(i == this.firststate)
-                    state.attr('selected',"1");
+                    state.attr('selected','1');
                 this.containers.firststate.append(state);
             }
         }
@@ -544,7 +543,6 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         if(this.conf.brush.end)
             newConf.brushend = Math.round(this.conf.brush.end.getTime() / 1000);
 
-        newConf = JSON.stringify(newConf);
         DashboardManager.savePartData({
             'id': this.id,
             'conf': newConf
@@ -701,16 +699,16 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             .attr('fill', function(d){ return d.color})
             .select('title').text(function(d){
                 var title = states[d.type].concat(
-                    " : ",
+                    ' : ',
                     this.getElapsedTime(d.end.getTime() - d.start.getTime()),
-                    "\n",
-                    "From : ",
+                    '\n',
+                    'From : ',
                     d.start.toLocaleDateString(),
-                    " ",
+                    ' ',
                     d.start.toLocaleTimeString(),
-                    " - To :",
+                    ' - To :',
                     d.end.toLocaleDateString(),
-                    " ",
+                    ' ',
                     d.end.toLocaleTimeString()
                 )
                 return title;
@@ -841,7 +839,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
                 .attr('stroke','white')
                 .attr('stroke-width',0)
                 .attr('fill','white')
-                .text(states[i]+" : "+percents[i]+'%');
+                .text(states[i]+' : '+percents[i]+'%');
         }
     };
 
@@ -859,8 +857,10 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
      * Reset all values
      */
     Sla.prototype.reset = function(){
-        var data = { 'id': this.id };
-        var conf = {};
+        var data = { 
+            'id': this.id,
+            'conf': {}
+        };
         //reset brush
         this.containers.brush.clear();
         this.containers.svg.select('.x.brush').call(this.containers.brush);
@@ -868,11 +868,10 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         this.conf.brush.start = false;
         this.conf.brush.end = false;
         this.end = false;
-        conf.brushstart = false;
-        conf.brushend = false;
-        conf.end = false;
+        data.conf.brushstart = false;
+        data.conf.brushend = false;
+        data.conf.end = false;
 
-        data.conf = JSON.stringify(conf);
         DashboardManager.savePartData(data);
         this.changeTarget();
     };
