@@ -1,7 +1,6 @@
 /*
  * This file is part of Omega Noc
- * Copyright Omega Noc (C) 2014 Omega Cube and contributors
- * Nicolas Lantoing, nicolas@omegacube.fr
+ * Copyright Omega Noc (C) 2016 Omega Cube and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,7 +15,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'], function(jQuery,createUrl,d3,DashboardManager,Calendar){
+'use strict';
+
+define([
+    'jquery',
+    'console',
+    'onoc.createurl',
+    'libs/d3',
+    'dashboards.manager',
+    'onoc.calendar'], function(jQuery, Console, createUrl, d3, DashboardManager, Calendar){
     /**
      * Handle the SLA widget
      * @property {Number} id         - Part's id
@@ -32,7 +39,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
      * @property {String} service    - Current selected service
      * @property {Number} firststate - Current assumed firststate
      */
-    var Sla = function(){
+    var Sla = function() {
         this.id = -1;
         this.conf = {
             'width': 100,
@@ -92,7 +99,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         this.host = false;
         this.service = false;
         this.firststate = false;
-    }
+    };
 
     /**
      * Attach to the widget's container
@@ -100,9 +107,9 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
      * @param {Object} options       - Current part configuration
      * @param {Widget} widget        - Widget instance
      */
-    Sla.prototype.attachTo = function(container, options, widget){
+    Sla.prototype.attachTo = function(container, options, widget) {
         this.id = options.id;
-        this.containers.main = $(container);
+        this.containers.main = jQuery(container);
         this.containers.main.addClass('slacontainer');
 
         //set boxsizes
@@ -119,17 +126,15 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
 
         this.handleScrolls(container);
 
-        if(options.conf){
+        if(options.conf) {
             if(options.conf.host)
                 this.host = options.conf.host;
             if(options.conf.service)
                 this.service = options.conf.service;
             if(options.conf.firststate)
                 this.firststate = options.conf.firststate;
-            if(Number(options.conf.start)){
+            if(Number(options.conf.start))
                 this.start = new Date(options.conf.start * 1000);
-
-            }
             if(Number(options.conf.end))
                 this.end = new Date(options.conf.end * 1000);
             if(Number(options.conf.brushstart))
@@ -148,7 +153,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             this.changeTarget();
 
         //main timeline events
-        $('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
+        jQuery('#dashboard-global-timeline').on('timeline.update',function(e, start, end) {
             this.conf.brush.start = start;
             this.conf.brush.end = end;
             if(start <= this.start && end >= this.end){
@@ -162,13 +167,12 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
 
             this.changeTarget();
         }.bind(this));
-
-    }
+    };
 
     /**
      * Build Commands UI
      */
-    Sla.prototype.buildCommands = function(){
+    Sla.prototype.buildCommands = function() {
         var container = this.containers.commands;
 
         //refresh button
@@ -181,7 +185,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         //menus
         var actionsmenu = this.containers.header.find('.actions ul');
 
-        var fromdatechange = function(t){
+        var fromdatechange = function(t) {
             var newFrom = false;
             if(t < 0){
                 newFrom = new Date(Date.now() + t);
@@ -196,7 +200,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             DashboardManager.timeline.update(this.start, this.end);
         }.bind(this);
 
-        var untildatechange = function(t){
+        var untildatechange = function(t) {
             var newEnd = new Date(t);
             this.end = newEnd;
             this.conf.brush.start = false;
@@ -210,7 +214,9 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         var datemenu = this.containers.header.find('.datepicker ul');
 
         var tmp = jQuery('<li>Last year</li>');
-        tmp.click(function(){ fromdatechange(- 3600 * 1000 * 24 * 365);});
+        tmp.click(function() {
+            fromdatechange(- 3600 * 1000 * 24 * 365);
+        });
         datemenu.prepend(tmp);
 
         tmp = jQuery('<li>Current year</li>');
@@ -226,7 +232,9 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
 
 
         tmp = jQuery('<li>Last 30 days</li>');
-        tmp.click(function(){ fromdatechange(- 3600 * 1000 * 24 * 30);});
+        tmp.click(function() {
+            fromdatechange(- 3600 * 1000 * 24 * 30);
+        });
         datemenu.prepend(tmp);
 
         tmp = jQuery('<li>Current month</li>');
@@ -242,7 +250,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         datemenu.prepend(tmp);
 
 
-        var tmp = jQuery('<li>Last 24 hours</li>');
+        tmp = jQuery('<li>Last 24 hours</li>');
         tmp.click(function(){ fromdatechange(- 3600 * 1000 * 24);});
         datemenu.prepend(tmp);
 
@@ -250,13 +258,13 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         this.containers.date = {
             'from': datemenu.find('.datePicker.from'),
             'until': datemenu.find('.datePicker.until')
-        }
-        var fromCalendar = new Calendar(this.containers.date.from, function(d){
+        };
+        var fromCalendar = new Calendar(this.containers.date.from, function(d) {
             fromdatechange(d);
         }, this.containers.main);
         if(this.start)
             fromCalendar.set(this.start);
-        var untilCalendar = new Calendar(this.containers.date.until, function(d){
+        var untilCalendar = new Calendar(this.containers.date.until, function(d) {
             untildatechange(d);
         }, this.containers.main);
         if(this.end)
@@ -264,20 +272,20 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
 
         // Actions
         //Reset
-        var reset = $('<li>reset</li>');
+        var reset = jQuery('<li>reset</li>');
         reset.on('click',this.reset.bind(this));
         actionsmenu.prepend(reset);
 
         //target selection form
-        var form = $('<form class="sla-request" name="sla-request-'+this.id+'"></form>');
+        var form = jQuery('<form class="sla-request" name="sla-request-'+this.id+'"></form>');
 
-        this.containers.hosts = $('<select name="hosts"><option value="">Hosts</option></select');
+        this.containers.hosts = jQuery('<select name="hosts"><option value="">Hosts</option></select');
         form.append(this.containers.hosts);
 
-        this.containers.services = $('<select name="services" ><option value="">Services</option></select');
+        this.containers.services = jQuery('<select name="services" ><option value="">Services</option></select');
         form.append(this.containers.services);
 
-        this.containers.firststate = $('<select name="firststate"><option value="">First assumed state</option></select>');
+        this.containers.firststate = jQuery('<select name="firststate"><option value="">First assumed state</option></select>');
         form.append(this.containers.firststate);
         container.append(form);
         setTimeout(this.buildHostsForm.bind(this),0);
@@ -289,7 +297,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             this.firststate = this.containers.firststate[0].value || 0;
             this.changeTarget();
         }.bind(this));
-    }
+    };
 
     /**
      * Build main container (svg)
@@ -338,10 +346,10 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             .attr('fill-opacity',0.5);
         svg.select('.brush .background').attr('width',this.conf.width);
 
-        var xAxis = svg.append('g')
+        svg.append('g')
             .attr('class','x axis')
             .attr('transform','translate(0,'+this.scales.y(1)+')');
-        var x2Axis = svg.append('g')
+        svg.append('g')
             .attr('class','x2 axis')
             .attr('transform','translate(0,'+this.scales.y2(1)+')');
 
@@ -355,7 +363,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         this.containers.context = context;
         this.containers.brush = brush;
         this.containers.stats = stats;
-    }
+    };
 
     /**
      * Build target form
@@ -363,8 +371,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
     Sla.prototype.buildHostsForm = function(){
         //hosts
         var hosts = this.containers.hosts;
-        var services = this.containers.services;
-        $.ajax({
+        jQuery.ajax({
             'url':createUrl('/services/livestatus/get/hosts'),
             'type': 'GET'
         }).success(function(response){
@@ -374,10 +381,11 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
                 this.hosts[response.results[i].name] = response.results[i].services;
             }
 
-            if(this.host){
-                for(var i in this.containers.hosts[0].options){
-                    if(this.containers.hosts[0].options[i].value === this.host){
-                        this.containers.hosts[0].options[i].selected = '1';
+            if(this.host) {
+                var opt;
+                for(opt in this.containers.hosts[0].options){
+                    if(this.containers.hosts[0].options[opt].value === this.host){
+                        this.containers.hosts[0].options[opt].selected = '1';
                         break;
                     }
                 }
@@ -386,18 +394,18 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
                 for(var s in this.hosts[this.host])
                     this.containers.services.append('<option value="'+this.hosts[this.host][s]+'">'+this.hosts[this.host][s]+'</option>');
                 if(this.service){
-                    for(var i in this.containers.services[0].options){
-                        if(this.containers.services[0].options[i].value === this.service){
-                            this.containers.services[0].options[i].selected = '1';
+                    for(opt in this.containers.services[0].options){
+                        if(this.containers.services[0].options[opt].value === this.service){
+                            this.containers.services[0].options[opt].selected = '1';
                             break;
                         }
                     }
                 }
             }
-        }.bind(this)).error(function(e){
-            console.error(e);
+        }.bind(this)).error(function(e) {
+            Console.error(e);
         });
-    }
+    };
 
     /**
      * resize the svg
@@ -407,8 +415,8 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
     Sla.prototype.resize = function(width,height){
         //main
         var oldWidth = this.conf.width;
-        var width = DashboardManager.getPartWidth(width) - 5;
-        var height = DashboardManager.getPartHeight(height);
+        width = DashboardManager.getPartWidth(width) - 5;
+        height = DashboardManager.getPartHeight(height);
         this.conf.width = width;
         this.conf.height = height;
 
@@ -460,7 +468,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
      * Handle target select event.
      * @event
      */
-    Sla.prototype.changeServiceEvent = function(event){
+    Sla.prototype.changeServiceEvent = function() {
         if(this.service === this.containers.services[0].value) return;
         this.service = this.containers.services[0].value || null;
         this.changeTarget();
@@ -470,7 +478,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
      * Handle target select event.
      * @event
      */
-    Sla.prototype.changeHostEvent = function(event){
+    Sla.prototype.changeHostEvent = function(event) {
         var newHost = event.target.value;
         if(!newHost) return;
 
@@ -489,7 +497,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
      * Brush event
      * @event
      */
-    Sla.prototype.brushed = function(e){
+    Sla.prototype.brushed = function() {
         this.scales.x.domain(this.containers.brush.empty() ? this.scales.x2.domain() : this.containers.brush.extent());
         var domain = this.scales.x.domain();
         this.updateDateForms(domain[0],domain[1]);
@@ -497,12 +505,12 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         this.conf.brush.end = domain[1];
         this.draw();
         this.drawStats();
-    }
+    };
 
     /**
      * Change the current target
      */
-    Sla.prototype.changeTarget = function(){
+    Sla.prototype.changeTarget = function() {
         var url = false;
         var data = false;
         var host = this.host;
@@ -515,8 +523,8 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             var newStates = (newType === 'host') ? this.params.host_states : this.params.service_states;
             this.containers.firststate.empty();
             for(var i = 0, len = newStates.length; i<len; i++){
-                var state = $('<option value="'+i+'">'+newStates[i]+'</option>');
-                if(i == this.firststate)
+                var state = jQuery('<option value="'+i+'">'+newStates[i]+'</option>');
+                if(i === this.firststate)
                     state.attr('selected','1');
                 this.containers.firststate.append(state);
             }
@@ -548,15 +556,17 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             'conf': newConf
         });
 
-        $.ajax({
+        jQuery.ajax({
             'url': url,
             'type': 'GET',
             'data': data
         }).success(function(response){
             this.drawResults(response);
             this.containers.header.find('.refresh').attr('class','refresh');
-        }.bind(this)).error(function(e){ console.error(e); });
-    }
+        }.bind(this)).error(function(e) {
+            Console.error(e); 
+        });
+    };
 
     /**
      * Return string formated elapsed time
@@ -581,32 +591,24 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
             result = result.concat(d.getSeconds(),'s');
 
         return result;
-    }
+    };
 
     /**
      * Overdrive window scrolls events for this element
      * TODO: should be a generic function, can be usefull for futur widgets too
      */
-    Sla.prototype.handleScrolls = function(container){
-        /*container.addEventListener('wheel',function(e){
-            e.preventDefault();
+    Sla.prototype.handleScrolls = function(container) {
+        container.addEventListener('mousedown',function(e){ 
             e.stopPropagation();
-            var content = e.target;
-            while(content && content.tagName !== 'DIV') content = content.parentElement;
-            content.scrollTop += e.deltaY * 10;
-        },true);*/
-        container.addEventListener('mousedown',function(e){ e.stopPropagation();},false);
-    }
+        },false);
+    };
 
     /**
      * Draw charts from the server response
      * @param {Object} response - server response
      */
-    Sla.prototype.drawResults = function(response){
-        var data = response.results;
+    Sla.prototype.drawResults = function(response) {
         this.data = response.results;
-        var host = response.host;
-        var service = response.service || false;
 
         //update the timeline
         var start = new Date(response.start * 1000);
@@ -633,11 +635,12 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         //this.end = end;
 
         //if brush is set trigger the event
-        if(this.conf.brush.start && this.conf.brush.end){
+        if(this.conf.brush.start && this.conf.brush.end) {
             this.containers.brush.extent([this.conf.brush.start, this.conf.brush.end]);
             this.containers.svg.select('.x.brush').call(this.containers.brush);
             this.scales.x.domain([this.conf.brush.start, this.conf.brush.end]).range([20,this.conf.width]);
-        }else{
+        }
+        else {
             this.containers.brush.clear();
             this.containers.brush(this.containers.svg.select('.x.brush'));
         }
@@ -647,13 +650,13 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
 
         //fill stats
         this.drawStats();
-    }
+    };
 
 
     /**
      * Draw the svg
      */
-    Sla.prototype.draw = function(){
+    Sla.prototype.draw = function() {
         //draw the svg
         var data = this.data;
         var focus = this.containers.focus;
@@ -676,7 +679,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
                 end: new Date(event),
                 type: last[0],
                 color: colors[last[0]]
-            }
+            };
 
             parts.push(part);
         }
@@ -695,8 +698,8 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         rects.attr('x', function(d){ return x(d.start); })
             .attr('y',this.scales.y(0))
             .attr('height',this.scales.y(1) - this.scales.y(0))
-            .attr('width', function(d){ return x(d.end) - x(d.start)})
-            .attr('fill', function(d){ return d.color})
+            .attr('width', function(d){ return x(d.end) - x(d.start); })
+            .attr('fill', function(d){ return d.color; })
             .select('title').text(function(d){
                 var title = states[d.type].concat(
                     ' : ',
@@ -710,12 +713,12 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
                     d.end.toLocaleDateString(),
                     ' ',
                     d.end.toLocaleTimeString()
-                )
+                );
                 return title;
             }.bind(this));
 
         //context
-        var rects = context.selectAll('rect').data(parts);
+        rects = context.selectAll('rect').data(parts);
         rects.exit().remove();
         rects.enter().append('rect')
             .attr('stroke','black')
@@ -723,9 +726,9 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         rects.attr('x', function(d){ return x2(d.start); })
             .attr('y',this.scales.y2(0))
             .attr('height',this.scales.y2(1) - this.scales.y2(0))
-            .attr('width', function(d){ return x2(d.end) - x2(d.start)})
-            .attr('fill', function(d){ return d.color});
-    }
+            .attr('width', function(d){ return x2(d.end) - x2(d.start); })
+            .attr('fill', function(d){ return d.color; });
+    };
 
     /**
      * Draw stats data
@@ -737,6 +740,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         var fulltime = (end.getTime() - start.getTime()) / 1000;
         var states = (this.type === 'host') ? this.params.host_states : this.params.service_states;
         var colors = (this.type === 'host') ? this.params.host_colors : this.params.service_colors;
+        var i, len;
 
         //get times
         var times = {
@@ -763,7 +767,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
                 break;
             }
         }else{
-            for(var i = 1, len = timeline.length; i<len; i++){
+            for(i = 1, len = timeline.length; i<len; i++){
                 var last = timeline[i - 1];
                 var current = timeline[i];
                 if(current[1] * 1000 < start.getTime() && i+1 !== len)
@@ -823,7 +827,7 @@ define(['jquery','onoc.createurl','libs/d3','dashboards.manager','onoc.calendar'
         //draw
         var space = this.conf.width / 4;
         this.containers.stats.selectAll('*').remove();
-        for(var i = 0, len = states.length; i<len; i++){
+        for(i = 0, len = states.length; i<len; i++){
             this.containers.stats.append('rect')
                 .attr('fill',colors[i])
                 .attr('stroke','grey')
