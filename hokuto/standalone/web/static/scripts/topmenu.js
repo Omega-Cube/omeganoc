@@ -46,7 +46,7 @@ define(['jquery', 'onoc.createurl'], function(jQuery, createUrl) {
              * Delete an entry from the Dashboards dropdown menu
              * @param {String} name
              */
-            deleteTopMenuEntry: function (name) {
+            delete: function (name) {
                 var entries = jQuery('#menu-dashboards-list a');
                 entries.each(function (i, elm) {
                     var jqElm = jQuery(elm);
