@@ -1,9 +1,6 @@
-'use strict';
-
 /*
  * This file is part of Omega Noc
- * Copyright Omega Noc (C) 2014 Omega Cube and contributors
- * Xavier Roger-Machart, xrm@omegacube.fr
+ * Copyright Omega Noc (C) 2016 Omega Cube and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -18,6 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+'use strict';
+
 define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], function (jQuery, createUrl, states, DataService, Console) {
     var _currentPanel = false; // Tells us if there's a panel currently displayed. When not false contains the name of the displayed element
     var _container = null; // The jQuery object containing the container

@@ -1,10 +1,6 @@
-'use strict';
-
 /*
  * This file is part of Omega Noc
- * Copyright Omega Noc (C) 2014 Omega Cube and contributors
- * Xavier Roger-Machart, xrm@omegacube.fr
- * Nicolas Lantoing, nicolas@omegacube.fr
+ * Copyright Omega Noc (C) 2016 Omega Cube and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+'use strict';
+
 define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (jQuery, d3, DashboardManager, Calendar){
     /**
      * Called on init, build the svg container and settup events listeners

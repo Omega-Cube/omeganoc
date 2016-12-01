@@ -1,11 +1,6 @@
-'use strict';
-
-/* globals requirejs, onoc_main_modules, ONOC */
-
 /*
  * This file is part of Omega Noc
- * Copyright Omega Noc (C) 2014 Omega Cube and contributors
- * Xavier Roger-Machart, xrm@omegacube.fr
+ * Copyright Omega Noc (C) 2016 Omega Cube and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,6 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+'use strict';
+
+/* globals requirejs, onoc_main_modules, ONOC */
 
 // Omega Noc main launcher script
 // This script configures Require.js and loads the actual starting script for the currently loading page
