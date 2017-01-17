@@ -90,7 +90,7 @@ class Nanto(object):
         logging.info('Starting nanto')
         self.__validate_influx_config()
         self.__register_default_prediction_systems()
-        
+
         logging.debug('[nanto] Starting with {0} workers registered. The time is {1}'.format(len(self.worker_containers), time.time()))
 
         self.run = True

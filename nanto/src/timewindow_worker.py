@@ -24,11 +24,11 @@ import os
 import time
 import traceback
 
-from prediction_worker import PredictionWorker, PredictionValue
+from prediction_worker import PredictionBatch, PredictionValue
 from on_reader.livestatus import livestatus
 
 
-class TimewindowWorker(PredictionWorker):
+class TimewindowWorker(PredictionBatch):
     """ 
     This worker tries to produce an estimate of how a value will behave in a near future, based on the last month of values
     """
@@ -140,8 +140,9 @@ class TimewindowWorker(PredictionWorker):
                                                          lower_80 VARCHAR(1024),\
                                                          lower_95 VARCHAR(1024),\
                                                          upper_80 VARCHAR(1024),\
-                                                         upper_95 VARCHAR(1024))') # Data can be null if forecasting is impossible with current data
+                                                         upper_95 VARCHAR(1024))')
+                                                         # Data can be null if forecasting is impossible with current data
         if currentversion < 2:
-            # Add the error_desc column, containing a user-friendly error message 
+            # Add the error_desc column, containing a user-friendly error message
             # if for any reason we could not produce results
             connection.execute('ALTER TABLE timewindow ADD error_desc TEXT')

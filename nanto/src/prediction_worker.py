@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+"""
+Contains the base classes for prediction workers
+"""
+
 # -*- coding: utf-8 -*-
 
 # This file is part of Omega Noc
@@ -35,78 +39,25 @@ from on_reader.livestatus import livestatus, get_all_hosts
 
 class PredictionValueTypeException(Exception):
     """ Thrown when we cannot convert a value from R to python """
-    def __init__(self, type):
-        self.message = 'The R type "{0}" is unknown or not supported'.format(type)
+    def __init__(self, valueType):
+        super(PredictionValueTypeException, self).__init__()
+        self.message = 'The R type "{0}" is unknown or not supported'.format(valueType)
 
-class PredictionWorker(Process):
+class PredictionWorker(object):
     """ Abstract base class for statistical modules (a.k.a. workers) """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, compute_interval, data_name, data_version):
-        """
-        Initializes a new instance of the worker.
-        
-        compute_interval contains the time to wait between two runs of this worker, in seconds
-        data_name contains a string identifier for the worker. It will be used by the worker's
-        data tools to associate the generated data with this worker
-        data_version contains a string representing the version of the data structure used to 
-        store this worker's results. It is used to automatically trigger an update if necessary
-        """
+    def __init__(self):
         # Host process state
         super(PredictionWorker, self).__init__()
-        self.compute_interval = compute_interval
-        self.data_name = data_name
-        self.data_version = data_version
-        self.run_exception = None # This member will be filled with any unmanaged exception that is cought in the run method
-        self.last_execution_time = Value('d', 0.0)
+        self.influx_info = None
 
-        # Shared
-        self.messages = Queue()
-        
-        # Worker process state
-        self.__cancel_requested = False
-        
-    def initialize(self, previous_worker, db_path, influx_info):
+    def initialize(self, influx_info):
         """
-        Called by the module just before it's ready to use this instance.
-        The previous_worker parameter may contain the worker instance that was 
-        executed just before that one. It can be used to pass values between
-        consecutive runs.
+        Called by the container just before it's ready to use this instance.
         """
-        self.database_file = db_path
         self.influx_info = influx_info
-        pass
 
-    def start(self):
-        return super(PredictionWorker, self).start()
-
-    def cancel(self):
-        """ Used by the host to politely ask the worker to stop working ASAP 
-        """
-        self.messages.put('cancel')
-        
-    def __process_all_queue(self):
-        while self.__process_queue():
-            pass
-        
-    def __process_queue(self):
-        # Read next value
-        try:
-            val = self.messages.get_nowait()
-        except queue.Empty:
-            return False
-        # Process value
-        if val == 'cancel':
-            self.__cancel_requested = True
-        return True
-        
-    def should_cancel(self):
-        """ Can be called from the worker process to know 
-            if the host asked for cancellation.
-        """
-        self.__process_all_queue()
-        return self.__cancel_requested
-        
     # R TOOLS for use by child classes
 
     @staticmethod
@@ -180,7 +131,7 @@ class PredictionWorker(Process):
         if value.type == 'bool':
             na_value = ri.NALogicalType()
         elif value.type == 'byte':
-            na_value = ri.NAIntegerType() # I guess that's correct ? That should probably be tested though
+            na_value = ri.NAIntegerType() # TODO: Verify
         elif value.type == 'float':
             na_value = ri.NARealType()
         elif value.type == 'int':
@@ -201,7 +152,7 @@ class PredictionWorker(Process):
             return ri.IntSexpVector(val)
         if value.type == 'string':
             return ri.StrSexpVector(val)
-        
+
         raise PredictionValueTypeException(value.type)
 
     @staticmethod
@@ -222,80 +173,18 @@ class PredictionWorker(Process):
 
     @staticmethod
     def __r_value_is_NA(value, ri):
-        return value is ri.NA_Integer or value is ri.NA_Real or value is ri.NA_Logical or value is ri.NA_Character
-
-    @abc.abstractmethod
-    def internal_run(self):
-        """
-        This method should be implemented by subclasses to contain the code specific to their particular prediction algorithm
-        """
-        pass
-
-    def run(self):
-        try:
-            self.internal_run()
-        except Exception as ex:
-            logging.error('[nanto] An error occured inside a prediction worker ({0})'.format(type(self)))
-            logging.debug('[nanto] Exception: {0}'.format(ex))
-            logging.debug('[nanto] Stack: {0}'.format(traceback.format_exc()))
-            self.run_exception = ex
-        self.last_execution_time.value = time.time()
-        logging.debug('[nanto] Leaving worker run at ' + str(self.last_execution_time.value))
+        return value is ri.NA_Integer or \
+               value is ri.NA_Real or \
+               value is ri.NA_Logical or \
+               value is ri.NA_Character
 
     @staticmethod
     def generate_r_path(file_name):
         """
-        Takes the name of an R file as a parameter and returns the 
+        Takes the name of an R file as a parameter and returns the
         full path to it (if it's located into the standard R files directory)
         """
         return os.path.join(os.path.dirname(os.path.realpath(__file__)), file_name)
-
-    # DATABASE TOOLS for use by child classes
-
-    def get_database(self):
-        """ Returns an sqlite3 database object suitable to store results """
-        try:
-            result = sqlite3.connect(self.database_file)
-        except Exception as ex:
-            logging.error('Could not open database for a prediction module ({0}): {1}'.format(self.database_file, ex))
-            raise
-
-        # Check if the versions table exists
-        cur = result.cursor()
-        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='onoc_pred_versions'")
-        if cur.fetchone() is None:
-            logging.info('[nanto] No versions table! Creating...')
-            # Create the versions table
-            result.execute('CREATE TABLE onoc_pred_versions (worker_name VARCHAR(255) NOT NULL PRIMARY KEY, version INT NOT NULL)')
-
-        # Check if the worker data structure is up to date
-        cur.execute('SELECT version FROM onoc_pred_versions WHERE worker_name=?', (self.data_name,))
-        row = cur.fetchone()
-        if row is None:
-            logging.debug('[nanto] No version row available for worker "{0}"; setting version to 0'.format(self.data_name))
-            version = 0
-        else:
-            version = row[0]
-
-        if self.data_version != version:
-            logging.info('[nanto] Updating {0} database from version {1} to {2}'.format(self.data_name, version, self.data_version))
-            self.updatedb(version, result)
-            if version == 0:
-                cur.execute('INSERT INTO onoc_pred_versions (worker_name, version) VALUES (?, ?)', (self.data_name, self.data_version))
-            else:
-                cur.execute('UPDATE onoc_pred_versions SET version=? WHERE worker_name=?', (self.data_version, self.data_name))
-
-        return result
-
-    def updatedb(self, currentversion, connection):
-        """
-        This method should be overriden by any child class that needs to store stuff
-        into the results database (returned by get_database()). When the database is opened,
-        and the structure version stored in it is different than the version specified in this
-        worker instance, this method will be called to let the worker apply the necessary 
-        structure upgrades (create and update tables, etc...).
-        """
-        raise Exception("Not implemented")
 
     # METROLOGY DATA TOOLS for use by child classes
     def get_metrics_structure(self):
@@ -333,7 +222,7 @@ class PredictionWorker(Process):
                 result[host_name][service_description].append(metric_name)
         return result
 
-    def get_metrics_data(self, hostname, servicename, probename, from_hours, remove_nones = True, expand = False):
+    def get_metrics_data(self, hostname, servicename, probename, from_hours, remove_nones=True, expand=False):
         """ 
         Returns the data stored in the metrics database for the period between now and N hours ago
 
@@ -382,7 +271,7 @@ class PredictionWorker(Process):
                     intervals[interval] += 1
                 else:
                     intervals[interval] = 1
-        
+
         if len(normalized_data) == 0:
             # No data
             return (0, 0, 0, [])
@@ -395,7 +284,7 @@ class PredictionWorker(Process):
                 interval_max_count = intervals[i]
                 interval = i
         logging.debug('Detected interval: {}'.format(interval))
-        
+
         # Generate the data array with one value every interval
         final_data = [normalized_data[0]['value']]
         start_time = normalized_data[0]['time']
@@ -422,7 +311,7 @@ class PredictionWorker(Process):
         if expand:
             # Expand before known data
             expanded_bound = time.time() - from_hours * 3600
-            # Round to the next interval 
+            # Round to the next interval
             expanded_bound -= (expanded_bound % interval) + interval
             if remove_nones:
                 while start_time >= expanded_bound:
@@ -432,7 +321,7 @@ class PredictionWorker(Process):
                 while start_time >= expanded_bound:
                     final_data.insert(0, None)
                     start_time -= interval
-            
+
             # Expand after known data
             expanded_bound = time.time()
             expanded_bound -= expanded_bound % interval
@@ -447,7 +336,7 @@ class PredictionWorker(Process):
         return (start_time, end_time, interval, final_data)
 
     def __get_influx_client(self):
-        return InfluxDBClient(host=self.influx_info['host'], 
+        return InfluxDBClient(host=self.influx_info['host'],
                               port=self.influx_info['port'],
                               database=self.influx_info['database'],
                               username=self.influx_info['username'],
@@ -455,17 +344,17 @@ class PredictionWorker(Process):
 
     @staticmethod
     def __get_numeric_measurements(client):
-        fielddata = client.query('show field keys');
-        for m in fielddata.items():
-            for f in m[1]:
-                if f[u'fieldKey'] == u'value':
-                    yield m[0]
-                    break    
+        fielddata = client.query('show field keys')
+        for measurement in fielddata.items():
+            for field in measurement[1]:
+                if field[u'fieldKey'] == u'value':
+                    yield measurement[0]
+                    break
 
     # LIVESTATUS TOOLS for use by child classes
     @staticmethod
     def get_livestatus_components():
-        """ 
+        """
         Returns the full list of components known to Livestatus.
         The result is an array of tuples (hostname, servicename)
         in which servicename may be null to describe a host component.
@@ -479,7 +368,7 @@ class PredictionWorker(Process):
         return result
 
     @staticmethod
-    def get_livestatus_hard_states(from_timestamp, host = None, service = None, state = None):
+    def get_livestatus_hard_states(from_timestamp, host=None, service=None, state=None):
         """
         Gets a list of hard state changes in the specified time interval.
         """
@@ -492,7 +381,7 @@ class PredictionWorker(Process):
         if host is not None:
             query = query.filter('host_name = ' + host)
         if service is not None:
-            query = query.filter('service_description = ' + service) 
+            query = query.filter('service_description = ' + service)
 
         if state is not None:
             query = query.filter('state = {0}'.format(state))
@@ -502,7 +391,7 @@ class PredictionWorker(Process):
     # MISC tools
 
     @staticmethod
-    def frange(start, stop, step = 1):
+    def frange(start, stop, step=1):
         """
         Works just like the standard range(), but returns floats instead of ints
         """
@@ -512,19 +401,187 @@ class PredictionWorker(Process):
             yield start
             start += step
 
+class PredictionOperation(PredictionWorker):
+    """
+    Defines a prediction operation that executes on a single probe, and returns
+    its results as a string
+    """
+    def __init__(self):
+        super(PredictionOperation, self).__init__()
+
+    def run(self, hostname, service, timeout, **kwargs):
+        """
+        Executes a predictive algorithm on a single specified probe, and returns a dict
+        containing all the resulting values. In that dict, there should be a key "status"
+        containing the return code that the process whould exit with (between 0 and 3).
+        Keyword arguments depends on the algorithm itself, and contains the command line
+        arguments that are not already in the other arguments.
+        """
+        try:
+            return self.internal_run(hostname, service, timeout, **kwargs)
+        except Exception as ex:
+            logging.error('[nanto] An error occured inside a prediction operation ({0})'.format(type(self)))
+            logging.debug('[nanto] Exception: {0}'.format(ex))
+            logging.debug('[nanto] Stack: {0}'.format(traceback.format_exc()))
+            return 1000
+
+    @abc.abstractmethod
+    def internal_run(self, hostname, service, timeout, **kwargs):
+        pass
+
+class PredictionBatch(Process, PredictionWorker):
+    """
+    Defines a prediction operation that executes on all available probes
+    and saves its results in a database backend
+    """
+    def __init__(self, compute_interval, data_name, data_version):
+        """
+        Initializes a new instance of the worker.
+
+        compute_interval contains the time to wait between two runs of this worker, in seconds
+        data_name contains a string identifier for the worker. It will be used by the worker's
+        data tools to associate the generated data with this worker
+        data_version contains a string representing the version of the data structure used to
+        store this worker's results. It is used to automatically trigger an update if necessary
+        """
+
+        # Host process state
+        super(PredictionBatch, self).__init__()
+        self.compute_interval = compute_interval
+        self.data_name = data_name
+        self.data_version = data_version
+        self.run_exception = None # This member will be filled with any unmanaged exception
+                                  # that is caught in the run method
+        self.last_execution_time = Value('d', 0.0)
+
+        # Shared
+        self.messages = Queue()
+
+        # Worker process state
+        self.__cancel_requested = False
+
+        self.database_file = None
+
+    def initialize(self, previous_worker, db_path, influx_info):
+        """
+        Called by the module just before it's ready to use this instance.
+        The previous_worker parameter may contain the worker instance that was
+        executed just before that one. It can be used to pass values between
+        consecutive runs.
+        """
+        super(PredictionBatch, self).initialize(influx_info)
+        self.database_file = db_path
+
+
+    def start(self):
+        return super(PredictionBatch, self).start()
+
+    def cancel(self):
+        """ Used by the host to politely ask the worker to stop working ASAP
+        """
+        self.messages.put('cancel')
+
+    def __process_all_queue(self):
+        while self.__process_queue():
+            pass
+
+    def __process_queue(self):
+        # Read next value
+        try:
+            val = self.messages.get_nowait()
+        except queue.Empty:
+            return False
+        # Process value
+        if val == 'cancel':
+            self.__cancel_requested = True
+        return True
+
+    def should_cancel(self):
+        """ Can be called from the worker process to know
+            if the host asked for cancellation.
+        """
+        self.__process_all_queue()
+        return self.__cancel_requested
+
+    # DATABASE TOOLS for use by child classes
+
+    def get_database(self):
+        """ Returns an sqlite3 database object suitable to store results """
+        try:
+            result = sqlite3.connect(self.database_file)
+        except Exception as ex:
+            logging.error('Could not open database for a prediction module ({0}): {1}'.format(self.database_file, ex))
+            raise
+
+        # Check if the versions table exists
+        cur = result.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='onoc_pred_versions'")
+        if cur.fetchone() is None:
+            logging.info('[nanto] No versions table! Creating...')
+            # Create the versions table
+            result.execute('CREATE TABLE onoc_pred_versions (worker_name VARCHAR(255) NOT NULL PRIMARY KEY, version INT NOT NULL)')
+
+        # Check if the worker data structure is up to date
+        cur.execute('SELECT version FROM onoc_pred_versions WHERE worker_name=?', (self.data_name,))
+        row = cur.fetchone()
+        if row is None:
+            logging.debug('[nanto] No version row available for worker "{0}"; setting version to 0'.format(self.data_name))
+            version = 0
+        else:
+            version = row[0]
+
+        if self.data_version != version:
+            logging.info('[nanto] Updating {0} database from version {1} to {2}'.format(self.data_name, version, self.data_version))
+            self.updatedb(version, result)
+            if version == 0:
+                cur.execute('INSERT INTO onoc_pred_versions (worker_name, version) VALUES (?, ?)', (self.data_name, self.data_version))
+            else:
+                cur.execute('UPDATE onoc_pred_versions SET version=? WHERE worker_name=?', (self.data_version, self.data_name))
+
+        return result
+
+    def updatedb(self, currentversion, connection):
+        """
+        This method should be overriden by any child class that needs to store stuff
+        into the results database (returned by get_database()). When the database is opened,
+        and the structure version stored in it is different than the version specified in this
+        worker instance, this method will be called to let the worker apply the necessary
+        structure upgrades (create and update tables, etc...).
+        """
+        raise Exception("Not implemented")
+
+    @abc.abstractmethod
+    def internal_run(self):
+        """
+        This method should be implemented by subclasses to contain the code specific
+        to their particular prediction algorithm
+        """
+        pass
+
+    def run(self):
+        try:
+            self.internal_run()
+        except Exception as ex:
+            logging.error('[nanto] An error occured inside a prediction worker ({0})'.format(type(self)))
+            logging.debug('[nanto] Exception: {0}'.format(ex))
+            logging.debug('[nanto] Stack: {0}'.format(traceback.format_exc()))
+            self.run_exception = ex
+        self.last_execution_time.value = time.time()
+        logging.debug('[nanto] Leaving worker run at ' + str(self.last_execution_time.value))
+
 
 class PredictionValue(object):
     """ A wrapper for values sent to R """
-    def __init__(self, type, value):
+    def __init__(self, valueType, value):
         """
         Creates a new R value
-        
+
         type is a string describing the target R type of the value. Possible type values are:
         bool, byte, float, int or string
-        
+
         value is the actual value that should be converted and sent
         """
-        self.type = type
+        self.type = valueType
         self.value = value
 
     def __repr__(self):
