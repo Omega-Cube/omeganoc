@@ -16,7 +16,7 @@ class StateSwitchWorker(PredictionOperation):
     def __init__(self):
         # This script runs every hour
         super(StateSwitchWorker, self).__init__()
-        self.states_length = (3600 * 24 * 30) # Take one month of history into account
+        self.states_length = (3600 * 24 * 30 * 12) # Take one month of history into account
 
     def internal_run(self, hostname, servicename, timeout, **kwargs):
         """
@@ -44,10 +44,14 @@ class StateSwitchWorker(PredictionOperation):
         checkinterval = StateSwitchWorker.__get_checkinterval(hostname, servicename)
         if checkinterval is None:
             logging.debug('[State Switch Worker] Missing check interval for {0}, {1}. Are you sure these names are correct ?'.format(hostname, servicename))
-        events = PredictionWorker.get_livestatus_hard_states(
+        # events = PredictionWorker.get_livestatus_hard_states(
+        #     from_time,
+        #     hostname,
+        #     '' if servicename is None else servicename)
+        events = self.get_influx_hard_states(
             from_time,
             hostname,
-            '' if servicename is None else servicename)
+            '__host__' if servicename is None else servicename)
         los = StateSwitchWorker.__create_los_from_events(events, from_time)
         logging.debug("================================")
         logging.debug("%s", events)

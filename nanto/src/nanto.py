@@ -3,22 +3,27 @@
 """ Nagios check that execute Nanto predictions """
 
 import argparse
+import ConfigParser
 import importlib
 import logging
 
 import nagiosplugin
 
+conf_file_path = '/etc/nanto.cfg'
+
 class NantoResource(nagiosplugin.Resource):
-    def __init__(self, worker_name, hostname, servicename):
+    def __init__(self, worker_name, hostname, servicename, influx_info):
         super(NantoResource, self).__init__()
         self.worker_type = load_worker(worker_name)
         self.hostname = hostname
         self.servicename = servicename
         self.worker_name = worker_name
+        self.influx_info = influx_info
 
     def probe(self):
         logging.debug('Running prediction on %s/%s', self.hostname, self.servicename)
         worker_inst = self.worker_type()
+        worker_inst.initialize(self.influx_info)
         return nagiosplugin.Metric('{} prediction'.format(self.worker_name), worker_inst.run(self.hostname, self.servicename, 300000), min=0, uom='s')
 
 def load_worker(worker_name):
@@ -37,6 +42,25 @@ def load_worker(worker_name):
     logging.debug('[nanto] Loaded worker %s', worker_name)
     return worker_type
 
+def load_config():
+    conf = ConfigParser.SafeConfigParser()
+    readlist = conf.read(conf_file_path)
+    if len(readlist) != 1:
+        logging.critical('Could not read the configuration file ({})'.format(conf_file_path))
+        return None
+    try:
+        confitems = conf.items('nanto')
+    except ConfigParser.NoSectionError as ex:
+        logging.critical('The configuration file does not contain a Nanto section')
+        return None
+    confdict = {key: value for key, value in confitems}
+    return {
+        'host': confdict.get('influx_host', None),
+        'port': confdict.get('influx_port', None),
+        'database': confdict.get('influx_database', None),
+        'username': confdict.get('influx_username', None),
+        'password': confdict.get('influx_password', None)
+    }
 
 def main():
     # TODO: Add the possibility to pass in other custom arguments, 
@@ -59,8 +83,11 @@ def main():
                       help='The target hostname')
     argp.add_argument('-S', '--service', help='Name of the service you want the data for')
     args = argp.parse_args()
+
+    conf = load_config()
+
     check = nagiosplugin.Check(
-        NantoResource(args.worker, args.hostname, args.service),
+        NantoResource(args.worker, args.hostname, args.service, conf),
         nagiosplugin.ScalarContext(args.worker + ' prediction', args.warning, args.critical))
     check.main()
 

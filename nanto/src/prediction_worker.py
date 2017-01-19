@@ -370,7 +370,7 @@ class PredictionWorker(object):
     @staticmethod
     def get_livestatus_hard_states(from_timestamp, host=None, service=None, state=None):
         """
-        Gets a list of hard state changes in the specified time interval.
+        Gets a list of hard state changes in the specified time interval, from the Livestatus service.
         """
         query = livestatus.log._query
 
@@ -387,6 +387,38 @@ class PredictionWorker(object):
             query = query.filter('state = {0}'.format(state))
 
         return query.call()
+
+    def get_influx_hard_states(self, from_timestamp, host=None, service=None, state=None):
+        """
+        Gets a list of hard state changes in the specified interval, from InfluxDB.
+        """
+        client = self.__get_influx_client()
+        sql = "SELECT time, state, service_description, host_name FROM EVENT where time > {}s AND state_type='HARD'".format(int(from_timestamp))
+        if host is not None:
+            sql += " AND host_name='{}'".format(host)
+        if service is not None:
+            sql += " AND service_description='{}'".format(service)
+        if state is not None:
+            sql += " AND state='{}'".format(state)
+        logging.debug("Influx query: %s", sql)
+        raw = client.query(sql, epoch='s')
+        # TODO : Make StateSwitch.__create_los_from_events compatible with generators
+        # so we don't have to turn the result into a list
+        result = []
+        for evt in raw.get_points():
+            logging.debug('event %s', evt['state'])
+            state = 0
+            if evt['state'] == 'WARNING':
+                state = 1
+            elif evt['state'] == 'CRITICAL':
+                state = 2
+            elif evt['state'] == 'ERROR':
+                state = 3
+            result.append({
+                'time': evt['time'],
+                'state': state
+            })
+        return result
 
     # MISC tools
 
