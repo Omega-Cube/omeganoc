@@ -105,7 +105,7 @@ class PredictionWorker(object):
             logging.error('An error occured while executing the R script "{0}": {1}'.format(script_name, ex.message))
             logging.debug('Inputs:')
             for ikey, ival in inputs.iteritems():
-                logging.debug('{0}: {1}'.format(ikey, ival))
+                logging.debug('%s: %s', ikey, ival)
             return False
 
         # Read outputs
@@ -191,7 +191,7 @@ class PredictionWorker(object):
         """
         Returns a list of metrics available in the metrics database.
         """
-        client = self.__get_influx_client()
+        client = self.get_influx_client()
         result = {}
         tagdata = client.query('show tag values with key in ("host_name", "service_description")')
         measurements = list(PredictionWorker.__get_numeric_measurements(client))
@@ -223,14 +223,14 @@ class PredictionWorker(object):
         return result
 
     def get_metrics_data(self, hostname, servicename, probename, from_hours, remove_nones=True, expand=False):
-        """ 
+        """
         Returns the data stored in the metrics database for the period between now and N hours ago
 
-        If expand is True, then the function will add None values to fill areas of time that 
+        If expand is True, then the function will add None values to fill areas of time that
         are required but not returned by the database
 
-        If remove_nones is True, the all None values in the series will be replaced by the previous value.
-        If the first value is None, it will be set to zero.
+        If remove_nones is True, the all None values in the series will be replaced
+        by the previous value. If the first value is None, it will be set to zero.
 
         The function returns a set containing :
         - The step interval (in seconds)
@@ -240,7 +240,7 @@ class PredictionWorker(object):
         """
         logging.debug('Data requested for host "{}", service "{}", metric "{}" on {} hours'.format(
             hostname, servicename, probename, from_hours))
-        client = self.__get_influx_client()
+        client = self.get_influx_client()
         query = "select time, value from \"{}\" where host_name='{}' and service_description='{}' and time >= now() - {}h".format(
             'metric_' + probename,
             hostname,
@@ -335,7 +335,7 @@ class PredictionWorker(object):
                     end_time += interval
         return (start_time, end_time, interval, final_data)
 
-    def __get_influx_client(self):
+    def get_influx_client(self):
         return InfluxDBClient(host=self.influx_info['host'],
                               port=self.influx_info['port'],
                               database=self.influx_info['database'],
@@ -365,59 +365,6 @@ class PredictionWorker(object):
             result.append((hname, None))
             for sname in hlist[hname]['services']:
                 result.append((hname, sname))
-        return result
-
-    @staticmethod
-    def get_livestatus_hard_states(from_timestamp, host=None, service=None, state=None):
-        """
-        Gets a list of hard state changes in the specified time interval, from the Livestatus service.
-        """
-        query = livestatus.log._query
-
-        query = query.columns(*['time', 'host_name', 'service_description', 'state'])
-        query = query.filter('class = 1')
-        query = query.filter('state_type = HARD')
-        query = query.filter('time > {:.0f}'.format(from_timestamp))
-        if host is not None:
-            query = query.filter('host_name = ' + host)
-        if service is not None:
-            query = query.filter('service_description = ' + service)
-
-        if state is not None:
-            query = query.filter('state = {0}'.format(state))
-
-        return query.call()
-
-    def get_influx_hard_states(self, from_timestamp, host=None, service=None, state=None):
-        """
-        Gets a list of hard state changes in the specified interval, from InfluxDB.
-        """
-        client = self.__get_influx_client()
-        sql = "SELECT time, state, service_description, host_name FROM EVENT where time > {}s AND state_type='HARD'".format(int(from_timestamp))
-        if host is not None:
-            sql += " AND host_name='{}'".format(host)
-        if service is not None:
-            sql += " AND service_description='{}'".format(service)
-        if state is not None:
-            sql += " AND state='{}'".format(state)
-        logging.debug("Influx query: %s", sql)
-        raw = client.query(sql, epoch='s')
-        # TODO : Make StateSwitch.__create_los_from_events compatible with generators
-        # so we don't have to turn the result into a list
-        result = []
-        for evt in raw.get_points():
-            logging.debug('event %s', evt['state'])
-            state = 0
-            if evt['state'] == 'WARNING':
-                state = 1
-            elif evt['state'] == 'CRITICAL':
-                state = 2
-            elif evt['state'] == 'ERROR':
-                state = 3
-            result.append({
-                'time': evt['time'],
-                'state': state
-            })
         return result
 
     # MISC tools

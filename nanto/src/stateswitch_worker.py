@@ -1,5 +1,9 @@
+"""
+This module contains the prediction logic for state switch times
+based on markov chains
+"""
+
 import logging
-import random
 import time
 
 from on_reader.livestatus import livestatus
@@ -13,6 +17,9 @@ class FromValueException(Exception):
         self.message = 'Invalid value for the "from" parameter: {}'.format(received_value)
 
 class StateSwitchWorker(PredictionOperation):
+    """
+    Implements markov chains transition matrix algorithm and runs it on a specified host or service
+    """
     def __init__(self):
         # This script runs every hour
         super(StateSwitchWorker, self).__init__()
@@ -43,19 +50,12 @@ class StateSwitchWorker(PredictionOperation):
         # possible check interval
         checkinterval = StateSwitchWorker.__get_checkinterval(hostname, servicename)
         if checkinterval is None:
-            logging.debug('[State Switch Worker] Missing check interval for {0}, {1}. Are you sure these names are correct ?'.format(hostname, servicename))
-        # events = PredictionWorker.get_livestatus_hard_states(
-        #     from_time,
-        #     hostname,
-        #     '' if servicename is None else servicename)
-        events = self.get_influx_hard_states(
+            logging.warning('[State Switch Worker] Missing check interval for "%s", "%s". Are you sure these names are correct ?', hostname, servicename)
+        events = self.__get_influx_hard_states(
             from_time,
             hostname,
             '__host__' if servicename is None else servicename)
         los = StateSwitchWorker.__create_los_from_events(events, from_time)
-        logging.debug("================================")
-        logging.debug("%s", events)
-        logging.debug("================================")
 
         # Send the data to R
         outputs = {'FR': None, 'F': None, 'M': None, 'TM': None}
@@ -74,7 +74,38 @@ class StateSwitchWorker(PredictionOperation):
                 return None
             else:
                 # Convert the result from "number of data points" (1 data point / minute) to seconds
-                return int(round(outputs['F'][from_id - 1] + outputs['F'][from_id + 2] + outputs['F'][from_id + 5])) * 60
+                result = outputs['F'][from_id - 1] + outputs['F'][from_id + 2] + outputs['F'][from_id + 5]
+                return int(round(result)) * 60
+
+    def __get_influx_hard_states(self, from_timestamp, host=None, service=None, state=None):
+        """
+        Gets a list of hard state changes in the specified interval, from InfluxDB.
+        """
+        client = self.get_influx_client()
+        sql = "SELECT time, state, service_description, host_name FROM EVENT where time > {}s AND state_type='HARD'".format(int(from_timestamp))
+        if host is not None:
+            sql += " AND host_name='{}'".format(host)
+        if service is not None:
+            sql += " AND service_description='{}'".format(service)
+        if state is not None:
+            sql += " AND state='{}'".format(state)
+        logging.debug("Influx query: %s", sql)
+        raw = client.query(sql, epoch='s')
+        # TODO : Make StateSwitch.__create_los_from_events compatible with generators
+        # so we don't have to turn the result into a list
+        result = []
+        for evt in raw.get_points():
+            logging.debug('event %s', evt['state'])
+            state = 0
+            if evt['state'] == 'WARNING':
+                state = 1
+            elif evt['state'] == 'CRITICAL':
+                state = 3
+            result.append({
+                'time': evt['time'],
+                'state': state
+            })
+        return result
 
     @staticmethod
     def __create_los_from_events(events, from_time):
@@ -96,7 +127,7 @@ class StateSwitchWorker(PredictionOperation):
         return los
 
     @staticmethod
-    def __get_checkinterval(hname, sname = None):
+    def __get_checkinterval(hname, sname=None):
         if sname is None:
             query = livestatus.hosts._query
             query = query.columns(*['check_interval'])
