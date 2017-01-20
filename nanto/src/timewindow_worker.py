@@ -24,7 +24,7 @@ import os
 import time
 import traceback
 
-from prediction_worker import PredictionBatch, PredictionValue
+from prediction_worker import PredictionBatch, PredictionWorker, PredictionValue
 from on_reader.livestatus import livestatus
 
 
