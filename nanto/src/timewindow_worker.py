@@ -1,4 +1,8 @@
-#!/usr/bin/python
+"""
+Implementation of the Timewindow prediction algorithm
+It tries to look at past prefdata for the known probes,
+and predicts what that perfdata could look like in the future.
+"""
 
 # -*- coding: utf-8 -*-
 
@@ -29,8 +33,9 @@ from on_reader.livestatus import livestatus
 
 
 class TimewindowWorker(PredictionBatch):
-    """ 
-    This worker tries to produce an estimate of how a value will behave in a near future, based on the last month of values
+    """
+    This worker tries to produce an estimate of how a value will behave
+    in a near future, based on the last month of values
     """
     def __init__(self):
         # The worker runs every 2 hours
@@ -55,7 +60,6 @@ class TimewindowWorker(PredictionBatch):
                     entries_count += 1
                     success = False
                     checkinterval = 3600 # For now we'll only consider one value/hour
-                    now = time.time()
                     try:
                         success = self.__go(h, s, metric, checkinterval)
                     except Exception, ex:
@@ -99,8 +103,8 @@ class TimewindowWorker(PredictionBatch):
 
         # Send the values to R
         inputs = {'iData': PredictionValue('float', normalized_values),
-                    'iTwPoints': PredictionValue('int', 300),
-                    'iOutputLength': PredictionValue('int', 6)}
+                  'iTwPoints': PredictionValue('int', 300),
+                  'iOutputLength': PredictionValue('int', 6)}
 
         outputs = {'pred_mean': None, 'pred_lower': None, 'pred_upper': None}
 
@@ -120,14 +124,14 @@ class TimewindowWorker(PredictionBatch):
         else:
             self.save_error(target, "This node could not be processed")
             return False
-        
+
     def save_error(self, target, message):
         """ Saves an error to the database, and clear and existing results """
         with self.get_database() as con:
             logging.debug('Saving error message "{}" for target "{}"'.format(message, target))
             con.execute('INSERT OR REPLACE INTO timewindow (probe, update_time, error_desc, start_time, step, mean, lower_80, lower_95, upper_80, upper_95) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         (target, time.time(), message, None, None, None, None, None, None, None))
-        
+
     def updatedb(self, currentversion, connection):
         if currentversion < 1:
             logging.debug('[nanto:timewindow] Creating timewindow table')
@@ -141,7 +145,7 @@ class TimewindowWorker(PredictionBatch):
                                                          lower_95 VARCHAR(1024),\
                                                          upper_80 VARCHAR(1024),\
                                                          upper_95 VARCHAR(1024))')
-                                                         # Data can be null if forecasting is impossible with current data
+            # Data can be null if forecasting is impossible with current data
         if currentversion < 2:
             # Add the error_desc column, containing a user-friendly error message
             # if for any reason we could not produce results
