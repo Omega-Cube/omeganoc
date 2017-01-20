@@ -12,6 +12,9 @@ import nagiosplugin
 conf_file_path = '/etc/nanto.cfg'
 
 class NantoResource(nagiosplugin.Resource):
+    """
+    A wrapper that turns a prediction worker into a nagiosplugin resource
+    """
     def __init__(self, worker_name, hostname, servicename, influx_info):
         super(NantoResource, self).__init__()
         self.worker_type = load_worker(worker_name)
@@ -27,6 +30,9 @@ class NantoResource(nagiosplugin.Resource):
         return nagiosplugin.Metric('{} prediction'.format(self.worker_name), worker_inst.run(self.hostname, self.servicename, 300000), min=0, uom='s')
 
 def load_worker(worker_name):
+    """
+    Locates and returns a prediction worker class
+    """
     modulename = worker_name.lower() + '_worker'
     try:
         mod = importlib.import_module(modulename)
@@ -43,6 +49,9 @@ def load_worker(worker_name):
     return worker_type
 
 def load_config():
+    """
+    Loads the configuration required by the prediction operations
+    """
     conf = ConfigParser.SafeConfigParser()
     readlist = conf.read(conf_file_path)
     if len(readlist) != 1:
@@ -66,11 +75,11 @@ def main():
     # TODO: Add the possibility to pass in other custom arguments, 
     # for example the "from" state for the state transition previsions
 
-    logging.basicConfig(filename='nanto.log',
-                        filemode='a',
-                        format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                        datefmt='%H:%M:%S',
-                        level=logging.DEBUG)
+    # logging.basicConfig(filename='nanto.log',
+    #                     filemode='a',
+    #                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+    #                     datefmt='%H:%M:%S',
+    #                     level=logging.DEBUG)
 
     argp = argparse.ArgumentParser(description=__doc__)
     argp.add_argument('-w', '--warning', metavar='RANGE', default='',
