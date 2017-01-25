@@ -35,7 +35,7 @@ from prediction_helper import PredictionHelper
 class PredictionOperation(object):
     """
     Defines a prediction operation that executes on a single probe, and returns
-    its results as a string
+    its results as a number
     """
     def __init__(self):
         super(PredictionOperation, self).__init__()
@@ -46,11 +46,8 @@ class PredictionOperation(object):
 
     def run(self, hostname, service, timeout, data_length, **kwargs):
         """
-        Executes a predictive algorithm on a single specified probe, and returns a dict
-        containing all the resulting values. In that dict, there should be a key "status"
-        containing the return code that the process whould exit with (between 0 and 3).
-        Keyword arguments depends on the algorithm itself, and contains the command line
-        arguments that are not already in the other arguments.
+        Executes a predictive algorithm on a single specified probe, and returns a number
+        representing a predicted value. (but that is most likely to change in the future)
         """
         try:
             return self.internal_run(hostname, service, timeout, data_length, **kwargs)
@@ -62,6 +59,9 @@ class PredictionOperation(object):
 
     @abc.abstractmethod
     def internal_run(self, hostname, service, timeout, data_length, **kwargs):
+        """
+        Abstract method containing the logic executed when run() is called.
+        """
         pass
 
 class PredictionBatch(Process):
