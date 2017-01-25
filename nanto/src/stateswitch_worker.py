@@ -20,12 +20,8 @@ class StateSwitchWorker(PredictionOperation):
     """
     Implements markov chains transition matrix algorithm and runs it on a specified host or service
     """
-    def __init__(self):
-        # This script runs every hour
-        super(StateSwitchWorker, self).__init__()
-        self.states_length = (3600 * 24 * 30 * 12) # Take one month of history into account
 
-    def internal_run(self, hostname, servicename, timeout, **kwargs):
+    def internal_run(self, hostname, servicename, timeout, data_length=0, **kwargs):
         """
         In addition to the standard arguments, this algorithm accepts:
         'service' allows you to specify which service to run the algorithm on
@@ -42,8 +38,15 @@ class StateSwitchWorker(PredictionOperation):
             if not from_id is int or from_id < 1 or from_id > 3:
                 raise FromValueException(from_id)
 
+        logging.debug("[State Switch Worker] Starting on hostname '%s', service name '%s'",
+                      hostname,
+                      servicename)
+
         # Read
-        from_time = time.time() - self.states_length
+        if data_length == 0: # If no data length specified
+            data_length = 30 # Default to one month of data
+        logging.debug("[State Switch Worker] Getting %s days of data", data_length)
+        from_time = time.time() - data_length * 24 * 3600
 
         # To avoid having bajillions of values we'll handle only one list of states at a time
         # One state / minute, which is a lot over one month but allows us to be compatible with any
@@ -95,7 +98,6 @@ class StateSwitchWorker(PredictionOperation):
         # so we don't have to turn the result into a list
         result = []
         for evt in raw.get_points():
-            logging.debug('event %s', evt['state'])
             state = 0
             if evt['state'] == 'WARNING':
                 state = 1

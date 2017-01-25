@@ -15,19 +15,27 @@ class NantoResource(nagiosplugin.Resource):
     """
     A wrapper that turns a prediction worker into a nagiosplugin resource
     """
-    def __init__(self, worker_name, hostname, servicename, influx_info):
+    def __init__(self, worker_name, hostname, servicename, data_length, influx_info):
         super(NantoResource, self).__init__()
         self.worker_type = load_worker(worker_name)
         self.hostname = hostname
         self.servicename = servicename
         self.worker_name = worker_name
         self.influx_info = influx_info
+        self.data_length = data_length
 
     def probe(self):
         logging.debug('Running prediction on %s/%s', self.hostname, self.servicename)
         worker_inst = self.worker_type()
         worker_inst.initialize(self.influx_info)
-        return nagiosplugin.Metric('{} prediction'.format(self.worker_name), worker_inst.run(self.hostname, self.servicename, 300000), min=0, uom='s')
+        return nagiosplugin.Metric(
+            '{} prediction'.format(self.worker_name), worker_inst.run(
+                self.hostname,
+                self.servicename,
+                300000,
+                self.data_length),
+            min=0,
+            uom='s')
 
 def load_worker(worker_name):
     """
@@ -72,14 +80,14 @@ def load_config():
     }
 
 def main():
-    # TODO: Add the possibility to pass in other custom arguments, 
+    # TODO: Add the possibility to pass in other custom arguments,
     # for example the "from" state for the state transition previsions
 
-    # logging.basicConfig(filename='nanto.log',
-    #                     filemode='a',
-    #                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-    #                     datefmt='%H:%M:%S',
-    #                     level=logging.DEBUG)
+    logging.basicConfig(filename='nanto.log',
+                        filemode='a',
+                        format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                        datefmt='%H:%M:%S',
+                        level=logging.DEBUG)
 
     argp = argparse.ArgumentParser(description=__doc__)
     argp.add_argument('-w', '--warning', metavar='RANGE', default='',
@@ -90,13 +98,15 @@ def main():
                       help='The name of the algorithm that should be executed on the specified probe')
     argp.add_argument('-H', '--hostname', required=True,
                       help='The target hostname')
+    argp.add_argument('-d', '--datalength', type=int, default=0,
+                      help='The amount of data that should be used as the prediction input, in days.')
     argp.add_argument('-S', '--service', help='Name of the service you want the data for')
     args = argp.parse_args()
 
     conf = load_config()
 
     check = nagiosplugin.Check(
-        NantoResource(args.worker, args.hostname, args.service, conf),
+        NantoResource(args.worker, args.hostname, args.service, args.datalength, conf),
         nagiosplugin.ScalarContext(args.worker + ' prediction', args.warning, args.critical))
     check.main()
 

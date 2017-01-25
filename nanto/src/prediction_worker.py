@@ -388,7 +388,7 @@ class PredictionOperation(PredictionWorker):
     def __init__(self):
         super(PredictionOperation, self).__init__()
 
-    def run(self, hostname, service, timeout, **kwargs):
+    def run(self, hostname, service, timeout, data_length, **kwargs):
         """
         Executes a predictive algorithm on a single specified probe, and returns a dict
         containing all the resulting values. In that dict, there should be a key "status"
@@ -397,7 +397,7 @@ class PredictionOperation(PredictionWorker):
         arguments that are not already in the other arguments.
         """
         try:
-            return self.internal_run(hostname, service, timeout, **kwargs)
+            return self.internal_run(hostname, service, timeout, data_length, **kwargs)
         except Exception as ex:
             logging.error('[nanto] An error occured inside a prediction operation ({0})'.format(type(self)))
             logging.debug('[nanto] Exception: {0}'.format(ex))
@@ -405,7 +405,7 @@ class PredictionOperation(PredictionWorker):
             return 1000
 
     @abc.abstractmethod
-    def internal_run(self, hostname, service, timeout, **kwargs):
+    def internal_run(self, hostname, service, timeout, data_length, **kwargs):
         pass
 
 class PredictionBatch(Process, PredictionWorker):
