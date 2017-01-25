@@ -8,7 +8,8 @@ import time
 
 from on_reader.livestatus import livestatus
 
-from prediction_worker import PredictionOperation, PredictionWorker, PredictionValue
+from prediction_worker import PredictionOperation
+from prediction_helper import PredictionHelper, PredictionValue
 
 class FromValueException(Exception):
     """ Thrown when we receive an incorrect value in the 'from' parameter """
@@ -62,7 +63,7 @@ class StateSwitchWorker(PredictionOperation):
 
         # Send the data to R
         outputs = {'FR': None, 'F': None, 'M': None, 'TM': None}
-        if self.run_r_script(PredictionWorker.generate_r_path('stateswitch.r'), {'LOS': PredictionValue('int', los)}, outputs):
+        if self.helper.run_r_script(PredictionHelper.generate_r_path('stateswitch.r'), {'LOS': PredictionValue('int', los)}, outputs):
             if outputs['M'] is None:
                 outputs['M'] = []
             logging.debug('Outputs:')
@@ -84,7 +85,7 @@ class StateSwitchWorker(PredictionOperation):
         """
         Gets a list of hard state changes in the specified interval, from InfluxDB.
         """
-        client = self.get_influx_client()
+        client = self.helper.get_influx_client()
         sql = "SELECT time, state, service_description, host_name FROM EVENT where time > {}s AND state_type='HARD'".format(int(from_timestamp))
         if host is not None:
             sql += " AND host_name='{}'".format(host)

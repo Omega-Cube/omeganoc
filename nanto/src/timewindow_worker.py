@@ -28,9 +28,8 @@ import os
 import time
 import traceback
 
-from prediction_worker import PredictionBatch, PredictionWorker, PredictionValue
-from on_reader.livestatus import livestatus
-
+from prediction_worker import PredictionBatch
+from prediction_helper import PredictionHelper, PredictionValue
 
 class TimewindowWorker(PredictionBatch):
     """
@@ -44,7 +43,7 @@ class TimewindowWorker(PredictionBatch):
         self.predicted_points = 6
 
     def internal_run(self):
-        components = self.get_metrics_structure()
+        components = self.helper.get_metrics_structure()
         logging.debug('[nanto:timewindow] About to run timewindow prediction on {0} hosts'.format(len(components)))
         logging.debug('[nanto:timewindow] On process {0}'.format(os.getpid()))
         t0 = time.time()
@@ -77,7 +76,7 @@ class TimewindowWorker(PredictionBatch):
     def __go(self, host, service, metric, checkinterval):
         now = time.time()
         target = '{}.{}.{}'.format(host, service, metric)
-        (start, end, step, values) = self.get_metrics_data(host, service, metric, checkinterval * self.history_points_count / 3600, False, True)
+        (start, end, step, values) = self.helper.get_metrics_data(host, service, metric, checkinterval * self.history_points_count / 3600, False, True)
 
         # Change the time series granularity so that we have the one required by the R script
         normalized_values = []
@@ -108,7 +107,7 @@ class TimewindowWorker(PredictionBatch):
 
         outputs = {'pred_mean': None, 'pred_lower': None, 'pred_upper': None}
 
-        if self.run_r_script(PredictionWorker.generate_r_path('timewindow.r'), inputs, outputs):
+        if self.helper.run_r_script(PredictionHelper.generate_r_path('timewindow.r'), inputs, outputs):
             valcount = len(outputs['pred_mean'])
             mean = ';'.join([str(i) for i in outputs['pred_mean']])
             lower_80 = ';'.join([str(i) for i in outputs['pred_lower'][:valcount]])
