@@ -198,7 +198,8 @@ class PredictionHelper(object):
 
     def get_metrics_data(self, hostname, servicename, probename, from_hours, remove_nones=True, expand=False):
         """
-        Returns the data stored in the metrics database for the period between now and N hours ago
+        Returns the data stored in the metrics database for the period between now and N hours ago,
+        as a strict time series (for example containing one point every 5 minutes)
 
         If expand is True, then the function will add None values to fill areas of time that
         are required but not returned by the database
