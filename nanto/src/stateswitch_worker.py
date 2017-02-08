@@ -68,16 +68,12 @@ class StateSwitchWorker(PredictionOperation):
         logging.debug("[State Switch Worker] Getting %s days of data", data_length)
         from_time = time.time() - data_length * 24 * 3600
 
-        # To avoid having bajillions of values we'll handle only one list of states at a time
-        # One state / minute, which is a lot over one month but allows us to be compatible with any
-        # possible check interval
-        checkinterval = StateSwitchWorker.__get_checkinterval(hostname, servicename)
-        if checkinterval is None:
-            logging.warning('[State Switch Worker] Missing check interval for "%s", "%s". Are you sure these names are correct ?', hostname, servicename)
+        # Get the list of past state changes (events) from InfluxDB
         events = self.__get_influx_hard_states(
             from_time,
             hostname,
             '__host__' if servicename is None else servicename)
+        # Create the LOS from the events list, with always one point every minute
         los = StateSwitchWorker.__create_los_from_events(events, from_time)
 
         # Send the data to R
@@ -147,21 +143,3 @@ class StateSwitchWorker(PredictionOperation):
             from_time += 60
 
         return los
-
-    @staticmethod
-    def __get_checkinterval(hname, sname=None):
-        if sname is None:
-            query = livestatus.hosts._query
-            query = query.columns(*['check_interval'])
-            query = query.filter('name = ' + hname)
-        else:
-            query = livestatus.services._query
-            query = query.columns('check_interval')
-            query = query.filter('description = ' + sname)
-            query = query.filter('host_name = ' + hname)
-
-        result = query.call()
-        if len(result) == 0:
-            return None
-
-        return result[0]['check_interval']
