@@ -203,13 +203,13 @@ define([
                 close.on('click',backToNormal);
                 validate.on('click',save);
 
-                txtBox.keyup(function (e) {
-                    e.preventDefault();
+                txtBox.keyup(function (evt) {
+                    evt.preventDefault();
 
-                    if (e.which === 13) { // If enter key (13) was pressed
+                    if (evt.which === 13) { // If enter key (13) was pressed
                         save();
                     }
-                    else if (e.which === 27) { // If escape key (27) was pressed
+                    else if (evt.which === 27) { // If escape key (27) was pressed
                         backToNormal();
                     }
                 });

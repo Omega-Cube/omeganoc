@@ -17,6 +17,10 @@
  */
 'use strict';
 
+// TODO: Remove usage of a global var (where should we put conf_is_locked instead ?)
+/* globals ONOC */
+
+
 define([
     'jquery', 
     'onoc.createurl', 
@@ -270,7 +274,6 @@ define([
                 url = createurl(url);
             }
 
-            // TODO: Remove usage of a global var (where should we put conf_is_locked instead ?)
             if(!ONOC.conf_is_locked) {
                 var span = jQuery('<span class="cell"></span>');
                 span.append('<a href="' + url + '" class="button">Edit</a>');

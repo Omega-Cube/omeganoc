@@ -94,8 +94,8 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
 
             button[0].addEventListener('click',function(event){
                 event.preventDefault();
-                var current = event.target.parentNode.getElementsByClassName('hidden')[0].value;
-                var index = values.indexOf(current) + 1;
+                var currentValue = event.target.parentNode.getElementsByClassName('hidden')[0].value;
+                var index = values.indexOf(currentValue) + 1;
                 if(index === values.length)
                     index = 0;
                 var newVal = values[index];
@@ -192,14 +192,14 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
 
             button[0].addEventListener('click',function(event){
                 event.preventDefault();
-                var current = (event.target.parentNode.getElementsByClassName('hidden')[0].value === 'true');
-                current = !current;
-                var newVal = String(current);
+                var currentValue = (event.target.parentNode.getElementsByClassName('hidden')[0].value === 'true');
+                currentValue = !currentValue;
+                var newVal = String(currentValue);
                 event.target.parentNode.getElementsByClassName('hidden')[0].value = newVal;
-                button.text((current) ? 'Bottom':'Top');
+                button.text((currentValue) ? 'Bottom':'Top');
 
                 var scale = this.scales[this.probes[probe].scale];
-                newVal = this.getScale(scale.unit, scale.orient , current, scale.stacked);
+                newVal = this.getScale(scale.unit, scale.orient , currentValue, scale.stacked);
                 this.probes[probe].scale = newVal;
 
                 var query = {
@@ -293,8 +293,8 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
 
             button[0].addEventListener('click',function(event){
                 event.preventDefault();
-                var current = event.target.parentNode.getElementsByClassName('hidden')[0].value;
-                var index = values.indexOf(current) + 1;
+                var currentValue = event.target.parentNode.getElementsByClassName('hidden')[0].value;
+                var index = values.indexOf(currentValue) + 1;
                 if(index === values.length)
                     index = 0;
 

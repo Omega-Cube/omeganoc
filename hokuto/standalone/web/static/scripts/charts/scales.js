@@ -134,12 +134,12 @@ define(['libs/d3','onoc.units'],function(d3,Units){
         this.y.domain([this.min, this.max]).nice().tickFormat(5);
         if(this.log){
             var _tmp = this.y;
-            this.y = function(d){
+            this.y = function(val){
                 var ret= 0;
-                if(!d || d < 0)
+                if(!val || val < 0)
                     ret= _tmp(this.min);
                 else
-                    ret = _tmp(d);
+                    ret = _tmp(val);
                 return ret;
             }.bind(this);
             for(var p in _tmp)

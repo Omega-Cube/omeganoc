@@ -24,22 +24,22 @@ require(['jquery','onoc.createurl', 'console'], function (jQuery, createurl, Con
 
     jQuery(document).ready(function() {
         //bind buttons actions
-        jQuery('#mainContent').find('.block').on('click',function(e){
-            jQuery.ajax(createurl('/block-user/'+e.target.parentNode.parentNode.dataset['id']),{
+        jQuery('#mainContent').find('.block').on('click',function(clickEvt){
+            jQuery.ajax(createurl('/block-user/'+clickEvt.target.parentNode.parentNode.dataset['id']),{
                 'type': 'PUT'
             }).success(function() {
                 document.location.reload();
-            }).error(function(e) { 
-                Console.error('Error while blocking the user: ' + e);
+            }).error(function(errorEvt) { 
+                Console.error('Error while blocking the user: ' + errorEvt);
             });
         });
-        jQuery('#mainContent').find('.delete').on('click',function(e){
-            jQuery.ajax(createurl('/delete-user/'+e.target.parentNode.parentNode.dataset['id']),{
+        jQuery('#mainContent').find('.delete').on('click',function(clickEvt){
+            jQuery.ajax(createurl('/delete-user/'+clickEvt.target.parentNode.parentNode.dataset['id']),{
                 'type': 'DELETE'
             }).success(function(){
                 document.location.reload();
-            }).error(function(e) {
-                Console.error('Error while deleting a user: ' + e);
+            }).error(function(errorEvt) {
+                Console.error('Error while deleting a user: ' + errorEvt);
             });
         });
 

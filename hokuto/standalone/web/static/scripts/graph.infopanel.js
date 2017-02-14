@@ -189,7 +189,7 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
             var statusText = 'Unknown', statusClass = 'state-unknown';
             switch(states.getServicesStates(hostName, serviceName).state) {
             case 0:
-                statusText = 'Ok',
+                statusText = 'Ok';
                 statusClass = 'status-ok';
                 break;
                 
@@ -230,10 +230,6 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
         });
     }
 
-    function errorCallback() {
-        alert('error !');
-    }
-
     function initPanel(container) {
         _container = jQuery(container);
 
@@ -259,7 +255,9 @@ define(['jquery', 'onoc.createurl', 'onoc.states', 'dataservice', 'console'], fu
                         createHostPanel(name, function (result) {
                             _container.append(result);
                             _currentPanel = name;
-                        }, errorCallback);
+                        }, function() {
+                            alert('Error!');
+                        });
                     }
                 }
             }

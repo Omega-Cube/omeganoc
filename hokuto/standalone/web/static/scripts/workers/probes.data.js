@@ -280,18 +280,21 @@ define([
         getLogs: function(data){
             var probes = data['probes'];
             var results = {};
-            var h,s,d;
-            for(var p in probes){
-                d= p.split(separator), h=d[0], s=d[1];
-                if(!s || !h) continue;
-                var logs = this.logs[h][s].getLogs(data['start'],data['end']);
+            var host, service, parts;
+            for(var probe in probes){
+                parts = probe.split(separator);
+                host = parts[0];
+                service = parts[1];
+                if(!service || !host) 
+                    continue;
+                var logs = this.logs[host][service].getLogs(data['start'],data['end']);
                 if(!logs.length)
                     continue;
-                if(!results[h])
-                    results[h] = {};
-                if(results[h][s])
+                if(!results[host])
+                    results[host] = {};
+                if(results[host][service])
                     continue;
-                results[h][s] = logs;
+                results[host][service] = logs;
             }
             if(!Object.keys(results).length)
                 return false;

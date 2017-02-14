@@ -18,33 +18,33 @@
 'use strict';
 
 require(['jquery','onoc.createurl', 'onoc.states'],function(jQuery, createUrl, OnocStates){
-    jQuery(document).ready(function(){
+    jQuery(document).ready(function() {
         var hosts = false;
 
-        function _init(hosts){
+        function _init(hostList) {
             var container = document['logs-switch-1-select'].target;
             var option = false;
-            for(var h in hosts){
+            for(var h in hostList){
                 option = document.createElement('option');
                 option.setAttribute('value',h);
                 option.text = h;
                 container.appendChild(option);
-                for(var s in hosts[h]){
+                for(var s in hostList[h]){
                     option = document.createElement('option');
-                    option.setAttribute('value',h.concat('.',hosts[h][s]));
-                    option.text = h.concat('.',hosts[h][s]);
+                    option.setAttribute('value',h.concat('.',hostList[h][s]));
+                    option.text = h.concat('.',hostList[h][s]);
                     container.appendChild(option);
                 }
             }
-            container.addEventListener('change',function(e){
+            container.addEventListener('change',function(e) {
                 var target = e.target.value;
-                var container = jQuery('#logs-switch-1 .logs_list');
-                container.empty();
-                buildLogList(target,container);
+                var logsList = jQuery('#logs-switch-1 .logs_list');
+                logsList.empty();
+                buildLogList(target, logsList);
             });
         }
 
-        function buildLogList(target,container){
+        function buildLogList(target,container) {
             target = String.split(target,'.');
             var host = target[0];
             var service = (target[1]) ? target[1]:false;
@@ -68,7 +68,7 @@ require(['jquery','onoc.createurl', 'onoc.states'],function(jQuery, createUrl, O
             });
         }
 
-        jQuery(document).on('onoc.livestatus.states',function(){
+        jQuery(document).on('onoc.livestatus.states',function() {
             if(!hosts){
                 hosts = OnocStates.getServicesList();
                 _init(hosts);
