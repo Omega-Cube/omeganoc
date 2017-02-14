@@ -21,39 +21,37 @@
 
 import ConfigParser
 import logging
-import multiprocessing
 import os.path
 import signal
 import sys
-import threading
 import time
-import traceback
 
 import importlib
 from daemon import DaemonContext
 from lockfile.pidlockfile import PIDLockFile
 
 
-conf_file_path = '/etc/nanto.cfg'
-log_file_path = '/var/log/nanto.log'
-lock_file_path = '/var/run/nanto.pid'
+CONF_FILE_PATH = '/etc/nanto.cfg'
+LOG_FILE_PATH = '/var/log/nanto.log'
+LOCK_FILE_PATH = '/var/run/nanto.pid'
 current_app = None # Will contain the currently running app instance
 current_context = None
-    
+
 class InfluxConfigurationException(Exception):
     """ An exception raised when the InfluxDB configuration has a problem """
     def __init__(self, message):
+        super(InfluxConfigurationException, self).__init__()
         self.message = message
     def __str__(self):
         return self.message
 
 class Nanto(object):
-    """ 
-    This class implements the prediction module that runs statistical analysis on 
+    """
+    This class implements the prediction module that runs statistical analysis on
     historical data at regular intervals.
-    
+
     Note that as of now the module could have been implemented as a simple separated daemon
-    since we actually don't communicate with the broker. Be we may need to do that later. 
+    since we actually don't communicate with the broker. Be we may need to do that later.
     We'll see...
     """
     def __init__(self, modconf):
@@ -62,7 +60,7 @@ class Nanto(object):
         self.debug_worker = modconf.get('debug_worker', None)
         logging.debug('debug_worker is {0}'.format(self.debug_worker))
         # Determines the amount of time we'll wait before running a worker again after it crashed
-        self.error_interval = modconf.get('error_interval', 600) 
+        self.error_interval = modconf.get('error_interval', 600)
         logging.debug('error_interval is {0}'.format(self.error_interval))
         # Folder in which we'll store all the data
         self.storage = modconf.get('database_file', '/var/log/shinken/nanto.db')
@@ -83,14 +81,15 @@ class Nanto(object):
         self.workers = modconf.get('workers', '')
         self.workers = [w.strip() for w in self.workers.split(',')]
         logging.debug('workers is {0}'.format(self.workers))
-        
+
         self.worker_containers = []
+        self.run = False
 
     def main(self):
         logging.info('Starting nanto')
         self.__validate_influx_config()
         self.__register_default_prediction_systems()
-        
+
         logging.debug('[nanto] Starting with {0} workers registered. The time is {1}'.format(len(self.worker_containers), time.time()))
 
         self.run = True
@@ -99,8 +98,8 @@ class Nanto(object):
             # Breathe
             time.sleep(10)
             # Check workers
-            for wc in self.worker_containers:
-                wc.check()
+            for container in self.worker_containers:
+                container.check()
 
         logging.debug('[nanto] Stopped')
 
@@ -117,18 +116,15 @@ class Nanto(object):
             except Exception as err:
                 logging.warning('[nanto] Could not load worker module {0} because: {1}'.format(modulename, err))
                 continue
-            
             typename = w + 'Worker'
             try:
-                type = getattr(mod, typename)
+                typename_value = getattr(mod, typename)
             except AttributeError:
                 logging.warning('[nanto] Could not find the worker class {0} in the module {1}'.format(typename, modulename))
                 continue
-            
             logging.debug('[nanto] Loaded worker ' + w)
-            
-            self.worker_containers.append(PredictionWorkerContainer(type, self))
-        
+            self.worker_containers.append(PredictionWorkerContainer(typename_value, self))
+
     def __validate_influx_config(self):
         """
         Throws an error if an elements of the InfluxDB configuration is missing or invalid
@@ -145,12 +141,13 @@ class Nanto(object):
         if self.influx_info['password'] is None:
             missing.append('INFLUX_PASSWORD')
         if len(missing) > 0:
-            raise InfluxConfigurationException('Missing InfluxDB configuration directives: ' + ', '.join(missing))
+            raise InfluxConfigurationException('Missing InfluxDB configuration directives: ' +
+                                               ', '.join(missing))
 
         try:
             self.influx_info['port'] = int(self.influx_info['port'])
         except ValueError:
-            raise InfluxConfigurationException('The current configuration value for INFLUX_PORT ("{}") is not a valid number'.format(port))
+            raise InfluxConfigurationException('The current configuration value for INFLUX_PORT ("{}") is not a valid number'.format(self.influx_info['port']))
         logging.debug('InfluxDB configuration is valid')
 
     def stop(self):
@@ -162,7 +159,9 @@ class Nanto(object):
                 w.cancel()
 
 class PredictionWorkerContainer(object):
-    """ This class wraps the statistical modules, initializes them, schedules them, and runs them """
+    """
+    This class wraps the statistical modules, initializes them, schedules them, and runs them
+    """
     def __init__(self, worker_class, container):
         logging.debug('[nanto] Preparing worker {0}'.format(worker_class.__name__))
         self.worker_class = worker_class
@@ -170,6 +169,7 @@ class PredictionWorkerContainer(object):
         self.is_running = False
         self.container = container # The ONocPredict module that contains this container instance
         self.create_new_worker()
+        self.start_time = 0
 
     def create_new_worker(self):
         """
@@ -217,24 +217,24 @@ class PredictionWorkerContainer(object):
             # - The computations we start here may be very resource-intensive
             #   and can take a lot of time (potentially several hours) to complete.
             #   Of course real-time performance is not a concern at this point.
-            # - The computation are not done on threads but on separate processes, 
+            # - The computation are not done on threads but on separate processes,
             #   which allows for a better isolation of the main loop from the
             #   potentially very high performance requirements of the modules we
             #   will execute. (expecially since CPython will actually not execute
             #   two threads simultaneously)
             # - We do not use a process pool because the typical time span between
             #   two runs will vary between one hour and one week (maybe even one
-            #   month ?). Because of this and because we don't need split-second 
+            #   month ?). Because of this and because we don't need split-second
             #   reactivity, I don't thing having a pool with mostly idle processes
             #   is a good idea.
             self.is_running = True
             self.start_time = time.time()
             self.worker_instance.start()
-            
+
     def cancel(self):
         if self.worker_instance is not None:
             self.worker_instance.cancel()
-            
+
 def halt(signum, frame):
     global current_app
     global current_context
@@ -246,15 +246,15 @@ def halt(signum, frame):
             logging.error('An error occured while stopping the daemon: ' + str(ex))
     if current_context is not None:
         current_context.terminate(signum, frame)
-            
+
 def run():
     global current_app
     global current_context
     # Read configuration
     conf = ConfigParser.SafeConfigParser()
-    readlist = conf.read(conf_file_path)
+    readlist = conf.read(CONF_FILE_PATH)
     if len(readlist) != 1:
-        logging.critical('Could not read the configuration file ({})'.format(conf_file_path))
+        logging.critical('Could not read the configuration file ({})'.format(CONF_FILE_PATH))
         sys.exit(1)
         return 1
     try:
@@ -269,23 +269,23 @@ def run():
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler = logging.FileHandler(log_file_path)
+    handler = logging.FileHandler(LOG_FILE_PATH)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    
+
     # Configure daemon
     current_context = DaemonContext(
         files_preserve = [handler.stream],
-        pidfile = PIDLockFile(lock_file_path),
+        pidfile = PIDLockFile(LOCK_FILE_PATH),
         umask = 0o002,
         working_directory = os.path.dirname(os.path.abspath(__file__))
     )
-    
+
     current_context.signal_map = {
         signal.SIGTERM: halt,
         signal.SIGHUP: halt
     }
-    
+
     try:
         current_app = Nanto(confdict)
         with current_context:
@@ -293,6 +293,6 @@ def run():
     except Exception as ex:
         logging.error('An error occured in the daemon logic: ' + str(ex))
     return 0
-    
+
 if __name__ == '__main__':
     run()
