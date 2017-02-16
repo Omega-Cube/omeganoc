@@ -42,7 +42,7 @@ requirejs.config({
     }
 });
 
-requirejs(['jquery','onoc.tooltips', 'onoc.config'], function(jQuery, Tooltips, Config) {
+requirejs(['jquery', 'libs/rsvp','onoc.tooltips', 'onoc.config', 'console'], function(jQuery, RSVP, Tooltips, Config, Console) {
     var onoc_start = function(module) {
         if(typeof(module) === 'string') {
             module = [module];
@@ -51,8 +51,19 @@ requirejs(['jquery','onoc.tooltips', 'onoc.config'], function(jQuery, Tooltips, 
         return requirejs(module);
     };
 
+    // System configuration
     Config.setValues(ONOC.url_root, ONOC.separator, ONOC.is_admin, ONOC.shinken_contact);
 
+    // Set up RSVP to log unhandled errors
+    RSVP.on('error', function(error, label) {
+        if(label)
+            Console.error('Unhandled RSVP promise error, in ' + label);
+        else
+            Console.error('Unhandled RSVP promise error');
+        Console.error(error);
+    });
+
+    // Start
     jQuery(document).ready(function() {
         var help = new Tooltips();
         help.bind(jQuery('#content'));

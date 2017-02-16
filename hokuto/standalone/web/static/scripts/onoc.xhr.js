@@ -17,55 +17,115 @@
  */
 'use strict';
 
+// TODO: Refactoring, to create a fluent factory for the OnocXHR object instead
+// of using statif methods.
+// Something like : new OnocXHR.responseType(JSON).send(url) ?
 
 define(['libs/rsvp'], function(RSVP) {
     var OnocXHR = {
-        getJson: function(url, data) {
-            return new RSVP.Promise(function(resolve, reject) {
-                var xhr = new XMLHttpRequest();
+        _runXhr: function(verb, url, data, requestDoneCallback) {
+            var xhr = new XMLHttpRequest();
 
-                // Prepare outbound data
-                if(data) {
-                    var dataStrParts = [];
-                    for(var key in data) {
-                        if(data[key] instanceof Array) {
-                            for(var i in data[key]) {
-                                dataStrParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key][i]));
-                            }
-                        }
-                        else {
-                            dataStrParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
+            xhr.onreadystatechange = function() {
+                if(xhr.readyState === 4) {
+                    requestDoneCallback(xhr);
+                }
+            };
+
+            xhr.open(verb, url);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            if(verb === 'POST')
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.send(data);
+        },
+
+        _createDataString: function(data) {
+            if(data) {
+                var dataStrParts = [];
+                for(var key in data) {
+                    if(data[key] instanceof Array) {
+                        for(var i in data[key]) {
+                            dataStrParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key][i]));
                         }
                     }
-
-                    if(dataStrParts.length > 0) {
-                        // Append the arguments to the url
-                        url += '?' + dataStrParts.join('&');
+                    else {
+                        dataStrParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
                     }
                 }
 
-                xhr.onreadystatechange = function() {
-                    if(xhr.readyState === 4) {
-                        if(xhr.status === 200) {
-                            var jsonData = null;
-                            try {
-                                jsonData = JSON.parse(xhr.response);
-                            }
-                            catch(ex) {
-                                reject('Invalid JSON received: "' + xhr.response + '"');
-                            }
-                            resolve(jsonData);
-                        }
-                        else {
-                            reject(xhr);
-                        }
-                    }
-                };
 
-                xhr.open('GET', url);
-                xhr.send(null);
+                if(dataStrParts.length > 0) {
+                    return dataStrParts.join('&').replace(/%20/g, '+');
+                }
+            }
+            return null;
+        },
+
+        _handleJsonResponse: function(xhr, resolve, reject) {
+            if(xhr.status === 200) {
+                var jsonData = null;
+                try {
+                    jsonData = JSON.parse(xhr.response);
+                }
+                catch(ex) {
+                    reject('Invalid JSON received: "' + xhr.response + '"');
+                }
+                resolve(jsonData);
+            }
+            else {
+                reject(xhr);
+            }
+        },
+
+        _handleEmptyResponse: function(xhr, resolve, reject) {
+            if(xhr.status === 200) {
+                resolve(null);
+            }
+            else {
+                reject(xhr);
+            }
+        },
+
+        getJson: function(url, data) {
+            return new RSVP.Promise(function(resolve, reject) {
+                // Prepare outbound data
+                var dataString = OnocXHR._createDataString(data);
+                if(dataString) {
+                    url += '?' + dataString;
+                }
+
+                OnocXHR._runXhr('GET', url, null, function(finishedXhr) {
+                    OnocXHR._handleJsonResponse(finishedXhr, resolve, reject);
+                });
             });
         },
+
+        post: function(url, data) {
+            return new RSVP.Promise(function(resolve, reject) {
+                var dataString = OnocXHR._createDataString(data);
+                OnocXHR._runXhr('POST', url, dataString, function(finishedXhr) {
+                    OnocXHR._handleEmptyResponse(finishedXhr, resolve, reject);
+                });
+            });
+        },
+
+        postJson: function(url, data) {
+            return new RSVP.Promise(function(resolve, reject) {
+                var dataString = OnocXHR._createDataString(data);
+                OnocXHR._runXhr('POST', url, dataString, function(finishedXhr) {
+                    OnocXHR._handleJsonResponse(finishedXhr, resolve, reject);
+                });
+            });
+        },
+
+        delete: function(url, data) {
+            return new RSVP.Promise(function(resolve, reject) {
+                var dataString = OnocXHR._createDataString(data);
+                OnocXHR._runXhr('DELETE', url, dataString, function(finishedXhr) {
+                    OnocXHR._handleEmptyResponse(finishedXhr, resolve, reject);
+                });
+            });
+        }
     };
 
     return OnocXHR;

@@ -140,9 +140,8 @@ define([
         /**
          * Create a new data structure with default values for a new part that
          * is being added to a dashboard with this widget
-         * @param {DashboardsManager} dashboardsManager - Instance
          */
-        createDefaultData: function (dashboardsManager) {
+        createDefaultData: function () {
             var defaultData = {
                 'widget': this.id,
                 'title': this.name
@@ -151,7 +150,7 @@ define([
             if (this._module.default)
                 defaultData = jQuery.extend(defaultData, this._module.default());
 
-            dashboardsManager.addWidget(defaultData, this);
+            return defaultData;
         },
 
         /**

@@ -2874,7 +2874,7 @@ define([
             //Finally create it
             Widget.getWidgetById(currentConf.widget, function(widget) {
                 if(widget) {
-                    DashboardManager.addWidget(partData, widget);
+                    DashboardManager.addPart(partData, widget);
                 }
             });
         });
@@ -3131,7 +3131,7 @@ define([
             //show the spinner if needed
             this.toogleSpinner(this.container.main);
 
-            DashboardManager.savePartData(data, function() {
+            DashboardManager.savePartData(data).then(function() {
                 DashboardProbes.worker.postMessage([3, {
                     'probes': probeList,
                     'start' : (this.conf.fromDate) ? this.conf.fromDate.getTime() : false

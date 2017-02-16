@@ -19,7 +19,6 @@
 
 require(['jquery', 'console', 'onoc.createurl', 'topmenu'], function (jQuery, Console, createUrl, TopMenu) {
     jQuery(document).ready(function(){
-
         var dblist = jQuery('#dashboards-list');
 
         //setup delete buttons

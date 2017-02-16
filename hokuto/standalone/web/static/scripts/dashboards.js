@@ -79,6 +79,13 @@ require([
         });
     }
 
+    function initDeleteButton() {
+        jQuery('#dashboard-controls .remove').click(function(e) {
+            e.preventDefault();
+            DashboardsManager.deleteCurrentDashboard();
+        });
+    }
+
     /**
      * Add widget popup button
      */
@@ -86,8 +93,9 @@ require([
         jQuery('#add-widget-button').click(function (e) {
             e.preventDefault();
 
-            showAddWidgetPopup(function (widget) {
-                DashboardsManager.buildWidget(widget);
+            showAddWidgetPopup(function (widgetName) {
+                DashboardsManager.addWidget(widgetName);
+                // TODO: Use the premise returned by addWidget to know when we can scroll
                 setTimeout(function(){
                     var newwidget = jQuery('#dashboard > ul > li');
                     newwidget = newwidget[newwidget.length - 1];
@@ -102,6 +110,29 @@ require([
 
             jQuery('#add-widget-popup').bPopup().close();
         });
+    }
+
+    function initToobar() {
+         // React to title changes
+        jQuery(document).on('titlechanged.dashboards.onoc', function(e, newTitle) {
+            jQuery('#dashboard-title').text(newTitle);
+
+            // Do we have a title ?
+            // If so, show the dashboard toolbar
+            var toolbar = jQuery('#dashboard-controls');
+            
+            if(newTitle) {
+                toolbar.fadeIn();
+            }
+            else {
+                toolbar.fadeOut();
+            }
+        });
+
+        // Prepare toolbar buttons
+        initDeleteButton();
+        initAddWidgetButton();
+        initCreateButton();
     }
 
     /**
@@ -175,8 +206,7 @@ require([
     }
 
     jQuery(document).ready(function() {
-        initCreateButton();
-        initAddWidgetButton();
+        initToobar();
 
         // Start showing the dashboard
         DashboardsManager.init(jQuery('#dashboard > ul'));

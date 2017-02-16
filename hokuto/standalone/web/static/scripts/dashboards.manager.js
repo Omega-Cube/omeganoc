@@ -18,15 +18,17 @@
 'use strict';
 
 define([
-    'jquery', 
+    'jquery',
+    'libs/rsvp',
     'dashboards.widget', 
+    'dashboards.service',
     'console', 
-    'onoc.createurl', 
+    'onoc.createurl',
     'topmenu',
     'dashboards.timeline', 
     'libs/gridster', 
     'libs/jquery.hashchange', 
-    'onoc.message'], function (jQuery, Widget, Console, createUrl, TopMenu, DashboardTimeline) {
+    'onoc.message'], function (jQuery, RSVP, Widget, Service, Console, createUrl, TopMenu, DashboardTimeline) {
     /**
      * Manages the user's dashboards data and display
      * @property {Gridster} gridster         - Handle parts size and position
@@ -97,12 +99,16 @@ define([
 
             // Listen for URL changes
             jQuery(window).hashchange(function () {
-                // TODO: fix
-                //ok this is very very nasty but there is tons of glitch and issue with dashboards unload atm (workers and gridster don't flush their data correctly)
-                //so it's better to reload the header between each dashboard than bringing memory leaks, bad formating and other glitch that will force to reload anyway.
-                location.reload(true);
-                //var hash = decodeURIComponent(location.hash.substring(1));
-                //DashboardsManager.loadDashboard(hash);
+                // Check if we need to change dashboards
+                var newBoardName = DashboardsManager.readDashboardNameFromUrl();
+                if(newBoardName !== DashboardsManager.currentDashboard)
+                {
+                    // TODO: fix
+                    //ok this is very very nasty but there is tons of glitch and issue with dashboards unload atm (workers and gridster don't flush their data correctly)
+                    //so it's better to reload the header between each dashboard than bringing memory leaks, bad formating and other glitch that will force to reload anyway.
+                    location.reload(true);
+                    //DashboardsManager.loadDashboard(newBoardName);
+                }
             });
 
             // Load the initial dashboard
@@ -144,7 +150,8 @@ define([
             DashboardsManager.unloadDashboard();
             DashboardsManager._setNoDashboardMessage('Loading...');
 
-            DashboardsManager._loadDashboardData(dashboardName, function (data) {
+            //DashboardsManager._loadDashboardData(dashboardName, function (data) {
+            Service.details(dashboardName).then(function(data) {
                 DashboardsManager._setNoDashboardMessage('');
                 DashboardsManager.timeline.show();
                 // Iterate over all the parts and create them
@@ -159,8 +166,8 @@ define([
 
                 // Update the dashboard title
                 DashboardsManager._setDashboardTitle(dashboardName);
-                DashboardsManager._showDashboardControls(true);
-            }, function (errorCode, errorText) {
+                //DashboardsManager._showDashboardControls(true);
+            }).catch(function (errorCode, errorText) {
                 if (errorCode === 404) {
                     DashboardsManager._setNoDashboardMessage('The specified dashboard could not be found on the server');
                 }
@@ -169,8 +176,6 @@ define([
                     Console.error('Dashboard loading error : ' + errorCode + ' / ' + errorText);
                 }
             });
-
-            DashboardsManager.currentDashboard = dashboardName;
         },
 
         /**
@@ -180,7 +185,8 @@ define([
          */
         createDashboard: function(name, initialWidget) {
             //DashboardsManager.unloadDashboard();
-            DashboardsManager.currentDashboard = name;
+            //DashboardsManager._setDashboardTitle(name);
+            
             //DashboardsManager._setNoDashboardMessage('');
 
             //DashboardsManager._setDashboardTitle(name);
@@ -188,24 +194,13 @@ define([
             //while we force reload between DB...
             //DashboardsManager._showDashboardControls(true);
             //DashboardsManager.timeline.show();
-            DashboardsManager.buildWidget(initialWidget,function(){
-                document.location.hash = this.name;
-            }.bind({'name': name}));
-        },
 
-        /**
-         * Build a new widget
-         * @param {String} widgetName - The widget we need to create
-         */
-        buildWidget: function(widgetName,callback) {
-            Widget.getWidgetById(widgetName, function (widget) {
-                if (!widget)
-                    return;
-
-                // Create the part with its default values
-                widget.createDefaultData(this);
-                if(typeof callback === 'function') callback();
-            }.bind(this));
+            Console.log('createDashboard');
+            DashboardsManager._addWidget(initialWidget, name, false).then(function() {
+                // Update the page
+                Console.log('DONE ' + name);
+                document.location.hash = name;
+            });
         },
 
         /**
@@ -213,13 +208,68 @@ define([
          * @param {Object} partData - Part's configuration
          * @param {Object} widget - Part's widget instance
          */
-        addWidget: function (partData, widget) {
-            partData.id = DashboardsManager._createTemporaryID();
-            partData.dashboard = DashboardsManager.currentDashboard;
+        addPart: function(partData, widget) {
+            return DashboardsManager._addPart(partData, widget, DashboardsManager.currentDashboard, true);
+        },
 
-            DashboardsManager.savePartData(partData, function(savedData) {
-                DashboardsManager._createPart(savedData, widget,false);
-                DashboardsManager._scanChangedPositions();
+        /**
+         * Add a new part to the specified dashboard
+         * @param {Object} partData - Part's configuration
+         * @param {Object} widget - Part's widget instance
+         * @param {String} dashboardName - The name of the dashboard this part will be added to
+         * @param {boolean} display - True if the new part should be inserted into the DOM; false otherwise
+         */
+        _addPart: function(partData, widget, dashboardName, display) {
+            partData.id = DashboardsManager._createTemporaryID();
+            partData.dashboard = dashboardName;
+
+            Console.log('_addpart');
+            return DashboardsManager.savePartData(partData).then(function() {
+                Console.log('_savePartData success ' + display);
+                if(display) {
+                    DashboardsManager._createPart(partData, widget,false);
+                    DashboardsManager._scanChangedPositions();
+                }
+            });
+        },
+
+        /**
+         * Add a new widget to the current dashboard, using the default part configuration
+         * @param {String} widgetName - The name of the widget to add
+         */
+        addWidget: function (widgetName) {
+            return DashboardsManager._addWidget(widgetName, DashboardsManager.currentDashboard, true);
+        },
+
+        /**
+         * Add a new widget to the specified dashboard, using the default part configuration
+         * @param {String} widgetName - The name of the widget to add
+         * @param {String} dashboardName - The name of the dashboard the widget will be added to
+         * @param {boolean} display - True if the new part should be inserted into the DOM; false otherwise
+         */
+        _addWidget: function(widgetName, dashboardName, display) {
+            return new RSVP.Promise(function(resolve, reject) {
+                // Find the widget
+                Console.log('addWidget');
+                Widget.getWidgetById(widgetName, function(widget) {
+                    Console.log('getWidgetById callback');
+                    if(widget) {
+                        // Widget is good; create the part
+                        var defaultPart = widget.createDefaultData();
+
+                        // Save and display
+                        DashboardsManager._addPart(defaultPart, widget, dashboardName, display).then(function(partResponse) {
+                            Console.log('_addpart success');
+                            resolve(partResponse);
+                        }).catch(function(error) {
+                            Console.log('_addpart failed ' + error);
+                            reject(error);
+                        });
+                    }
+                    else {
+                        reject('DashboardsManager.addWidget - Unknown widget name');
+                    }
+                });
             });
         },
 
@@ -243,9 +293,7 @@ define([
             DashboardsManager.currentParts[pid] = null;
 
             // Save the removal
-            jQuery.ajax(createUrl('/dashboards/part/' + pid), {
-                type: 'DELETE'
-            });
+            Service.removePart(pid);
         },
 
         /**
@@ -259,18 +307,13 @@ define([
             }
 
             // Rename on the server
-            jQuery.post(createUrl('/dashboards'), {
-                'oldname': DashboardsManager.currentDashboard,
-                'newname': newName
-            });
+            Service.rename(DashboardsManager.currentDashboard, newName);
 
             // Rename in the dashboard title
             DashboardsManager._setDashboardTitle(newName);
 
             // Rename in the main menu
             TopMenu.dashboards.rename(DashboardsManager.currentDashboard, newName);
-
-            DashboardsManager.currentDashboard = newName;
 
             // Change the URL
             window.location.hash = encodeURIComponent(newName);
@@ -307,28 +350,12 @@ define([
         },
 
         /**
-         * Changes the displayed dasoboard title
+         * Changes the displayed dashboard title
          * @param {String} title
          */
         _setDashboardTitle: function (title) {
-            jQuery('#dashboard-title').text(title);
-        },
-
-        /**
-         * Loads dashboard's data from the server
-         * @param {String} dashboardId     - Dashboard's id (ATM dashboard's name are used as their ID)
-         * @param {Function} callback      - Callback to be called on success
-         * @param {Function} errorCallback - Callback to be called on failure
-         */
-        _loadDashboardData: function (dashboardId, callback, errorCallback) {
-            var url = createUrl('/dashboards/details/' + dashboardId);
-            jQuery.getJSON(url).done(function (data) {
-                callback(data);
-            }).fail(function (jqXhr, textStatus) {
-                if (errorCallback) {
-                    errorCallback(jqXhr.status, textStatus);
-                }
-            });
+            DashboardsManager.currentDashboard = title;
+            jQuery(document).trigger('titlechanged.dashboards.onoc', [title]);
         },
 
         /**
@@ -431,38 +458,6 @@ define([
         },
 
         /**
-         * Save part configuration
-         * @param {Object} partData The part configuration objet to save.
-         * @param {Function} callback Optionnal. Callback called when the server has done saving the data, and will receive the saved object (potentially changed by the server logic) as a parameter.
-         */
-        savePartData: function (partData, callback) {
-            var url = createUrl('/dashboards/part');
-            if(!partData.id && !partData.conf)
-                return;
-
-            var originalConf = null;
-            if(partData.conf) {
-                originalConf = partData.conf;
-                partData.conf = JSON.stringify(partData.conf);
-            }
-
-            jQuery.post(url, partData, function (data) {
-                if (data.original_id !== data.saved_id) {
-                    DashboardsManager._applyDefinitivePartId(data.original_id, data.saved_id);
-                    partData.id = data.saved_id;
-                }
-                if(data.conf)
-                    data.conf = JSON.parse(data.conf);
-
-                if(callback)
-                    callback(partData);
-            }, 'json');
-
-            if(originalConf)
-                partData.conf = originalConf;
-        },
-
-        /**
          * Update a part with his definitive ID
          * @param {Number} oldId - old temporary ID
          * @param {Number} newId - New ID returned by the server
@@ -475,6 +470,21 @@ define([
                 delete DashboardsManager.currentParts[oldId];
                 DashboardsManager.currentParts[newId].id = newId;
             }
+        },
+
+        /**
+         * Save part configuration
+         * @param {Object} partData The part configuration objet to save.
+         * @returns {Promise} A promise, whose success callback receives the server response object as its parameter
+         */
+        savePartData: function(partData) {
+            return Service.savePart(partData).then(function(response) {
+                if(response.original_id !== response.saved_id) {
+                    DashboardsManager._applyDefinitivePartId(response.original_id, response.saved_id);
+                    partData.id = response.saved_id;
+                }
+                return response;
+            });
         },
 
         /**
@@ -491,7 +501,8 @@ define([
                 TopMenu.dashboards.delete(DashboardsManager.currentDashboard);
             }
 
-            DashboardsManager._showDashboardControls(false);
+            DashboardsManager._setDashboardTitle('');
+            //DashboardsManager._showDashboardControls(false);
             //TODO: flush worker too
         },
         
@@ -505,83 +516,15 @@ define([
         },
 
         /**
-         * Display dashboards list (dashboards landing page)
+         * Removes the current dashboard data from the server, and from the user's screen.
          */
-        _setDashboardsList: function(){
-            DashboardsManager._setDashboardTitle('DASHBOARDS');
-            var dblist = jQuery('#dashboards-list');
-            dblist.css('display','block');
-            jQuery('#dashboard').css('display','none');
-
-            //setup delete buttons
-            dblist.find('.delete').each(function(index,element){
-                jQuery(element).click(function(event){
-                    var target = jQuery(event.target);
-                    var name = event.target.dataset['db'];
-                    jQuery.ajax({
-                        'url': createUrl('/dashboards/' + name),
-                        'type': 'DELETE'
-                    }).success(function(){
-                        target.parent().remove();
-                        TopMenu.dashboards.delete(name);
-                    }).error(function(e){
-                        Console.error('An error occured while trying to delete the dashboard: ' + e);
-                    });
+        deleteCurrentDashboard: function() {
+            if(DashboardsManager.currentDashboard) {
+                Service.removeDashboard(DashboardsManager.currentDashboard).then(function() {
+                    // TODO: That's kindof dirty. Find something less brutal.
+                    document.location = createUrl('/manage/dashboards');
                 });
-            });
-
-            //setup rename buttons
-            dblist.find('.edit').each(function(index,element){
-                jQuery(element).click(function(event){
-                    var target = jQuery(event.target);
-                    var dbname = target.parent().find('.name');
-                    var name = event.target.dataset['db'];
-                    var form = jQuery('<form action="#" name="renamedb"><input type="text" name="dbname" class="name" value="'+name+'"/><input class="submit" type="submit" value="ok"/></form>');
-                    form.submit(function(e){
-                        e.preventDefault();
-                        var newname = form[0].dbname.value;
-                        if(newname !== name){
-                            dbname.text(newname);
-                            jQuery.ajax({
-                                'url': createUrl('/dashboards'),
-                                'type': 'POST',
-                                'data': {
-                                    'oldname': name,
-                                    'newname': newname
-                                }
-                            });
-                        }
-                        form.replaceWith(dbname);
-                        return false;
-                    });
-                    dbname.replaceWith(form);
-                });
-
-            });
-        },
-
-        /**
-         * Display or hide dashboard controls (Rename and addWidget buttons)
-         * @param {Boolean} show
-         */
-        _showDashboardControls: function (show) {
-            var controls = jQuery('#dashboard-controls');
-
-            if (show){
-                controls.fadeIn();
-                controls.find('.remove').click(function(){
-                    jQuery.ajax({
-                        'url': '/dashboards/' + DashboardsManager.currentDashboard,
-                        'type': 'DELETE'
-                    }).success(function(){
-                        document.location = '/manage/dashboards';
-                    }).error(function(e){
-                        Console.error('An error occured while trying to delete the dashboard: ' + e);
-                    });
-                    return false;
-                });
-            }else
-                controls.fadeOut();
+            }
         }
     };
 

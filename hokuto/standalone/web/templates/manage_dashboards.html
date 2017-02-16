@@ -19,9 +19,15 @@
 
 {%block head%}
 <link href="{{ url_for('static', filename='css/units.css') }}" rel="stylesheet" type="text/css" />
+
+<script>
+    onoc_main_modules.push('manage_dashboards');
+</script>
 {%endblock%}
 
 {%block content%}
+
+
 
 <h3 class="title">Manage dashboards</h3>
 
@@ -51,5 +57,5 @@
     </ol>
   </section>
 </article>
-<script src="{{ url_for('static', filename='scripts/manage_dashboards.js') }}"></script>
+
 {%endblock%}
