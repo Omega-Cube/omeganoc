@@ -25,10 +25,9 @@ define([
     'console', 
     'onoc.createurl',
     'topmenu',
-    'dashboards.timeline', 
     'libs/gridster', 
     'libs/jquery.hashchange', 
-    'onoc.message'], function (jQuery, RSVP, Widget, Service, Console, createUrl, TopMenu, DashboardTimeline) {
+    'onoc.message'], function (jQuery, RSVP, Widget, Service, Console, createUrl, TopMenu) {
     /**
      * Manages the user's dashboards data and display
      * @property {Gridster} gridster         - Handle parts size and position
@@ -40,6 +39,7 @@ define([
     var DashboardsManager = {
         gridster: null,
         element: null,
+        timeline: null, // TODO: Maybe move the timeline out of here? This one is accessed from the outside, singleton style.
         currentDashboard: '',
         lastAssignedTempID: 0,
         currentParts: {}, // A list of all the currently displayed parts data, indexed by part ID
@@ -56,14 +56,12 @@ define([
          * Init function
          * @property {DOMElement} target - define @element
          */
-        init: function (target) {
+        init: function (target, timeline) {
             DashboardsManager.element = target;
+            DashboardsManager.timeline = timeline;
 
             // Initialize the central message
             jQuery('#dashboard-big-msg').onocMessage();
-
-            // Initialize global timeline element
-            DashboardsManager.timeline = new DashboardTimeline(jQuery('#dashboard-global-timeline'));
 
             // Initialize Gridster
             var cols = Math.floor((jQuery('#content').width()) / 70);
@@ -116,7 +114,6 @@ define([
 
             if (firstDashboard) {
                 DashboardsManager.loadDashboard(firstDashboard);
-                DashboardsManager.timeline.show();
             }
             else {
                 //if no DB available display the create dashboard icon
@@ -153,7 +150,6 @@ define([
             //DashboardsManager._loadDashboardData(dashboardName, function (data) {
             Service.details(dashboardName).then(function(data) {
                 DashboardsManager._setNoDashboardMessage('');
-                DashboardsManager.timeline.show();
                 // Iterate over all the parts and create them
                 jQuery.each(data, function (index, value) {
                     Widget.getWidgetById(value.widget, function (widget) {
@@ -193,7 +189,6 @@ define([
 
             //while we force reload between DB...
             //DashboardsManager._showDashboardControls(true);
-            //DashboardsManager.timeline.show();
 
             Console.log('createDashboard');
             DashboardsManager._addWidget(initialWidget, name, false).then(function() {
@@ -355,7 +350,7 @@ define([
          */
         _setDashboardTitle: function (title) {
             DashboardsManager.currentDashboard = title;
-            jQuery(document).trigger('titlechanged.dashboards.onoc', [title]);
+            jQuery(DashboardsManager.element).trigger('titlechanged.dashboards.onoc', [title]);
         },
 
         /**

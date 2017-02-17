@@ -133,6 +133,7 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
         this.brush = false;
         this.scale = false;
         this.axis = false;
+        this.visible = false;
 
         this.containers = {
             'main': container,
@@ -201,15 +202,21 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'onoc.calendar'], function (j
     /**
      * Display on
      */
-    DashboardTimeline.prototype.show = function(){
-        this.containers.main.attr('style','display: block;');
+    DashboardTimeline.prototype.show = function() {
+        if(!this.visible) {
+            this.containers.main.attr('style','display: block;');
+            this.visible = true;
+        }
     };
 
     /**
      * Display off
      */
-    DashboardTimeline.prototype.hide = function(){
-        this.containers.main.attr('style','display: hidden;');
+    DashboardTimeline.prototype.hide = function() {
+        if(this.visible) {
+            this.containers.main.attr('style','display: hidden;');
+            this.visible = false;
+        }
     };
 
     /**

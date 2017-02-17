@@ -21,9 +21,13 @@ require([
     'jquery', 
     'dashboards.manager', 
     'onoc.createurl', 
-    'dashboards.widget', 
+    'dashboards.widget',
+    'dashboards.timeline', 
     'libs/jquery.validate', 
-    'libs/jquery.bpopup'], function (jQuery, DashboardsManager, createurl, Widget) {
+    'libs/jquery.bpopup'], function (jQuery, DashboardsManager, createurl, Widget, DashboardTimeline) {
+
+    var timeline = null;
+
     /**
      * Create Dashboard button behavior
      */
@@ -112,9 +116,9 @@ require([
         });
     }
 
-    function initToobar() {
+    function initToobar(dashboardContainer) {
          // React to title changes
-        jQuery(document).on('titlechanged.dashboards.onoc', function(e, newTitle) {
+        jQuery(dashboardContainer).on('titlechanged.dashboards.onoc', function(e, newTitle) {
             jQuery('#dashboard-title').text(newTitle);
 
             // Do we have a title ?
@@ -123,9 +127,11 @@ require([
             
             if(newTitle) {
                 toolbar.fadeIn();
+                timeline.show();
             }
             else {
                 toolbar.fadeOut();
+                timeline.hide();
             }
         });
 
@@ -206,9 +212,13 @@ require([
     }
 
     jQuery(document).ready(function() {
-        initToobar();
+        var dashboardContainer = jQuery('#dashboard > ul');
+        initToobar(dashboardContainer);
+
+        // Initialize global timeline element
+        timeline = new DashboardTimeline(jQuery('#dashboard-global-timeline'));
 
         // Start showing the dashboard
-        DashboardsManager.init(jQuery('#dashboard > ul'));
+        DashboardsManager.init(dashboardContainer, timeline);
     });
 });
