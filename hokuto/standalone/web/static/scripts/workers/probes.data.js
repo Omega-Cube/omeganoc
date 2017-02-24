@@ -18,11 +18,14 @@
 'use strict';
 
 define([
+    'libs/rsvp',
     'onoc.createurl', 
     'onoc.xhr', 
     'console',
     'workers/probes.log', 
-    'workers/probes.probe'], function(createUrl, OnocXhr, Console, Log, Probe) {
+    'workers/probes.probe'], function(RSVP, createUrl, OnocXhr, Console, Log, Probe) {
+    
+    // TODO: Remove this
     var separator = '[SEP]';
 
     /**
@@ -40,17 +43,15 @@ define([
          * Add a new probe
          * @param {Array} data - [{String} probe name, {Number} check interval]
          */
-        addProbe: function(data) {
-            var probe = data[0];
-            var interval = data[1];
+        addProbe: function(probeName, interval) {
             if(typeof probe !== 'string'){
                 postMessage([9001,'Failed to add probe, argument must be a string ' + (typeof probe) + ' given.']);
                 return false;
             }
-            if(!this.probes[probe]){
-                this.probes[probe] = new Probe();
-                this.probes[probe].setInterval(interval);
-                var d = probe.split(separator);
+            if(!this.probes[probeName]){
+                this.probes[probeName] = new Probe();
+                this.probes[probeName].setInterval(interval);
+                var d = probeName.split(separator);
                 if(d.length > 1){
                     var h = d[0], s = d[1];
                     this.logs[h] = this.logs[h] || {};
@@ -348,32 +349,37 @@ define([
 
         /**
          * Fetch and return data from given probes
-         * @param {Object} q - Request details
-         * @param {Number} signature - Requester ID
+         * @param {Array} probesList - A list of probe IDs to retrieve
+         * @param {Number} start - Timestamp of the lower bound of the time period to retrieve
+         * @param {Number} end - Timestamp of the upper bound of the time period to retrieve
          */
-        fetch: function(q,signature){
+        fetch: function(probesList, start, end, onResult, onDone) {
+            var logsPromises = [];
+            var metricsPromises = null;
+            var predictsPromise = null;
             //TODO: fetch only probes and log at the given timeline
-            var probes = q.probes || Object.keys(this.probes), details = [];
-            if(!Array.isArray(probes)) probes = Object.keys(probes);
-            for(var i=0,len = probes.length;i<len;i++){
-                var start = false, end = false;
-                if(!!q && q['start'])
-                    start = q['start'];
-                if(!!q && q['end'])
-                    end = q['end'];
+            probesList = probesList || Object.keys(this.probes);
+            var details = [];
+            if(!Array.isArray(probesList)) 
+                probesList = Object.keys(probesList);
+                
+            for(var i=0,len = probesList.length;i<len;i++){
                 if(start || end)
-                    this.probes[probes[i]].setRequestedDate(start,end);
-                details = probes[i].split(separator);
+                    this.probes[probesList[i]].setRequestedDate(start,end); // TODO: Check that this.probes[probes[i]] exists
+                details = probesList[i].split(separator);
 
-                if(!!this.logs[details[0]] && !!this.logs[details[0]][details[1]])
-                    this.fetchLog(details[0],details[1], signature, start, end);
+                if(!!this.logs[details[0]] && !!this.logs[details[0]][details[1]]) {
+                    this.fetchLog(details[0], details[1], start, end).then(function(logResults) {
+                        onResult(['log', details[0],details[1], logResults]);
+                    });
+                }
             }
 
-            var query = {'probes': probes };
-            if(!!q && q['start'])
-                query['start'] = Math.floor(q['start'] / 1000);
-            if(!!q && q['end'])
-                query['start'] = Math.floor(q['end'] / 1000);
+            var query = {'probes': probesList };
+            if(start)
+                start = Math.floor(start / 1000);
+            if(end)
+                end = Math.floor(end / 1000);
 
             OnocXhr.getJson(createUrl('/services/metrics/values'), query).then(function(data) {
                 if(data) {
@@ -401,31 +407,34 @@ define([
          * Fetch log data
          * @param {String} host    - Host name
          * @param {String} service - Service name
-         * @param {Number} sig     - Requester ID
          * @param {Number} start   - Start date timestamp
          * @param {Number} end     - end date timestamp
          */
-        fetchLog: function(host,service,sig,start,end){
-            if(start) start /= 1000;
-            if(end) end /= 1000;
+        fetchLog: function(host, service, start, end){
+            if(start)
+                start /= 1000;
+            if(end)
+                end /= 1000;
+
             if(!this.logs[host][service].getLogs().length) {
                 var url = createUrl('/services/livestatus/get/service/logs/' + host + '/' + service + '/');
                 var data = { 'start': start, 'end': end};
-                OnocXhr.getJson(url, data).then(function(logs) {
+                return OnocXhr.getJson(url, data).then(function(logs) {
                     this.logs[host][service].setData(logs);
                     var results = {};
                     results[host] = {};
                     results[host][service] = this.logs[host][service].getLogs();
-                    postMessage([10, results, sig]);
+                    return results;
                 }.bind(this));
             } 
             else {
-                var results = {};
-                results[host] = {};
-                results[host][service] = this.logs[host][service].getLogs();
-                postMessage([10, results, sig]);
+                return new RSVP.Promise(function(resolve) {
+                    var results = {};
+                    results[host] = {};
+                    results[host][service] = this.logs[host][service].getLogs();
+                    resolve(results);
+                }.bind(this));
             }
-            return;
         },
 
         /**

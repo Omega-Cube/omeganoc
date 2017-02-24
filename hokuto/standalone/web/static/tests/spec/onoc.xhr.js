@@ -18,7 +18,7 @@
 'use strict';
 
 // Jasmine globals
-/* global describe it expect beforeEach afterEach jasmine */
+/* global describe it expect jasmine */
 
 define(['onoc.xhr'], function(OnocXHR) {
     describe('The ONOC requests library', function() {

@@ -65,12 +65,15 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     this.buildEditPanel();
                     var context = this.axis.x2.domain();
                     var focus = this.axis.x.domain();
-                    DashboardProbes.worker.postMessage([8,{
-                        'probes': this.probes,
-                        'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                        'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                        'mode': this.conf.mode
-                    },this.id]);
+                    this.checkAggregate(
+                        [context[0].getTime(),context[1].getTime()],
+                        [focus[0].getTime(),focus[1].getTime()]);
+                    // DashboardProbes.worker.postMessage([8,{
+                    //     'probes': this.probes,
+                    //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                    //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                    //     'mode': this.conf.mode
+                    // },this.id]);
                 }.bind(this));
 
             return container;
@@ -126,14 +129,15 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 
                 var context = this.axis.x2.domain();
                 var focus = this.axis.x.domain();
-                DashboardProbes.worker.postMessage([8,{
-                    'probes': this.probes,
-                    'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                    'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                    'mode': this.conf.mode
-                },this.id]);
-
-
+                this.checkAggregate(
+                    [context[0].getTime(),context[1].getTime()],
+                    [focus[0].getTime(),focus[1].getTime()]);
+                // DashboardProbes.worker.postMessage([8,{
+                //     'probes': this.probes,
+                //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                //     'mode': this.conf.mode
+                // },this.id]);
             }.bind(this));
 
             container.append(button);
@@ -223,12 +227,15 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 this.buildEditPanel();
                 var context = this.axis.x2.domain();
                 var focus = this.axis.x.domain();
-                DashboardProbes.worker.postMessage([8,{
-                    'probes': this.probes,
-                    'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                    'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                    'mode': this.conf.mode
-                },this.id]);
+                this.checkAggregate(
+                    [context[0].getTime(),context[1].getTime()],
+                    [focus[0].getTime(),focus[1].getTime()]);
+                // DashboardProbes.worker.postMessage([8,{
+                //     'probes': this.probes,
+                //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                //     'mode': this.conf.mode
+                // },this.id]);
 
             }.bind(this));
 
@@ -315,12 +322,15 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
 
                 var context = this.axis.x2.domain();
                 var focus = this.axis.x.domain();
-                DashboardProbes.worker.postMessage([8,{
-                    'probes': this.probes,
-                    'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                    'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                    'mode': this.conf.mode
-                },this.id]);
+                this.checkAggregate(
+                    [context[0].getTime(),context[1].getTime()],
+                    [focus[0].getTime(),focus[1].getTime()]);
+                // DashboardProbes.worker.postMessage([8,{
+                //     'probes': this.probes,
+                //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                //     'mode': this.conf.mode
+                // },this.id]);
             }.bind(this));
 
             return container;
@@ -388,12 +398,15 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     this.redraw();
                     var context = this.axis.x2.domain();
                     var focus = this.axis.x.domain();
-                    DashboardProbes.worker.postMessage([8,{
-                        'probes': this.probes,
-                        'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                        'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                        'mode': this.conf.mode
-                    },this.id]);
+                    this.checkAggregate(
+                        [context[0].getTime(),context[1].getTime()],
+                        [focus[0].getTime(),focus[1].getTime()]);
+                    // DashboardProbes.worker.postMessage([8,{
+                    //     'probes': this.probes,
+                    //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                    //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                    //     'mode': this.conf.mode
+                    // },this.id]);
                 }.bind(this));
 
             return container;

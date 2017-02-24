@@ -24,72 +24,72 @@ define([
     'onoc.createurl',
     'onoc.states',
     'onoc.config',
-    'workerclient'], function (jQuery, Console, DataService, createUrl, States, Config, WorkerClient) {
+    'dashboard.worker'], function (jQuery, Console, DataService, createUrl, States, Config, DashboardWorker) {
 
     //onmessage event, aka workers control room
-    function onWorkerMessage(data){
-        if(data instanceof Array && data.length >= 2){
-            var response = data[1], event = false;
-            /**
-             * 0: log/notification
-             * 1: Received probes data
-             * 6: Returned probes data
-             * 8: Returned newly aggregated data
-             * 9: Returned cursor data
-             * 10: Returned logs data
-             * 11: Returned predict data
-             * 9001: error
-             */
-            switch(data[0]) {
-            case 0:
-                //console.log('[WORKER]',response);
-                break;
-            case 1:
-                event = 'fetch';
-                //console.log("[WORKER] Got data from the server.",data);
-                break;
-            case 6:
-                event = 'get';
-                //console.log('[WORKER] Returned requested data.', data);
-                break;
-            case 8:
-                event = 'aggregate';
-                break;
-            case 9:
-                event = 'cursor';
-                break;
-            case 10:
-                event = 'logs';
-                break;
-            case 11:
-                event = 'predict';
-                break;
-            case 9001:
-                event = 'error';
-                //console.error('[WORKER]', response);
-                break;
-            default:
-                event = 'error';
-                Console.warn('[WORKER] Unknown return code', data[0], response);
-                break;
-            }
+    // function onWorkerMessage(data){
+    //     if(data instanceof Array && data.length >= 2){
+    //         var response = data[1], event = false;
+    //         /**
+    //          * 0: log/notification
+    //          * 1: Received probes data
+    //          * 6: Returned probes data
+    //          * 8: Returned newly aggregated data
+    //          * 9: Returned cursor data
+    //          * 10: Returned logs data
+    //          * 11: Returned predict data
+    //          * 9001: error
+    //          */
+    //         switch(data[0]) {
+    //         case 0:
+    //             //console.log('[WORKER]',response);
+    //             break;
+    //         case 1:
+    //             event = 'fetch';
+    //             //console.log("[WORKER] Got data from the server.",data);
+    //             break;
+    //         case 6:
+    //             event = 'get';
+    //             //console.log('[WORKER] Returned requested data.', data);
+    //             break;
+    //         case 8:
+    //             event = 'aggregate';
+    //             break;
+    //         case 9:
+    //             event = 'cursor';
+    //             break;
+    //         case 10:
+    //             event = 'logs';
+    //             break;
+    //         case 11:
+    //             event = 'predict';
+    //             break;
+    //         case 9001:
+    //             event = 'error';
+    //             //console.error('[WORKER]', response);
+    //             break;
+    //         default:
+    //             event = 'error';
+    //             Console.warn('[WORKER] Unknown return code', data[0], response);
+    //             break;
+    //         }
 
-            //execute listeners
-            if(event && this._listeners[this._events[event]].length) {
-                var listener = this._listeners[this._events[event]];
-                var sig = false, callback = false, l = false;
-                for(var i = 0, len = listener.length; i<len; i++) {
-                    l = listener[i];
-                    sig = l[0];
-                    callback = l[1];
-                    //check if the event require a valid signature
-                    if(data[2] && data[2] !== sig)
-                        continue;
-                    callback(data[1]);
-                }
-            }
-        }
-    }
+    //         //execute listeners
+    //         if(event && this._listeners[this._events[event]].length) {
+    //             var listener = this._listeners[this._events[event]];
+    //             var sig = false, callback = false, l = false;
+    //             for(var i = 0, len = listener.length; i<len; i++) {
+    //                 l = listener[i];
+    //                 sig = l[0];
+    //                 callback = l[1];
+    //                 //check if the event require a valid signature
+    //                 if(data[2] && data[2] !== sig)
+    //                     continue;
+    //                 callback(data[1]);
+    //             }
+    //         }
+    //     }
+    // }
 
     function getInterpolatedValue(x, p, values){
         var result = 0;
@@ -136,7 +136,7 @@ define([
     var DashboardProbes = {
         probes: {},
         metrics: false,
-        worker: new WorkerClient('workers/probes.worker', onWorkerMessage),
+        worker: new DashboardWorker(),
         probesDoneLoadingCallbacks: [],
 
         /**
@@ -146,7 +146,8 @@ define([
         addProbe: function(probe){
             var query = probe.split(Config.separator());
             var interval = States.getServicesStates(query[0],query[1]).check_interval || 1;
-            this.worker.postMessage([2,[probe,interval]]);
+            ///this.worker.postMessage([2,[probe,interval]]);
+            this.worker.addProbe(probe, interval);
             if(!this.probes[probe])
                 this.probes[probe] = [];
             return this;

@@ -17,7 +17,7 @@
  */
 'use strict';
 
-define(['workers/workerdata'], function(WorkerData) {
+define(['workers/workerserver'], function(WorkerServer) {
     return {
         // A console module written to be used from inside a worker context
 
@@ -25,19 +25,19 @@ define(['workers/workerdata'], function(WorkerData) {
         // in the parent folder
 
         log: function (message) {
-            WorkerData.postMessage(['log', '[Worker]\t' + message]);
+            WorkerServer.currentInstance.sendConsoleMessage('[Worker]\t' + message, WorkerServer.LOG_LEVEL.LOG);
         },
 
         info: function (message) {
-            WorkerData.postMessage(['info', '[Worker]\t' + message]);
+            WorkerServer.currentInstance.sendConsoleMessage('[Worker]\t' + message, WorkerServer.LOG_LEVEL.INFO);
         },
 
         warn: function (message) {
-            WorkerData.postMessage(['warn', '[Worker]\t' + message]);
+            WorkerServer.currentInstance.sendConsoleMessage('[Worker]\t' + message, WorkerServer.LOG_LEVEL.WARN);
         },
 
         error: function (message) {
-            WorkerData.postMessage(['error', '[Worker]\t' + message]);
+            WorkerServer.currentInstance.sendConsoleMessage('[Worker]\t' + message, WorkerServer.LOG_LEVEL.ERROR);
         }
     };
 });

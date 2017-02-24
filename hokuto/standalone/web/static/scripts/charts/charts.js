@@ -22,7 +22,7 @@ define([
     'libs/d3',
     'dashboards.manager',
     'dashboards.widget',
-    'dashboards.probes', 
+    'dashboards.probes',
     'onoc.createurl',
     'charts/forms',
     'charts/scales',
@@ -33,20 +33,20 @@ define([
     'onoc.tooltips',
     'onoc.config'
 ], function(
-    jQuery, 
+    jQuery,
     d3,
-    DashboardManager, 
-    Widget, 
-    DashboardProbes, 
-    createUrl, 
-    form, 
-    DashboardChartScale, 
-    Units, 
-    Legends, 
-    Predict, 
-    Calendar, 
+    DashboardManager,
+    Widget,
+    DashboardProbes,
+    createUrl,
+    form,
+    DashboardChartScale,
+    Units,
+    Legends,
+    Predict,
+    Calendar,
     Tooltips,
-    Config) 
+    Config)
 {
     /**
      * Basicchart widget class,handle multiple charts
@@ -210,7 +210,7 @@ define([
         this.buildContainers(container);
         this._buildCommands();
         this.fetchUnits(function(){
-            // Once the units are available, show the "add" form 
+            // Once the units are available, show the "add" form
             // if this widget does not contain any data source yet
             if(!Object.keys(options.conf.probes).length) {
                 this.toogleAddPanel();
@@ -288,10 +288,10 @@ define([
             //toogle the spinner if probes
             if(Object.keys(this.probes).length){
                 this.toogleSpinner(this.container.main);
-    
+
                 for(var s in options.conf.scales)
                     this.addScale(s,options.conf.scales[s]);
-    
+
                 var order = 0;
                 for(var p in this.probes){
                     order++;
@@ -300,23 +300,23 @@ define([
                                              this.probes[p].stacked === 'true' ||
                                              this.probes[p].stacked === 1 ||
                                              this.probes[p].stacked === true;
-    
+
                     if(!this.probes[p]['order']) this.probes[p]['order'] = order;
                     if(this.probes[p].order > this.counter) this.counter = this.probes[p].order;
-    
+
                     DashboardProbes.addProbe(p);
-                    this.legends[p] = this.legendManager.addLegend({ 
+                    this.legends[p] = this.legendManager.addLegend({
                         'name': p,
                         'color': this.probes[p].color
                     });
-    
+
                     this.legendManager.getProbeContainer(p).on('click',function() {
                         this.context.moveOrderToTop(this.probe);
                     }.bind({'context': this, 'probe': p}));
                 }
                 this.counter = order;
             }
-    
+
             //draw the legend and resize the box
             var setLegend = function() {
                 var check = this.legendManager.redraw();
@@ -327,18 +327,21 @@ define([
                 this.updateBoxSize();
             };
             setLegend.call(this);
-    
+
             //add listeners to the probe worker to update this chart on updates
-            DashboardProbes.worker.on('cursor',this.showCursor.bind(this));
+            // DashboardProbes.worker.on('cursor',this.showCursor.bind(this));
+            
             DashboardProbes.worker.on('fetch', function() {
                 this.container.main.parent().find('.refresh').attr('class','refresh');
-                DashboardProbes.worker.postMessage([6,{
-                    'probes': this.probes,
-                    'start': this.conf.fromDate,
-                    'end': this.conf.untilDate,
-                    'mode': this.conf.mode
-                },this.id]);
+                this.getFromWorker();
+                // DashboardProbes.worker.postMessage([6,{
+                //     'probes': this.probes,
+                //     'start': this.conf.fromDate,
+                //     'end': this.conf.untilDate,
+                //     'mode': this.conf.mode
+                // },this.id]);
             }.bind(this), this.id);
+
             DashboardProbes.worker.on('predict',function(data){
                 this.predict.set(data);
                 //update scale domains
@@ -353,79 +356,84 @@ define([
                 }
                 this.redraw();
             }.bind(this),this.id);
-            DashboardProbes.worker.on('get', function(data){
-                var stacked = {};
-                var probes = this.probes;
-                var entry;
-                this.buildScale();
-                this.setDomain(data);
-                for(entry in data) {
-                    if(!data[entry] || !probes[entry]) continue;
-                    if(probes[entry].stacked){
-                        stacked[probes[entry].scale] = stacked[probes[entry].scale] || {};
-                        stacked[probes[entry].scale][entry] = probes[entry];
-                    }
-                }
-                for(entry in stacked) {
-                    stacked[entry]._stackedData = DashboardProbes.getStackedData(stacked[entry],data);
-                    if(stacked[entry]._stackedData.length)
-                        this.scales[entry].updateDomain(stacked[entry]._stackedData[stacked[entry]._stackedData.length - 1]);
-                }
-    
-                this.redraw(data);
-                this.buildAxis();
-                if(this.conf.brushstart && this.conf.brushend){
-                    var context = this.axis.x2.domain();
-                    setTimeout(function(){
-                        this.container.brush.extent([this.conf.brushstart, this.conf.brushend]);
-                        this.container.context.select('.x.brush').call(this.container.brush);
-                        this.axis.x.domain([this.conf.brushstart, this.conf.brushend]);
-    
-                        DashboardProbes.worker.postMessage([8, {
-                            'probes': this.probes,
-                            'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                            'focusTimeline': [this.conf.brushstart.getTime(),this.conf.brushend.getTime()],
-                            'mode': this.conf.mode
-                        },this.id]);
-                    }.bind(this),500);
-                }
-            }.bind(this), this.id);
-            DashboardProbes.worker.on('aggregate',function(data){
-                var stacked = {};
-                var entry;
-                for(entry in data){
-                    var probe = this.probes[entry];
-                    if(probe.stacked){
-                        stacked[probe.scale] = stacked[probe.scale] || {};
-                        stacked[probe.scale][entry] = data[entry];
-                    }
-                }
-                //TODO: Add a method to generate stacked arrays to prevent DRY.
-                for(entry in stacked) {
-                    var stackedData = DashboardProbes.getStackedData(stacked[entry],data);
-                    if(stackedData.length){
-                        var i = 0;
-                        for(var sEntry in stacked[entry]){
-                            data[sEntry].values = stackedData[i];
-                            //if(this.content[p])
-                            //    this.content[p].redraw(stackedData[i]);
-                            i++;
-                        }
-                    }
-                }
-                //prevent any glitch if the worker havn't returned all probes for any reason
-                for(entry in this.currentData) {
-                    if(!data[entry]){
-                        data[entry] = this.currentData[entry];
-                    }
-                }
-                this.currentData = data;
-                if(this.needAutoScale) this.autoScale();
-                else{
-                    this.soft_redraw();
-                }
-            }.bind(this),this.id);
-    
+
+            // DashboardProbes.worker.on('get', function(data){
+            //     var stacked = {};
+            //     var probes = this.probes;
+            //     var entry;
+            //     this.buildScale();
+            //     this.setDomain(data);
+            //     for(entry in data) {
+            //         if(!data[entry] || !probes[entry]) continue;
+            //         if(probes[entry].stacked){
+            //             stacked[probes[entry].scale] = stacked[probes[entry].scale] || {};
+            //             stacked[probes[entry].scale][entry] = probes[entry];
+            //         }
+            //     }
+            //     for(entry in stacked) {
+            //         stacked[entry]._stackedData = DashboardProbes.getStackedData(stacked[entry],data);
+            //         if(stacked[entry]._stackedData.length)
+            //             this.scales[entry].updateDomain(stacked[entry]._stackedData[stacked[entry]._stackedData.length - 1]);
+            //     }
+
+            //     this.redraw(data);
+            //     this.buildAxis();
+            //     if(this.conf.brushstart && this.conf.brushend){
+            //         var context = this.axis.x2.domain();
+            //         setTimeout(function(){
+            //             this.container.brush.extent([this.conf.brushstart, this.conf.brushend]);
+            //             this.container.context.select('.x.brush').call(this.container.brush);
+            //             this.axis.x.domain([this.conf.brushstart, this.conf.brushend]);
+
+            //             this.checkAggregate(
+            //                 [context[0].getTime(),context[1].getTime()],
+            //                 [this.conf.brushstart.getTime(),this.conf.brushend.getTime()]);
+            //             // DashboardProbes.worker.postMessage([8, {
+            //             //     'probes': this.probes,
+            //             //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+            //             //     'focusTimeline': [this.conf.brushstart.getTime(),this.conf.brushend.getTime()],
+            //             //     'mode': this.conf.mode
+            //             // },this.id]);
+            //         }.bind(this),500);
+            //     }
+            // }.bind(this), this.id);
+
+            // DashboardProbes.worker.on('aggregate',function(data){
+            //     var stacked = {};
+            //     var entry;
+            //     for(entry in data){
+            //         var probe = this.probes[entry];
+            //         if(probe.stacked){
+            //             stacked[probe.scale] = stacked[probe.scale] || {};
+            //             stacked[probe.scale][entry] = data[entry];
+            //         }
+            //     }
+            //     //TODO: Add a method to generate stacked arrays to prevent DRY.
+            //     for(entry in stacked) {
+            //         var stackedData = DashboardProbes.getStackedData(stacked[entry],data);
+            //         if(stackedData.length){
+            //             var i = 0;
+            //             for(var sEntry in stacked[entry]){
+            //                 data[sEntry].values = stackedData[i];
+            //                 //if(this.content[p])
+            //                 //    this.content[p].redraw(stackedData[i]);
+            //                 i++;
+            //             }
+            //         }
+            //     }
+            //     //prevent any glitch if the worker havn't returned all probes for any reason
+            //     for(entry in this.currentData) {
+            //         if(!data[entry]){
+            //             data[entry] = this.currentData[entry];
+            //         }
+            //     }
+            //     this.currentData = data;
+            //     if(this.needAutoScale) this.autoScale();
+            //     else{
+            //         this.soft_redraw();
+            //     }
+            // }.bind(this),this.id);
+
             //main timeline events
             jQuery('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
                 var domain = this.axis.x2.domain();
@@ -433,7 +441,7 @@ define([
                 this.conf.brushend = end;
                 if(start >= domain[0] && end <= domain[1]){
                     this.axis.x.domain([start,end]);
-    
+
                     for(var c in this.content)
                         this.content[c].redraw();
                     this.drawLogs();
@@ -441,14 +449,17 @@ define([
                     this.drawGrid();
                     this.container.brush.extent([start,end]);
                     this.container.context.call(this.container.brush);
-    
+
                     //check if require to update scale range
-                    DashboardProbes.worker.postMessage([8,{
-                        'probes': this.probes,
-                        'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
-                        'focusTimeline': [start.getTime(),end.getTime()],
-                        'mode': this.conf.mode
-                    },this.id]);
+                    this.checkAggregate(
+                        [domain[0].getTime(),domain[1].getTime()],
+                        [start.getTime(),end.getTime()]);
+                    // DashboardProbes.worker.postMessage([8,{
+                    //     'probes': this.probes,
+                    //     'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
+                    //     'focusTimeline': [start.getTime(),end.getTime()],
+                    //     'mode': this.conf.mode
+                    // },this.id]);
                 }else{
                     if(start < domain[0])
                         this.updateFromDate(start.getTime());
@@ -459,21 +470,24 @@ define([
                         this.container.brush.extent([start,end]);
                         this.container.context.call(this.container.brush);
                         //check if require to update scale range
-                        DashboardProbes.worker.postMessage([8,{
-                            'probes': this.probes,
-                            'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
-                            'focusTimeline': [start.getTime(),end.getTime()],
-                            'mode': this.conf.mode
-                        },this.id]);
+                        this.checkAggregate(
+                            [domain[0].getTime(),domain[1].getTime()],
+                            [start.getTime(),end.getTime()]);
+                        // DashboardProbes.worker.postMessage([8,{
+                        //     'probes': this.probes,
+                        //     'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
+                        //     'focusTimeline': [start.getTime(),end.getTime()],
+                        //     'mode': this.conf.mode
+                        // },this.id]);
                     }
                 }
             }.bind(this));
-    
+
             //logs return event
             DashboardProbes.worker.on('logs',function(data){
                 //flush cache
                 this._stackedLogsCache = {};
-    
+
                 this.logs = this.logs || {};
                 for(var host in data){
                     this.logs[host] = this.logs[host] || {};
@@ -482,12 +496,15 @@ define([
                 }
                 this.drawLogs();
             }.bind(this),this.id);
-    
+
             //TODO: maybe a global call should be done after all widget init instead?
-            DashboardProbes.worker.postMessage([3,{
-                'probes': Object.keys(this.probes),
-                'start': (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
-            },this.id]);
+            this.fetchFromWorker(
+                Object.keys(this.probes),
+                (this.conf.fromDate) ? this.conf.fromDate.getTime() : false); 
+            // DashboardProbes.worker.postMessage([3,{
+            //     'probes': Object.keys(this.probes),
+            //     'start': (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
+            // },this.id]);
         }.bind(this));
     };
 
@@ -999,7 +1016,14 @@ define([
 
             var date = this.axis.x.invert(e.pageX - offset - this.conf.chartMargin.left);
             this.cursorPos = date;
-            DashboardProbes.worker.postMessage([9,date]);
+
+            DashboardProbes.worker.getCursor(date).then(function(result) {
+                this.showCursor({
+                    values: result,
+                    date: date,
+                });
+            }.bind(this));
+            //DashboardProbes.worker.postMessage([9,date]);
         }.bind(this),true);
 
         // Context displays the overview chart
@@ -1023,12 +1047,15 @@ define([
         brush.on('brushstart',function() {
             var xDomain = this.axis.x.domain();
             var x2Domain = this.axis.x2.domain();
-            DashboardProbes.worker.postMessage([8, {
-                'probes': this.probes,
-                'contextTimeline': [xDomain[0].getTime(), xDomain[1].getTime()],
-                'focusTimeline': [x2Domain[0].getTime(), x2Domain[1].getTime()],
-                'mode': this.conf.mode
-            },this.id]);
+            this.checkAggregate(
+                [xDomain[0].getTime(), xDomain[1].getTime()],
+                [x2Domain[0].getTime(), x2Domain[1].getTime()]);
+            // DashboardProbes.worker.postMessage([8, {
+            //     'probes': this.probes,
+            //     'contextTimeline': [xDomain[0].getTime(), xDomain[1].getTime()],
+            //     'focusTimeline': [x2Domain[0].getTime(), x2Domain[1].getTime()],
+            //     'mode': this.conf.mode
+            // },this.id]);
         }.bind(this));
         brush.on('brushend',function() {
             var x2Domain = this.axis.x2.domain();
@@ -1048,12 +1075,15 @@ define([
                 'conf': data
             });
 
-            DashboardProbes.worker.postMessage([8,{
-                'probes': this.probes,
-                'contextTimeline': [x2Domain[0].getTime(),x2Domain[1].getTime()],
-                'focusTimeline': [xDomain[0].getTime(),xDomain[1].getTime()],
-                'mode': this.conf.mode
-            },this.id]);
+            this.checkAggregate(
+                [x2Domain[0].getTime(),x2Domain[1].getTime()],
+                [xDomain[0].getTime(),xDomain[1].getTime()]);
+            // DashboardProbes.worker.postMessage([8,{
+            //     'probes': this.probes,
+            //     'contextTimeline': [x2Domain[0].getTime(),x2Domain[1].getTime()],
+            //     'focusTimeline': [xDomain[0].getTime(),xDomain[1].getTime()],
+            //     'mode': this.conf.mode
+            // },this.id]);
         }.bind(this));
 
         this.container.brush = brush;
@@ -1091,12 +1121,15 @@ define([
 
                 this.container.brush.extent(range);
                 this.container.context.call(this.container.brush);
-                DashboardProbes.worker.postMessage([8,{
-                    'probes': this.probes,
-                    'contextTimeline': [max[0].getTime(),max[1].getTime()],
-                    'focusTimeline': [range[0].getTime(),range[1].getTime()],
-                    'mode': this.conf.mode
-                },this.id]);
+                this.checkAggregate(
+                    [max[0].getTime(),max[1].getTime()],
+                    [range[0].getTime(),range[1].getTime()]);
+                // DashboardProbes.worker.postMessage([8,{
+                //     'probes': this.probes,
+                //     'contextTimeline': [max[0].getTime(),max[1].getTime()],
+                //     'focusTimeline': [range[0].getTime(),range[1].getTime()],
+                //     'mode': this.conf.mode
+                // },this.id]);
 
                 //save brush state
                 this.conf.brushstart = (range[0].getTime() !== this.axis.x.domain()[0]) ? range[0] : false;
@@ -1147,7 +1180,7 @@ define([
             .attr('fill','#000')
             .attr('data-tooltip','Unit displayed on this scale, click to switch to the next one.')
             .attr('stroke','#57b4dc');
-        if(!current) 
+        if(!current)
             button.attr('style','display: none;');
         button.append('text')
               .text(unit)
@@ -1192,15 +1225,16 @@ define([
         refresh.click(function(e){
             e.target.setAttribute('class','refresh disabled');
             var probes = Object.keys(this.probes);
-            var data = {
-                'probes': probes
-            };
+            var start;
+            var end;
             if(this.conf.fromDate)
-                data.start = this.conf.fromDate.getTime();
+                start = this.conf.fromDate.getTime();
             if(this.conf.untilDate)
-                data.end = this.conf.untilDate.getTime();
+                end = this.conf.untilDate.getTime();
             this.toogleSpinner(this.container.main);
-            DashboardProbes.worker.postMessage([3,data,this.id]);
+
+            this.fetchFromWorker(probes, start, end);
+            //DashboardProbes.worker.postMessage([3,data,this.id]);
         }.bind(this));
 
         //actions
@@ -1221,12 +1255,15 @@ define([
 
             var context = this.axis.x2.domain();
             var focus = this.axis.x.domain();
-            DashboardProbes.worker.postMessage([8,{
-                'probes': this.probes,
-                'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                'mode': this.conf.mode
-            },this.id]);
+            this.checkAggregate(
+                [context[0].getTime(),context[1].getTime()],
+                [focus[0].getTime(),focus[1].getTime()]);
+            // DashboardProbes.worker.postMessage([8,{
+            //     'probes': this.probes,
+            //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+            //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+            //     'mode': this.conf.mode
+            // },this.id]);
 
             var data = {
                 'brushstart': false,
@@ -1278,12 +1315,15 @@ define([
 
             var context = this.axis.x2.domain();
             var focus = this.axis.x.domain();
-            DashboardProbes.worker.postMessage([8,{
-                'probes': this.probes,
-                'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                'mode': this.conf.mode
-            },this.id]);
+            this.checkAggregate(
+                [context[0].getTime(),context[1].getTime()],
+                [focus[0].getTime(),focus[1].getTime()]);
+            // DashboardProbes.worker.postMessage([8,{
+            //     'probes': this.probes,
+            //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+            //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+            //     'mode': this.conf.mode
+            // },this.id]);
 
             this.container.commands.find('.log').attr('class','log ' + (this.conf.log ? 'enabled':'disabled'));
 
@@ -1309,12 +1349,13 @@ define([
             this.container.commands.find('.mode').text(this.conf.mode);
             this.container.brush.clear();
             this.container.context.select('.x.brush').call(this.container.brush);
-            DashboardProbes.worker.postMessage([6,{
-                'probes': this.probes,
-                'start': this.conf.fromDate,
-                'end': this.conf.untilDate,
-                'mode': this.conf.mode
-            },this.id]);
+            this.getFromWorker();
+            // DashboardProbes.worker.postMessage([6,{
+            //     'probes': this.probes,
+            //     'start': this.conf.fromDate,
+            //     'end': this.conf.untilDate,
+            //     'mode': this.conf.mode
+            // },this.id]);
 
             DashboardManager.savePartData({
                 'id': this.id,
@@ -1871,7 +1912,7 @@ define([
      * Place the cursor at the given date position
      * @event
      */
-    DashboardChart.prototype.showCursor = function(event){
+    DashboardChart.prototype.showCursor = function(event) {
         var cursor = this.getCursor();
         if(event.date >= this.axis.x.domain()[0] && event.date <= this.axis.x.domain()[1]){
             cursor.attr('transform','translate('+this.axis.x(new Date(event.date))+',0)').attr('display','inherit');
@@ -1973,7 +2014,7 @@ define([
 
         //line used by predict path also so mandatory on each chart
         d3.svg.line()
-            .x(function(d){ 
+            .x(function(d){
                 return x(d.x);
             }).y(function(d){
                 return y(d.y);
@@ -1982,10 +2023,10 @@ define([
         // Create the area generator for the main graph...
         var area = d3.svg.area()
             .x(function (d) { return x(d.x); })
-            .y0(function(d){ 
+            .y0(function(d){
                 return y(d.y0) || this.conf.chartHeight;
             }.bind(this))
-            .y1(function (d) { 
+            .y1(function (d) {
                 return y((d.y0 || 0) + d.y);
             });
 
@@ -2030,7 +2071,7 @@ define([
             .attr('stroke','black')
             .attr('data-title', probe)
             .attr('data-date', function(d){ return d.x.toLocaleString(); })
-            .attr('data-value',function(d){ 
+            .attr('data-value',function(d){
                 return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
             }.bind(this));
 
@@ -2048,7 +2089,7 @@ define([
                         .attr('cx',function(dot){ return x(dot.x);})
                         .attr('data-title', probe)
                         .attr('data-date', function(dot){ return dot.x.toLocaleString(); })
-                        .attr('data-value',function(dot){ 
+                        .attr('data-value',function(dot){
                             return this.units.unitFormat(dot.y, this.units.get(this.scales[this.probes[probe].scale].unit));
                         }.bind(this));
 
@@ -2165,7 +2206,7 @@ define([
             .attr('stroke','black')
             .attr('data-title', probe)
             .attr('data-date', function(d){ return d.x.toLocaleString(); })
-            .attr('data-value',function(d){ 
+            .attr('data-value',function(d){
                 return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
             }.bind(this));
 
@@ -2183,8 +2224,8 @@ define([
                         .attr('cx',function(dot){ return x(dot.x);})
                         .attr('data-title', probe)
                         .attr('data-date', function(dot){ return dot.x.toLocaleString(); })
-                        .attr('data-value',function(dot){ 
-                            return this.units.unitFormat(dot.y, this.units.get(this.scales[this.probes[probe].scale].unit)); 
+                        .attr('data-value',function(dot){
+                            return this.units.unitFormat(dot.y, this.units.get(this.scales[this.probes[probe].scale].unit));
                         }.bind(this));
 
                     var p = g.selectAll('path.main').data(this._getPathList(redrawData));
@@ -2201,7 +2242,7 @@ define([
                     if(this.predictData[probe])
                         this.addPredict(this.predictData[probe],color,redrawData,y,probe);
 
-                } 
+                }
                 else {
                     g.selectAll('path.main').attr('d', line);
                     dots.selectAll('.dots')
@@ -2336,7 +2377,7 @@ define([
             .attr('cy',function(d){ return y((d.y0 || 0) + d.y); })
             .attr('data-title', probe)
             .attr('data-date', function(d){ return new Date(d.x).toLocaleString(); })
-            .attr('data-value',function(d){ 
+            .attr('data-value',function(d){
                 return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
             }.bind(this));
     };
@@ -2408,7 +2449,7 @@ define([
             .attr('stroke','black')
             .attr('data-title', probe)
             .attr('data-date', function(d){ return d.x.toLocaleString(); })
-            .attr('data-value',function(d){ 
+            .attr('data-value',function(d){
                 return this.units.unitFormat(d.y, this.units.get(this.scales[this.probes[probe].scale].unit));
             }.bind(this));
 
@@ -2492,8 +2533,8 @@ define([
                         .attr('cy',function(dot){ return y(dot.y0 + dot.y);})
                         .attr('data-title', probe)
                         .attr('data-date', function(dot){ return dot.x.toLocaleString(); })
-                        .attr('data-value',function(dot){ 
-                            return this.units.unitFormat(dot.y, this.units.get(this.scales[this.probes[probe].scale].unit)); 
+                        .attr('data-value',function(dot){
+                            return this.units.unitFormat(dot.y, this.units.get(this.scales[this.probes[probe].scale].unit));
                         }.bind(this));
 
                     //redraw predicted charts if any
@@ -3084,7 +3125,7 @@ define([
                     subcontainer.data('warned', 1);
                     subcontainer.prepend(jQuery('<div class="submit-warning">You are going to add ' + addCount + ' probes, are you sure? (re-click to confirm)<p>Adding too many probes at the same time can take some times and freez your browser!</p></div>'));
                     return false;
-                } 
+                }
                 else {
                     subcontainer.data('warned',false);
                     subcontainer.children()[0].remove();
@@ -3132,10 +3173,11 @@ define([
             this.toogleSpinner(this.container.main);
 
             DashboardManager.savePartData(data).then(function() {
-                DashboardProbes.worker.postMessage([3, {
-                    'probes': probeList,
-                    'start' : (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
-                },this.id]);
+                this.fetchFromWorker(probeList, (this.conf.fromDate) ? this.conf.fromDate.getTime() : false);
+                // DashboardProbes.worker.postMessage([3, {
+                //     'probes': probeList,
+                //     'start' : (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
+                // },this.id]);
                 clickedForm.color.value = getNextUnusedColor();
                 settings.find('.color').find('.selected').attr('class','');
                 settings.find('.color').find('[data-value="' + clickedForm.color.value + '"]').attr('class','selected');
@@ -3153,7 +3195,7 @@ define([
             }
             else {
                 for(i = 0, len = clickedForm['server'].length; i < len; i++){
-                    if(i) 
+                    if(i)
                         query = query.concat(Config.separator());
                     query = query.concat(clickedForm[i].value);
                 }
@@ -3241,12 +3283,15 @@ define([
 
                     var context = this.axis.x2.domain();
                     var focus = this.axis.x.domain();
-                    DashboardProbes.worker.postMessage([8,{
-                        'probes': this.probes,
-                        'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                        'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                        'mode': this.conf.mode
-                    },this.id]);
+                    this.checkAggregate(
+                        [context[0].getTime(),context[1].getTime()],
+                        [focus[0].getTime(),focus[1].getTime()]);
+                    // DashboardProbes.worker.postMessage([8,{
+                    //     'probes': this.probes,
+                    //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                    //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
+                    //     'mode': this.conf.mode
+                    // },this.id]);
                 }.bind(this));
 
                 groupContainer.append(stackButton);
@@ -3260,8 +3305,8 @@ define([
                 var unit = scale.unit;
 
                 var probeContainer = jQuery('<p class="editContent"></p>');
-                probeContainer.append('<label style="display: table-cell;text-shadow: -2px 2px black;">' + 
-                                      groups[g][p].split(separator).join('.') + 
+                probeContainer.append('<label style="display: table-cell;text-shadow: -2px 2px black;">' +
+                                      groups[g][p].split(separator).join('.') +
                                       '</label>');
                 probeContainer.append(form.colorBox.call(this,probe.color, groups[g][p]));
                 probeContainer.append(form.orientSelect.call(this,scale.orient, groups[g][p]));
@@ -3359,7 +3404,8 @@ define([
         this.conf.brushstart = false;
         this.conf.brushend = false;
 
-        DashboardProbes.worker.postMessage([7,{'probes': this.probes, 'start': this.conf.fromDate.getTime(), 'end': end },this.id]);
+        this.getTimeline(this.conf.fromDate.getTime(), end);
+        //DashboardProbes.worker.postMessage([7,{'probes': this.probes, 'start': this.conf.fromDate.getTime(), 'end': end },this.id]);
         DashboardManager.savePartData({
             'id': this.id,
             'conf': {
@@ -3391,7 +3437,8 @@ define([
         this.conf.brushstart = false;
         this.conf.brushend = false;
 
-        DashboardProbes.worker.postMessage([7,{'probes': this.probes, 'start': this.axis.x2.domain()[0].getTime(),'end': context},this.id]);
+        this.getTimeline(this.axis.x2.domain()[0].getTime(), context);
+        //DashboardProbes.worker.postMessage([7,{'probes': this.probes, 'start': this.axis.x2.domain()[0].getTime(),'end': context},this.id]);
         DashboardManager.savePartData({
             'id': this.id,
             'conf': {
@@ -3623,12 +3670,15 @@ define([
         //this.updateDateForms(range[0],range[1]);
 
         //check if require to update scale range
-        DashboardProbes.worker.postMessage([8,{
-            'probes': this.probes,
-            'contextTimeline': [current[0].getTime(),current[1].getTime()],
-            'focusTimeline': [range[0].getTime(),range[1].getTime()],
-            'mode': this.conf.mode
-        },this.id]);
+        this.checkAggregate(
+            [current[0].getTime(),current[1].getTime()],
+            [range[0].getTime(),range[1].getTime()]);
+        // DashboardProbes.worker.postMessage([8,{
+        //     'probes': this.probes,
+        //     'contextTimeline': [current[0].getTime(),current[1].getTime()],
+        //     'focusTimeline': [range[0].getTime(),range[1].getTime()],
+        //     'mode': this.conf.mode
+        // },this.id]);
 
         //saving zooming state every 5secs
         this.conf.brushstart = (range[0].getTime() !== current[0].getTime()) ? range[0] : false;
@@ -3658,6 +3708,128 @@ define([
     DashboardChart.prototype.updateDateForms = function(start,end){
         this.container.date.from.attr('value',start.toLocaleDateString());
         this.container.date.until.attr('value',end.toLocaleDateString());
+    };
+
+    DashboardChart.prototype.checkAggregate = function(previousRange, nextRange) {
+        DashboardProbes.worker.checkAggregate(
+            this.probes,
+            previousRange,
+            nextRange,
+            this.conf.mode
+        ).then(function(result) {
+            if(!result)
+                return;
+
+            var stacked = {};
+            var entry;
+            for(entry in result){
+                var probe = this.probes[entry];
+                if(probe.stacked){
+                    stacked[probe.scale] = stacked[probe.scale] || {};
+                    stacked[probe.scale][entry] = result[entry];
+                }
+            }
+            //TODO: Add a method to generate stacked arrays to prevent DRY.
+            for(entry in stacked) {
+                var stackedData = DashboardProbes.getStackedData(stacked[entry], result);
+                if(stackedData.length) {
+                    var i = 0;
+                    for(var sEntry in stacked[entry]) {
+                        result[sEntry].values = stackedData[i];
+                        i++;
+                    }
+                }
+            }
+            //prevent any glitch if the worker havn't returned all probes for any reason
+            for(entry in this.currentData) {
+                if(!result[entry]) {
+                    result[entry] = this.currentData[entry];
+                }
+            }
+            this.currentData = result;
+            if(this.needAutoScale)
+                this.autoScale();
+            else
+                this.soft_redraw();
+        }.bind(this));
+    };
+
+    DashboardChart.prototype.getFromWorker = function() {
+        DashboardProbes.worker.get(
+            this.probes,
+            this.conf.fromDate,
+            this.conf.untilDate,
+            this.conf.mode
+        ).then(function(result) {
+            this._handleGetResult(result);
+        }.bind(this));
+    };
+
+    DashboardChart.prototype.fetchFromWorker = function(probes, start, end) {
+        DashboardProbes.worker.fetch(probes, start, end).then(function() {
+            this._handleFetchResult();
+        }.bind(this));
+    };
+
+    DashboardChart.prototype.getTimeline = function(start, end) {
+        DashboardProbes.worker.getTimeline(this.probes, start, end).then(function(result) {
+            if(result) {
+                // We got a result from the cache
+                this._handleGetResult(result);
+            }
+            else {
+                // No cache... query cache!
+                this._handleFetchResults();
+            }
+        }.bind(this));
+    };
+
+    DashboardChart.prototype._handleFetchResult = function() {
+        this.container.main.parent().find('.refresh').attr('class','refresh');
+        this.getFromWorker();
+    };
+
+    DashboardChart.prototype._handleGetResult = function(result) {
+        var stacked = {};
+        var probes = this.probes;
+        var entry;
+        this.buildScale();
+        this.setDomain(result);
+
+        for(entry in result) {
+            if(!result[entry] || !probes[entry]) 
+                continue;
+            if(probes[entry].stacked){
+                stacked[probes[entry].scale] = stacked[probes[entry].scale] || {};
+                stacked[probes[entry].scale][entry] = probes[entry];
+            }
+        }
+        for(entry in stacked) {
+            stacked[entry]._stackedData = DashboardProbes.getStackedData(stacked[entry],result);
+            if(stacked[entry]._stackedData.length)
+                this.scales[entry].updateDomain(stacked[entry]._stackedData[stacked[entry]._stackedData.length - 1]);
+        }
+
+        this.redraw(result);
+        this.buildAxis();
+        if(this.conf.brushstart && this.conf.brushend) {
+            var context = this.axis.x2.domain();
+            setTimeout(function() {
+                this.container.brush.extent([this.conf.brushstart, this.conf.brushend]);
+                this.container.context.select('.x.brush').call(this.container.brush);
+                this.axis.x.domain([this.conf.brushstart, this.conf.brushend]);
+
+                this.checkAggregate(
+                    [context[0].getTime(),context[1].getTime()],
+                    [this.conf.brushstart.getTime(),this.conf.brushend.getTime()]);
+                // DashboardProbes.worker.postMessage([8, {
+                //     'probes': this.probes,
+                //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
+                //     'focusTimeline': [this.conf.brushstart.getTime(),this.conf.brushend.getTime()],
+                //     'mode': this.conf.mode
+                // },this.id]);
+            }.bind(this),500);
+        }
     };
 
     return DashboardChart;

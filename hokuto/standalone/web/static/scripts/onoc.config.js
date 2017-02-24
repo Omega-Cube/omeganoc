@@ -23,7 +23,7 @@ define([], function() {
     var _isAdmin = false;
     var _shinkenContact = false;
 
-    return {
+    var Config = {
         baseUrl: function() {
             return _baseUrl;
         },
@@ -45,6 +45,21 @@ define([], function() {
             _separator = separator;
             _isAdmin = isAdmin;
             _shinkenContact = shinkenContact;
-        }
+        },
+
+        export: function() {
+            return [
+                _baseUrl,
+                _separator,
+                _isAdmin,
+                _shinkenContact,
+            ];
+        },
+
+        import: function(exportedData) {
+            Config.setValues(exportedData[0], exportedData[1], exportedData[2], exportedData[3]);
+        },
     };
+
+    return Config;
 });

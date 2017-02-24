@@ -17,7 +17,7 @@
  */
 'use strict';
 
-define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console, Config) {
+define(['onoc.createurl', 'console', 'onoc.config', 'libs/rsvp', 'observable'], function(createUrl, Console, Config, RSVP, Observable) {
     /**
      * A class that creates a Web Worker using the Omega Noc infrastructure,
      * and provides tools to communicate with it
@@ -25,15 +25,18 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
      * @param {String} workerFile The name of the module containing the worker's entry point
      * @param {Function} callback A function that will be called when the worker sends a message to this client.
      */
-    var WorkerClient = function(workerFile, callback) {
+    var WorkerClient = function(workerFile) {
         this.worker = new Worker(createUrl('static/scripts/workers/onoc.js'));
         this.worker._client = this;
         this.worker.onmessage = this.processMessage;
         this.worker.onerror = this.processError;
 
-
         // A list of messages that are stored, waiting for the worker to be ready
         this.outMessageQueue = [];
+
+        // A list of calls currently running, waiting for their results to come back
+        // Indexed by call ID
+        this.runningCalls = {};
 
         // Stores the current state of the worker
         // -1: Still loading core dependencies
@@ -44,9 +47,12 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
         // The name of the main worker logic module
         this.workerFile = workerFile;
 
-        // the function(data) that will be called every time the worker sends a message
-        //TODO: Remove the bind, after the requirement in dashboard.probes has been taken care of
-        this.onMessageCallback = callback.bind(this);
+        /**
+         * Handles the event management stuff for events triggered from the server.
+         */
+        this.eventHandler = new Observable(this);
+
+        Console.log('Worker client "' + this.workerFile + '" is starting...');
     };
 
     /**
@@ -56,10 +62,11 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
     WorkerClient.prototype.processMessage = function(evt) {
         // Note : in this method 'this' contains the Worker instance
         var client = this._client;
-        if(!client._tryProcessReadyMessage(evt.data) && !client._tryProcessConsoleMessage(evt.data)) {
-            // Forward other messages to the worker user
-            // TODO: Add bind(client) after we rewrote the callers
-            client.onMessageCallback(evt.data);
+        if(!client._tryProcessReadyMessage(evt.data) && 
+           !client._tryProcessConsoleMessage(evt.data) &&
+           !client._tryProcessCallbackMessage(evt.data) &&
+           !client._tryProcessEventMessage(evt.data)) {
+            Console.warn('A "' + this.workerFile + '" worker client received an unknown message');
         }
     };
 
@@ -78,12 +85,10 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
                     // Configure the worker
                     this.worker.postMessage([
                         this.workerFile,
-                        Config.baseUrl(),
-                        Config.separator(),
-                        Config.isAdmin(),
-                        Config.shinkenContact()
+                        Config.export(),
                     ]);
                     this.readyState = 0;
+                    Console.log('Worker client "' + this.workerFile + '" is initializing...');
                 }
                 else {
                     Console.error('Illegal worker state change: going from "' + this.readyState + '" to 0');
@@ -96,6 +101,7 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
                         this.worker.postMessage(this.outMessageQueue.shift());
                     }
                     this.readyState = 1;
+                    Console.log('Worker client "' + this.workerFile + '" is ready.');
                 }
                 else {
                     Console.error('Illegal worker state change: going from "' + this.readyState + '" to 1');
@@ -132,6 +138,42 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
         else return false;
     };
 
+    WorkerClient.prototype._tryProcessCallbackMessage = function(data) {
+        if(Array.isArray(data) && data.length === 2 && data[0] === 'callback') {
+            data = data[1];
+            if(data.callId in this.runningCalls) {
+                var callbacks = this.runningCalls[data.callId];
+                delete this.runningCalls[data.callId];
+
+                if(data.error) {
+                    callbacks.reject(data.error);
+                }
+                else {
+                    callbacks.resolve(data.result);
+                }
+            }
+            else {
+                // Um, call not found ???
+                Console.warn('Unknown call ID (' + data.callId + ') received from worker "' + this.workerFile + '"!');
+                Console.log('Dropped call result data:');
+                Console.log(data.result);
+            }
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    };
+
+    WorkerClient.prototype._tryProcessEventMessage = function(data) {
+        if(Array.isArray(data) && data.length === 3 && data[0] === 'event') {
+            this.eventHandler.trigger(data[1], data[2]);
+            return true;
+        }
+        else return false;
+    };
+
     /**
      * Handler function for the worker's error event
      */
@@ -153,6 +195,22 @@ define(['onoc.createurl', 'console', 'onoc.config'], function(createUrl, Console
             // Add the message in a queue that will be flushed when the worker is ready to receive it
             this.outMessageQueue.push(data);
         }
+    };
+
+    WorkerClient.prototype.call = function(functionName, args) {
+        return new RSVP.Promise(function(resolve, reject) {
+            var callId = Math.random();
+            this.runningCalls[callId] = {
+                name: functionName, // Not actually necessary, but useful for debugging
+                resolve: resolve,
+                reject: reject,
+            };
+            this.postMessage({
+                call: callId,
+                method: functionName,
+                args: args,
+            });
+        }.bind(this));
     };
 
     return WorkerClient;
