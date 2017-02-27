@@ -17,7 +17,7 @@
  */
 'use strict';
 
-define([], function() {
+define(['console', 'argumentserror'], function(Console, ArgumentsError) {
     /**
      * Probe class
      * @class
@@ -122,7 +122,8 @@ define([], function() {
             this._cache[date] = result;
         }
         else {
-            postMessage([9001,'Trying to get data from an undefined or empty probe']);
+            throw new ArgumentsError('Trying to get data from an undefined or empty probe');
+            //postMessage([9001,'Trying to get data from an undefined or empty probe']);
         }
         return result;
     };
@@ -385,8 +386,8 @@ define([], function() {
             if(isNull && s)
                 continue;
 
-            if(isNaN(avg)){
-                postMessage([0,'NaN spotted on basic probe.']);
+            if(isNaN(avg)) {
+                Console.warn('NaN spotted on basic probe.');
                 continue;
             }
 

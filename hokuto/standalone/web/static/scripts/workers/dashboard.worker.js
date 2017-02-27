@@ -22,7 +22,8 @@ define([
     'onoc.config', 
     'console', 
     'onoc.xhr', 
-    'onoc.createurl', 
+    'onoc.createurl',
+    'argumentserror',
     'workers/probes.probe', 
     'workers/probes.log'
 ], function(
@@ -31,18 +32,15 @@ define([
     Console, 
     OnocXHR, 
     createUrl, 
+    ArgumentsError,
     Probe, 
     Log
 ) {
     var separator = Config.separator();
 
-    function ArgumentsError(message) {
-        this.name = 'ArgumentError';
-        this.message = message;
-    }
-
-    ArgumentsError.prototype = Error.prototype;
-
+    /**
+     * The DashboardsWorker class is a worker server proxy.
+     */
 
     function DashboardsWorker(server) {
         this._server = server;
