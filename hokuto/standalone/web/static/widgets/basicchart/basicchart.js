@@ -1,8 +1,6 @@
 ﻿/*
  * This file is part of Omega Noc
- * Copyright Omega Noc (C) 2014 Omega Cube and contributors
- * Xavier Roger-Machart, xrm@omegacube.fr
- * Nicolas Lantoing, nicolas@omegacube.fr
+ * Copyright Omega Noc (C) 2016 Omega Cube and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,19 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+'use strict';
 
-define(['jquery', 'libs/d3', 'dashboards.manager', 'dashboards.probes', 'charts/charts'], function (jQuery, d3, DashboardManager, DashboardProbes, DashboardChart) {
+define(['dashboards.probes', 'charts/charts'], function (DashboardProbes, DashboardChart) {
     /**
      * Handle differents kind of chart
      * Only visual and rendering operations will be done here
      * The widget is generated from the attachTo method (TODO: revamp or rename should be done here)
      */
-    var Basicchart = function(){
+    var BasicChart = function() {
         this.id = -1;
         this.chart= new DashboardChart();
-    }
+    };
 
-    Basicchart.prototype.attachTo = function (container, options) {
+    BasicChart.prototype.attachTo = function (container, options) {
         this.id = options.id;
         this.chart.init(container, options);
     };
@@ -37,11 +36,11 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'dashboards.probes', 'charts/
     /**
      * Called when this widget is deleted
      */
-    Basicchart.prototype.remove = function(){
+    BasicChart.prototype.remove = function(){
         DashboardProbes.removeSignature(this.id);
     };
 
-    Basicchart.default = function () {
+    BasicChart.default = function () {
         return {
             width: 9,
             height: 7,
@@ -52,5 +51,5 @@ define(['jquery', 'libs/d3', 'dashboards.manager', 'dashboards.probes', 'charts/
         };
     };
 
-    return Basicchart;
+    return BasicChart;
 });
