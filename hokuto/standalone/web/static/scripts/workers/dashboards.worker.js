@@ -121,8 +121,6 @@ define([
                 var results = {};
                 results[hostName] = {};
                 results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
-                ///postMessage([10,results,sig]);
-                //this.trigger('logsReceived', results);
                 return results;
             }.bind(this));
         }
@@ -130,11 +128,9 @@ define([
             var results = {};
             results[hostName] = {};
             results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
-            ///postMessage([10,results,sig]);
             return new RSVP.Promise(function(resolve) {
                 resolve(results);
             });
-            //this.trigger('logsReceived', results);
         }
     };
 

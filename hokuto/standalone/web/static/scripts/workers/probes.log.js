@@ -50,7 +50,7 @@ define([], function() {
             results.push(this._logs[i]);
         }
 
-        return results; 
+        return results;
     };
 
     /**
