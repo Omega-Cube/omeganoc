@@ -24,7 +24,7 @@ define([
     'onoc.createurl',
     'onoc.states',
     'onoc.config',
-    'dashboard.worker'], function (jQuery, Console, DataService, createUrl, States, Config, DashboardWorker) {
+    'dashboards.worker'], function (jQuery, Console, DataService, createUrl, States, Config, DashboardWorker) {
 
     //onmessage event, aka workers control room
     // function onWorkerMessage(data){

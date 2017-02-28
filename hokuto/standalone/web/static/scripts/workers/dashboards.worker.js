@@ -47,6 +47,7 @@ define([
 
         this.probes = {};
         this.logs = {};
+        this.predicted = {};
     }
 
     DashboardsWorker.prototype.addProbe = function(probeName, interval) {
@@ -89,24 +90,18 @@ define([
         if(end)
             query['end'] = Math.floor(end / 1000);
 
-        var resultPromise = OnocXHR.getJson(createUrl('/services/metrics/values'), query).then(function(data) {
-            if(data){
+        OnocXHR.getJson(createUrl('/services/metrics/values'), query).then(function(data) {
+            if(data) {
+                // The data is NOT USED by the client... don't bother sending it
                 ///postMessage([1,data,signature]);
                 //this.trigger('metricsReceived', data);
 
-                // Start executing this._parseResponseData, but don't wait for it to end before we return the result
-                setTimeout(function() {
-                    this._parseResponseData(data);
-                }.bind(this), 1);
-
-                return data;
+                this._parseResponseData(data);
             }
         }.bind(this));
 
         // Fetch predicted data
         this.fetchPredicts(probesList);
-
-        return resultPromise;
     };
 
     DashboardsWorker.prototype.fetchLog = function(hostName, serviceName, start, end) {
@@ -118,7 +113,7 @@ define([
         if(!this.logs[hostName][serviceName].getLogs().length) {
             var url = createUrl('/services/livestatus/get/service/logs/' + hostName + '/' + serviceName + '/');
 
-            OnocXHR.getJson(url, { 
+            return OnocXHR.getJson(url, { 
                 'start': start, 
                 'end': end
             }).then(function(data) {
@@ -127,7 +122,8 @@ define([
                 results[hostName] = {};
                 results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
                 ///postMessage([10,results,sig]);
-                this.trigger('logsReceived', results);
+                //this.trigger('logsReceived', results);
+                return results;
             }.bind(this));
         }
         else {
@@ -135,19 +131,25 @@ define([
             results[hostName] = {};
             results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
             ///postMessage([10,results,sig]);
-            this.trigger('logsReceived', results);
+            return new RSVP.Promise(function(resolve) {
+                resolve(results);
+            });
+            //this.trigger('logsReceived', results);
         }
     };
 
     DashboardsWorker.prototype.fetchPredicts = function(probesList) {
         //TODO check if predict data already fetched to prevent useless requests
-        OnocXHR.getJson(createUrl('/services/predict/forecast'), { 
+        return OnocXHR.getJson(createUrl('/services/predict/forecast'), { 
             'probes': probesList
         }).then(function(data) {
             ///postMessage([11,data,sig]);
-            this.trigger('predictReceived');
-            for(var probe in data)
+            //this.trigger('predictReceived', data);
+            for(var probe in data) {
                 this.probes[probe].setPredicted(data[probe]);
+                this.predicted[probe] = data[probe];
+            }
+            return data;
         }.bind(this));
     };
 
@@ -239,7 +241,9 @@ define([
     };
 
     DashboardsWorker.prototype.get = function(probesList, start, end, mode) {
-        var results = {};
+        var results = {
+            metrics: {},
+        };
         var stacks = {};
 
         mode = mode || 'max';
@@ -256,7 +260,7 @@ define([
             else {
                 var data = this.getProbe(probeName, start, end, mode);
                 if(data)
-                    results[probeName] = data;
+                    results.metrics[probeName] = data;
             }
         }
 
@@ -271,7 +275,7 @@ define([
             //aggregate theme
             var aggregate = this.aggregateStack(values, mode);
             for(var stack in aggregate) {
-                results[stack] = aggregate[stack];
+                results.metrics[stack] = aggregate[stack];
             }
         }
 
@@ -280,7 +284,13 @@ define([
         var logs = this.getLogs(probesList, start, end);
         if(logs) {
             ///postMessage([10,logs,signature]);
-            this.trigger('logsReceived', logs);
+            //this.trigger('logsReceived', logs);
+            results.logs = logs;
+        }
+
+        var predictions = this.getPredicts(probesList);
+        if(predictions) {
+            results.predicts = predictions;
         }
 
         return results;
@@ -306,6 +316,16 @@ define([
         if(!Object.keys(results).length)
             return false;
         return results;
+    };
+
+    DashboardsWorker.prototype.getPredicts = function(probesList) {
+        var result = {};
+
+        for(var probeName in probesList) {
+            result[probeName] = this.predicted[probeName];
+        }
+
+        return result;
     };
 
     DashboardsWorker._getInterpolated = function(time, previous, next) {

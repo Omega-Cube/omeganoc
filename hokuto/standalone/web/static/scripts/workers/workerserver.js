@@ -153,18 +153,22 @@ define(['libs/rsvp', 'onoc.config', 'console'], function(RSVP, Config, Console) 
         Config.import(message[1]);
 
         // Load the proxy that contains the actual logic
-        var proxyType = require(message[0]);
-        try {
-            this._proxyInstance = new proxyType(this);
-        }
-        catch(error) {
-            Console.error('Could not create an instance of the object obtained from the module "' + message[0] + '": ' + error);
-            return; // Stops the initialization sequence.
-        }
+        require([message[0]], function(ProxyType) {
+            try {
+                this._proxyInstance = new ProxyType(this);
+            }
+            catch(error) {
+                Console.error('Could not create an instance of the proxy object obtained from the module "' + message[0] + '": ' + error);
+                return; // Stops the initialization sequence.
+            }
 
-        // Proceed with the next steps
-        this._configReceived = true;
-        this.notifyLogicReady();
+            // Proceed with the next steps
+            this._configReceived = true;
+            this.notifyLogicReady();
+        }.bind(this), function(err) {
+            // An error occured while trying to load the proxy
+            Console.error('Could not load the proxy module "' + message[0] + '"');
+        });
     };
 
     /**

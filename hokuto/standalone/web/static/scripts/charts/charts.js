@@ -331,31 +331,31 @@ define([
             //add listeners to the probe worker to update this chart on updates
             // DashboardProbes.worker.on('cursor',this.showCursor.bind(this));
             
-            DashboardProbes.worker.on('fetch', function() {
-                this.container.main.parent().find('.refresh').attr('class','refresh');
-                this.getFromWorker();
-                // DashboardProbes.worker.postMessage([6,{
-                //     'probes': this.probes,
-                //     'start': this.conf.fromDate,
-                //     'end': this.conf.untilDate,
-                //     'mode': this.conf.mode
-                // },this.id]);
-            }.bind(this), this.id);
+            // DashboardProbes.worker.on('fetch', function() {
+            //     this.container.main.parent().find('.refresh').attr('class','refresh');
+            //     this.getFromWorker();
+            //     // DashboardProbes.worker.postMessage([6,{
+            //     //     'probes': this.probes,
+            //     //     'start': this.conf.fromDate,
+            //     //     'end': this.conf.untilDate,
+            //     //     'mode': this.conf.mode
+            //     // },this.id]);
+            // }.bind(this), this.id);
 
-            DashboardProbes.worker.on('predict',function(data){
-                this.predict.set(data);
-                //update scale domains
-                for(var entry in data){
-                    if(!data[entry]) continue;
-                    var range = [false,false];
-                    for(var d in data[entry].values){
-                        if(data[entry].values[d][1] > range[1]) range[1] = data[entry].values[d][1];
-                        if(typeof range[0] === 'boolean' || range[0] > data[entry].values[d][3]) range[0] = data[entry].values[d][3];
-                    }
-                    this.scales[this.probes[entry].scale].updateDomain({'range': range});
-                }
-                this.redraw();
-            }.bind(this),this.id);
+            // DashboardProbes.worker.on('predict',function(data){
+            //     this.predict.set(data);
+            //     //update scale domains
+            //     for(var entry in data){
+            //         if(!data[entry]) continue;
+            //         var range = [false,false];
+            //         for(var d in data[entry].values){
+            //             if(data[entry].values[d][1] > range[1]) range[1] = data[entry].values[d][1];
+            //             if(typeof range[0] === 'boolean' || range[0] > data[entry].values[d][3]) range[0] = data[entry].values[d][3];
+            //         }
+            //         this.scales[this.probes[entry].scale].updateDomain({'range': range});
+            //     }
+            //     this.redraw();
+            // }.bind(this),this.id);
 
             // DashboardProbes.worker.on('get', function(data){
             //     var stacked = {};
@@ -484,18 +484,18 @@ define([
             }.bind(this));
 
             //logs return event
-            DashboardProbes.worker.on('logs',function(data){
-                //flush cache
-                this._stackedLogsCache = {};
+            // DashboardProbes.worker.on('logs',function(data){
+            //     //flush cache
+            //     this._stackedLogsCache = {};
 
-                this.logs = this.logs || {};
-                for(var host in data){
-                    this.logs[host] = this.logs[host] || {};
-                    for(var service in data[host])
-                        this.logs[host][service] = data[host][service];
-                }
-                this.drawLogs();
-            }.bind(this),this.id);
+            //     this.logs = this.logs || {};
+            //     for(var host in data){
+            //         this.logs[host] = this.logs[host] || {};
+            //         for(var service in data[host])
+            //             this.logs[host][service] = data[host][service];
+            //     }
+            //     this.drawLogs();
+            // }.bind(this),this.id);
 
             //TODO: maybe a global call should be done after all widget init instead?
             this.fetchFromWorker(
@@ -3790,27 +3790,36 @@ define([
     };
 
     DashboardChart.prototype._handleGetResult = function(result) {
+        this._handleGetResultMetrics(result.metrics);
+        if(result.logs)
+            this._handleGetResultLogs(result.logs);
+        if(result.predicts)
+            this._handleGetResultPredicts(result.predicts);
+    };
+
+    DashboardChart.prototype._handleGetResultMetrics = function(metrics) {
         var stacked = {};
         var probes = this.probes;
         var entry;
         this.buildScale();
-        this.setDomain(result);
+        this.setDomain(metrics);
 
-        for(entry in result) {
-            if(!result[entry] || !probes[entry]) 
+        for(entry in metrics) {
+            if(!metrics[entry] || !probes[entry]) 
                 continue;
             if(probes[entry].stacked){
                 stacked[probes[entry].scale] = stacked[probes[entry].scale] || {};
                 stacked[probes[entry].scale][entry] = probes[entry];
             }
         }
+
         for(entry in stacked) {
-            stacked[entry]._stackedData = DashboardProbes.getStackedData(stacked[entry],result);
+            stacked[entry]._stackedData = DashboardProbes.getStackedData(stacked[entry], metrics);
             if(stacked[entry]._stackedData.length)
                 this.scales[entry].updateDomain(stacked[entry]._stackedData[stacked[entry]._stackedData.length - 1]);
         }
 
-        this.redraw(result);
+        this.redraw(metrics);
         this.buildAxis();
         if(this.conf.brushstart && this.conf.brushend) {
             var context = this.axis.x2.domain();
@@ -3830,6 +3839,34 @@ define([
                 // },this.id]);
             }.bind(this),500);
         }
+    };
+
+    DashboardChart.prototype._handleGetResultLogs = function(data) {
+        //flush cache
+        this._stackedLogsCache = {};
+
+        this.logs = this.logs || {};
+        for(var host in data){
+            this.logs[host] = this.logs[host] || {};
+            for(var service in data[host])
+                this.logs[host][service] = data[host][service];
+        }
+        this.drawLogs();
+    };
+
+    DashboardChart.prototype._handleGetResultPredict = function(data) {
+        this.predict.set(data);
+        //update scale domains
+        for(var entry in data){
+            if(!data[entry]) continue;
+            var range = [false,false];
+            for(var d in data[entry].values){
+                if(data[entry].values[d][1] > range[1]) range[1] = data[entry].values[d][1];
+                if(typeof range[0] === 'boolean' || range[0] > data[entry].values[d][3]) range[0] = data[entry].values[d][3];
+            }
+            this.scales[this.probes[entry].scale].updateDomain({'range': range});
+        }
+        this.redraw();
     };
 
     return DashboardChart;
