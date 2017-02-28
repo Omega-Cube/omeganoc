@@ -18,12 +18,12 @@
 'use strict';
 
 define([], function() {
-    function ArgumentsError(message) {
+    function ArgumentError(message) {
         this.name = 'ArgumentError';
         this.message = message;
     }
 
-    ArgumentsError.prototype = Error.prototype;
+    ArgumentError.prototype = Error.prototype;
 
-    return ArgumentsError;
+    return ArgumentError;
 });

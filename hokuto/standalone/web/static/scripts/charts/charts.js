@@ -224,9 +224,10 @@ define([
         this.container.main.on('mousemove',function(e){
             var target = e.target;
             var title = target.getAttribute('data-title');
-            if(!title){
+            if(!title) {
                 this.tooltips.toogle(false);
-            }else{
+            }
+            else {
                 var host = DashboardProbes.extractHost(title);
                 var service = DashboardProbes.extractService(title);
                 if(service === '__HOST__') service = '';
@@ -328,112 +329,6 @@ define([
             };
             setLegend.call(this);
 
-            //add listeners to the probe worker to update this chart on updates
-            // DashboardProbes.worker.on('cursor',this.showCursor.bind(this));
-            
-            // DashboardProbes.worker.on('fetch', function() {
-            //     this.container.main.parent().find('.refresh').attr('class','refresh');
-            //     this.getFromWorker();
-            //     // DashboardProbes.worker.postMessage([6,{
-            //     //     'probes': this.probes,
-            //     //     'start': this.conf.fromDate,
-            //     //     'end': this.conf.untilDate,
-            //     //     'mode': this.conf.mode
-            //     // },this.id]);
-            // }.bind(this), this.id);
-
-            // DashboardProbes.worker.on('predict',function(data){
-            //     this.predict.set(data);
-            //     //update scale domains
-            //     for(var entry in data){
-            //         if(!data[entry]) continue;
-            //         var range = [false,false];
-            //         for(var d in data[entry].values){
-            //             if(data[entry].values[d][1] > range[1]) range[1] = data[entry].values[d][1];
-            //             if(typeof range[0] === 'boolean' || range[0] > data[entry].values[d][3]) range[0] = data[entry].values[d][3];
-            //         }
-            //         this.scales[this.probes[entry].scale].updateDomain({'range': range});
-            //     }
-            //     this.redraw();
-            // }.bind(this),this.id);
-
-            // DashboardProbes.worker.on('get', function(data){
-            //     var stacked = {};
-            //     var probes = this.probes;
-            //     var entry;
-            //     this.buildScale();
-            //     this.setDomain(data);
-            //     for(entry in data) {
-            //         if(!data[entry] || !probes[entry]) continue;
-            //         if(probes[entry].stacked){
-            //             stacked[probes[entry].scale] = stacked[probes[entry].scale] || {};
-            //             stacked[probes[entry].scale][entry] = probes[entry];
-            //         }
-            //     }
-            //     for(entry in stacked) {
-            //         stacked[entry]._stackedData = DashboardProbes.getStackedData(stacked[entry],data);
-            //         if(stacked[entry]._stackedData.length)
-            //             this.scales[entry].updateDomain(stacked[entry]._stackedData[stacked[entry]._stackedData.length - 1]);
-            //     }
-
-            //     this.redraw(data);
-            //     this.buildAxis();
-            //     if(this.conf.brushstart && this.conf.brushend){
-            //         var context = this.axis.x2.domain();
-            //         setTimeout(function(){
-            //             this.container.brush.extent([this.conf.brushstart, this.conf.brushend]);
-            //             this.container.context.select('.x.brush').call(this.container.brush);
-            //             this.axis.x.domain([this.conf.brushstart, this.conf.brushend]);
-
-            //             this.checkAggregate(
-            //                 [context[0].getTime(),context[1].getTime()],
-            //                 [this.conf.brushstart.getTime(),this.conf.brushend.getTime()]);
-            //             // DashboardProbes.worker.postMessage([8, {
-            //             //     'probes': this.probes,
-            //             //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
-            //             //     'focusTimeline': [this.conf.brushstart.getTime(),this.conf.brushend.getTime()],
-            //             //     'mode': this.conf.mode
-            //             // },this.id]);
-            //         }.bind(this),500);
-            //     }
-            // }.bind(this), this.id);
-
-            // DashboardProbes.worker.on('aggregate',function(data){
-            //     var stacked = {};
-            //     var entry;
-            //     for(entry in data){
-            //         var probe = this.probes[entry];
-            //         if(probe.stacked){
-            //             stacked[probe.scale] = stacked[probe.scale] || {};
-            //             stacked[probe.scale][entry] = data[entry];
-            //         }
-            //     }
-            //     //TODO: Add a method to generate stacked arrays to prevent DRY.
-            //     for(entry in stacked) {
-            //         var stackedData = DashboardProbes.getStackedData(stacked[entry],data);
-            //         if(stackedData.length){
-            //             var i = 0;
-            //             for(var sEntry in stacked[entry]){
-            //                 data[sEntry].values = stackedData[i];
-            //                 //if(this.content[p])
-            //                 //    this.content[p].redraw(stackedData[i]);
-            //                 i++;
-            //             }
-            //         }
-            //     }
-            //     //prevent any glitch if the worker havn't returned all probes for any reason
-            //     for(entry in this.currentData) {
-            //         if(!data[entry]){
-            //             data[entry] = this.currentData[entry];
-            //         }
-            //     }
-            //     this.currentData = data;
-            //     if(this.needAutoScale) this.autoScale();
-            //     else{
-            //         this.soft_redraw();
-            //     }
-            // }.bind(this),this.id);
-
             //main timeline events
             jQuery('#dashboard-global-timeline').on('timeline.update',function(e,start,end){
                 var domain = this.axis.x2.domain();
@@ -454,13 +349,8 @@ define([
                     this.checkAggregate(
                         [domain[0].getTime(),domain[1].getTime()],
                         [start.getTime(),end.getTime()]);
-                    // DashboardProbes.worker.postMessage([8,{
-                    //     'probes': this.probes,
-                    //     'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
-                    //     'focusTimeline': [start.getTime(),end.getTime()],
-                    //     'mode': this.conf.mode
-                    // },this.id]);
-                }else{
+                }
+                else {
                     if(start < domain[0])
                         this.updateFromDate(start.getTime());
                     if(end > domain[1])
@@ -473,38 +363,15 @@ define([
                         this.checkAggregate(
                             [domain[0].getTime(),domain[1].getTime()],
                             [start.getTime(),end.getTime()]);
-                        // DashboardProbes.worker.postMessage([8,{
-                        //     'probes': this.probes,
-                        //     'contextTimeline': [domain[0].getTime(),domain[1].getTime()],
-                        //     'focusTimeline': [start.getTime(),end.getTime()],
-                        //     'mode': this.conf.mode
-                        // },this.id]);
                     }
                 }
             }.bind(this));
 
-            //logs return event
-            // DashboardProbes.worker.on('logs',function(data){
-            //     //flush cache
-            //     this._stackedLogsCache = {};
-
-            //     this.logs = this.logs || {};
-            //     for(var host in data){
-            //         this.logs[host] = this.logs[host] || {};
-            //         for(var service in data[host])
-            //             this.logs[host][service] = data[host][service];
-            //     }
-            //     this.drawLogs();
-            // }.bind(this),this.id);
 
             //TODO: maybe a global call should be done after all widget init instead?
             this.fetchFromWorker(
                 Object.keys(this.probes),
                 (this.conf.fromDate) ? this.conf.fromDate.getTime() : false); 
-            // DashboardProbes.worker.postMessage([3,{
-            //     'probes': Object.keys(this.probes),
-            //     'start': (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
-            // },this.id]);
         }.bind(this));
     };
 
@@ -3779,7 +3646,7 @@ define([
             }
             else {
                 // No cache... query cache!
-                this._handleFetchResults();
+                this._handleFetchResult();
             }
         }.bind(this));
     };
@@ -3854,7 +3721,7 @@ define([
         this.drawLogs();
     };
 
-    DashboardChart.prototype._handleGetResultPredict = function(data) {
+    DashboardChart.prototype._handleGetResultPredicts = function(data) {
         this.predict.set(data);
         //update scale domains
         for(var entry in data){

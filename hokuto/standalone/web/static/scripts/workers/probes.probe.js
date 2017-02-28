@@ -17,7 +17,7 @@
  */
 'use strict';
 
-define(['console', 'argumentserror'], function(Console, ArgumentsError) {
+define(['console', 'argumenterror'], function(Console, ArgumentError) {
     /**
      * Probe class
      * @class
@@ -122,7 +122,7 @@ define(['console', 'argumentserror'], function(Console, ArgumentsError) {
             this._cache[date] = result;
         }
         else {
-            throw new ArgumentsError('Trying to get data from an undefined or empty probe');
+            throw new ArgumentError('Trying to get data from an undefined or empty probe');
             //postMessage([9001,'Trying to get data from an undefined or empty probe']);
         }
         return result;

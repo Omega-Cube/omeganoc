@@ -23,7 +23,7 @@ define([
     'console', 
     'onoc.xhr', 
     'onoc.createurl',
-    'argumentserror',
+    'argumenterror',
     'workers/probes.probe', 
     'workers/probes.log'
 ], function(
@@ -32,7 +32,7 @@ define([
     Console, 
     OnocXHR, 
     createUrl, 
-    ArgumentsError,
+    ArgumentError,
     Probe, 
     Log
 ) {
@@ -66,6 +66,8 @@ define([
     };
 
     DashboardsWorker.prototype.fetch = function(probesList, start, end) {
+        start = start || false;
+        end = end || false;
 
         probesList = probesList || Object.keys(this.probes);
         if(!Array.isArray(probesList)) 
@@ -105,7 +107,7 @@ define([
     };
 
     DashboardsWorker.prototype.fetchLog = function(hostName, serviceName, start, end) {
-        if(start) 
+        if(start)
             start /= 1000;
         if(end)
             end /= 1000;
@@ -428,11 +430,11 @@ define([
             end = end.getTime();
 
         if(!start && !end) {
-            throw new ArgumentsError('You must specify a start or end time, or both.');
+            throw new ArgumentError('You must specify a start or end time, or both.');
         }
 
         if(!probesList) {
-            throw new ArgumentsError('Please provide a probes list.');
+            throw new ArgumentError('Please provide a probes list.');
         }
 
         var fetch = false;
