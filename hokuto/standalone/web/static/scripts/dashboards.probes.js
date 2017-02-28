@@ -21,75 +21,11 @@ define([
     'jquery', 
     'console', 
     'dataservice', 
+    'metroservice',
     'onoc.createurl',
     'onoc.states',
     'onoc.config',
-    'dashboards.worker'], function (jQuery, Console, DataService, createUrl, States, Config, DashboardWorker) {
-
-    //onmessage event, aka workers control room
-    // function onWorkerMessage(data){
-    //     if(data instanceof Array && data.length >= 2){
-    //         var response = data[1], event = false;
-    //         /**
-    //          * 0: log/notification
-    //          * 1: Received probes data
-    //          * 6: Returned probes data
-    //          * 8: Returned newly aggregated data
-    //          * 9: Returned cursor data
-    //          * 10: Returned logs data
-    //          * 11: Returned predict data
-    //          * 9001: error
-    //          */
-    //         switch(data[0]) {
-    //         case 0:
-    //             //console.log('[WORKER]',response);
-    //             break;
-    //         case 1:
-    //             event = 'fetch';
-    //             //console.log("[WORKER] Got data from the server.",data);
-    //             break;
-    //         case 6:
-    //             event = 'get';
-    //             //console.log('[WORKER] Returned requested data.', data);
-    //             break;
-    //         case 8:
-    //             event = 'aggregate';
-    //             break;
-    //         case 9:
-    //             event = 'cursor';
-    //             break;
-    //         case 10:
-    //             event = 'logs';
-    //             break;
-    //         case 11:
-    //             event = 'predict';
-    //             break;
-    //         case 9001:
-    //             event = 'error';
-    //             //console.error('[WORKER]', response);
-    //             break;
-    //         default:
-    //             event = 'error';
-    //             Console.warn('[WORKER] Unknown return code', data[0], response);
-    //             break;
-    //         }
-
-    //         //execute listeners
-    //         if(event && this._listeners[this._events[event]].length) {
-    //             var listener = this._listeners[this._events[event]];
-    //             var sig = false, callback = false, l = false;
-    //             for(var i = 0, len = listener.length; i<len; i++) {
-    //                 l = listener[i];
-    //                 sig = l[0];
-    //                 callback = l[1];
-    //                 //check if the event require a valid signature
-    //                 if(data[2] && data[2] !== sig)
-    //                     continue;
-    //                 callback(data[1]);
-    //             }
-    //         }
-    //     }
-    // }
+    'dashboards.worker'], function (jQuery, Console, DataService, MetroService, createUrl, States, Config, DashboardWorker) {
 
     function getInterpolatedValue(x, p, values){
         var result = 0;
@@ -146,24 +82,10 @@ define([
         addProbe: function(probe){
             var query = probe.split(Config.separator());
             var interval = States.getServicesStates(query[0],query[1]).check_interval || 1;
-            ///this.worker.postMessage([2,[probe,interval]]);
             this.worker.addProbe(probe, interval);
             if(!this.probes[probe])
                 this.probes[probe] = [];
             return this;
-        },
-
-        /**
-         * Remove a probe
-         * @param {Number} parts_id - The part's id
-         * @param {String} probe - Probe identifer (device-service)
-         * @param {String} scale - Scale identifer
-         */
-        remove: function(parts_id,probe,scale){
-            var req = {};
-            if(probe) req['probe'] = probe;
-            if(scale) req['scale'] = scale;
-            this._removeProbe(parts_id,req);
         },
 
         /**
@@ -251,17 +173,6 @@ define([
         extractHost: function(probe){
             var host = probe.split(Config.separator())[0];
             return host;
-            /*var metrics = this.metrics;
-            var split = probe.split(ONOC.separator);
-            while(split.length){
-                split.pop();
-                var host = split.join(ONOC.separator);
-                for(var i in metrics){
-                    if(host === i){
-                        return host;
-                    }
-                }
-            }*/
         },
 
         /**
@@ -272,19 +183,6 @@ define([
         extractService: function(probe){
             var service = probe.split(Config.separator())[1];
             return service;
-            /*var metrics = this.metrics;
-            var split = probe.split(ONOC.separator);
-            while(split.length){
-                split.pop();
-                var service = split.join(ONOC.separator);
-                for(var host in metrics){
-                    for(var i in metrics[host]){
-                        if(service === host + '.' +i){
-                            return i;
-                        }
-                    }
-                }
-            }*/
         },
 
         /**
@@ -308,65 +206,19 @@ define([
          * Fetch all available metrics from the server
          * @param {Function} callback
          */
-        _requestMetrics: function(callback){
-            jQuery.getJSON(createUrl('/services/metrics'),function(response){
+        _requestMetrics: function() {
+            return MetroService.getMetricsList().then(function(response) {
                 this.metrics = response;
-                if(callback && typeof callback === 'function')
-                    callback(this.metrics);
                 if(this.probesDoneLoadingCallbacks !== null) {
                     for(var i in this.probesDoneLoadingCallbacks) {
                         this.probesDoneLoadingCallbacks[i](response);
                     }
                     this.probesDoneLoadingCallbacks = null;
                 }
+
+                return response;
             }.bind(this));
         },
-
-        /**
-         * Send a DELETE request to remove a probe from a parts
-         * @param {Number} parts_id
-         * @param {Object} request - Request data
-         * @param {Function} successCallback
-         * @param {Function} errorCallback
-         */
-        _removeProbe: function(parts_id, request, successCallback, errorCallback){
-            var url = createUrl('/dashboards/part/keys/delete/'+parts_id);
-            jQuery.ajax({
-                url: url,
-                type: 'DELETE',
-                success: successCallback,
-                error: errorCallback,
-                dataType: 'json',
-                data: request
-            });
-        },
-
-    };
-
-    //worker responses
-
-    //build event list, use a function only to help readability and scaling
-    (function(){
-        var events = ['cursor','fetch','get','error','aggregate','timeline','logs','predict'];
-        DashboardProbes.worker._listeners = [];
-        DashboardProbes.worker._events = {};
-        for(var i = events.length;i;)
-            DashboardProbes.worker._events[events[--i]] = DashboardProbes.worker._listeners.push([]) - 1;
-    }());
-
-    /**
-     * Worker custom event listener
-     * @param {String} event      - event type
-     * @param {Function} callback
-     * @param {Number} signature  - Requester id (aka Part's id)
-     */
-    DashboardProbes.worker.on = function(event,callback,signature){
-        if(typeof this._events[event] === 'undefined'){
-            Console.error('[WORKER] Can\'t listen to event ' + event + ', unknown.');
-            return false;
-        }
-        this._listeners[this._events[event]].push([signature,callback]);
-        return this._listeners.length - 1;
     };
 
     //TODO: GRUICK!

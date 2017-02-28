@@ -17,7 +17,7 @@
  */
 'use strict';
 
-define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,DashboardManager,DashboardProbes) {
+define(['jquery', 'dashboards.manager', 'dashboards.service'], function(jQuery, DashboardManager, DashboardService) {
 
     /**
      * Tools to build basicchart's panel forms
@@ -30,13 +30,13 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          * @param {Array} units    - Units list
          * @return form container
          */
-        unitSelect : function(current,probe,units){
+        unitSelect : function(current,probe,units) {
             var container = jQuery('<select name="unit" style="display:table-cell;" class="formButton select"></select>');
             for(var u in units)
                 container.append('<option '+((current === u) ? 'selected="selected"': '')+' value="'+u+'">'+u+'</option>');
 
             if(probe)
-                container[0].addEventListener('change',function(event){
+                container[0].addEventListener('change',function(event) {
                     var scale = this.scales[this.probes[probe].scale];
                     var newVal = this.getScale(event.target.value, scale.orient,scale.reversed,scale.stacked);
 
@@ -53,8 +53,8 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
 
                     this.setDomain(this.data);
 
-                    if(!this.scales[scale.name].boundedProbe){
-                        DashboardProbes.remove(this.id,false,scale.name);
+                    if(!this.scales[scale.name].boundedProbe) {
+                        DashboardService.removePartScale(this.id, scale.name);
                         delete this.scales[scale.name];
                     }
                     this.cleanScales();
@@ -68,12 +68,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     this.checkAggregate(
                         [context[0].getTime(),context[1].getTime()],
                         [focus[0].getTime(),focus[1].getTime()]);
-                    // DashboardProbes.worker.postMessage([8,{
-                    //     'probes': this.probes,
-                    //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                    //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                    //     'mode': this.conf.mode
-                    // },this.id]);
                 }.bind(this));
 
             return container;
@@ -117,8 +111,8 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 query.conf.probes[probe] = {'scale': newVal};
                 DashboardManager.savePartData(query);
                 this.setDomain(this.data);
-                if(!this.scales[scale.name].boundedProbe){
-                    DashboardProbes.remove(this.id,false,scale.name);
+                if(!this.scales[scale.name].boundedProbe) {
+                    DashboardService.removePartScale(this.id, scale.name);
                     delete this.scales[scale.name];
                 }
                 this.cleanScales();
@@ -132,12 +126,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 this.checkAggregate(
                     [context[0].getTime(),context[1].getTime()],
                     [focus[0].getTime(),focus[1].getTime()]);
-                // DashboardProbes.worker.postMessage([8,{
-                //     'probes': this.probes,
-                //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                //     'mode': this.conf.mode
-                // },this.id]);
             }.bind(this));
 
             container.append(button);
@@ -216,8 +204,8 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 DashboardManager.savePartData(query);
 
                 this.setDomain(this.data);
-                if(!this.scales[scale.name].boundedProbe){
-                    DashboardProbes.remove(this.id,false,scale.name);
+                if(!this.scales[scale.name].boundedProbe) {
+                    DashboardService.removePartScale(this.id, scale.name);
                     delete this.scales[scale.name];
                 }
                 this.cleanScales();
@@ -230,13 +218,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 this.checkAggregate(
                     [context[0].getTime(),context[1].getTime()],
                     [focus[0].getTime(),focus[1].getTime()]);
-                // DashboardProbes.worker.postMessage([8,{
-                //     'probes': this.probes,
-                //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                //     'mode': this.conf.mode
-                // },this.id]);
-
             }.bind(this));
 
             container.append(button);
@@ -325,12 +306,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                 this.checkAggregate(
                     [context[0].getTime(),context[1].getTime()],
                     [focus[0].getTime(),focus[1].getTime()]);
-                // DashboardProbes.worker.postMessage([8,{
-                //     'probes': this.probes,
-                //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                //     'mode': this.conf.mode
-                // },this.id]);
             }.bind(this));
 
             return container;
@@ -345,7 +320,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
          */
         typeAddSelect : function(current){
             var container = jQuery('<p class="type"></p>');
-            //var button = $('<button style="width:5em;" class="formButton"></button>');
             var select = jQuery('<select name="type" class="hidden"></select>');
             var values = ['line','area','column'];
             current = current || 'line';
@@ -401,12 +375,6 @@ define(['jquery','dashboards.manager','dashboards.probes'], function(jQuery,Dash
                     this.checkAggregate(
                         [context[0].getTime(),context[1].getTime()],
                         [focus[0].getTime(),focus[1].getTime()]);
-                    // DashboardProbes.worker.postMessage([8,{
-                    //     'probes': this.probes,
-                    //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                    //     'focusTimeline': [focus[0].getTime(),focus[1].getTime()],
-                    //     'mode': this.conf.mode
-                    // },this.id]);
                 }.bind(this));
 
             return container;

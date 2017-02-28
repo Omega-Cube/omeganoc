@@ -20,6 +20,11 @@
 
 """ Contains tools used to display the dashboards """
 
+import json
+import pprint
+from collections import defaultdict
+
+
 from flask import render_template, request, abort
 from flask.ext.login import login_required, current_user
 from sqlalchemy import Table, select, exists, or_
@@ -29,12 +34,10 @@ from ajax import jsondump
 from widgetsloader import load_widgets_list
 from unit import Unit
 
-import json
-from collections import defaultdict
 
 @app.route('/dashboards')
 @login_required
-def dashboards(dashname = None):
+def dashboards(dashname=None):
     """ Dashboards landing page """
     return render_template("dashboards.html")
 
@@ -56,7 +59,7 @@ def dashboards_checkname():
     name = request.args['name']
     if not name:
         return abort(404)
-    return jsondump(not dashboard_name_exists(name));
+    return jsondump(not dashboard_name_exists(name))
 
 @app.route('/dashboards/details/<dashboardName>')
 @login_required
@@ -112,32 +115,32 @@ def dashboard_part_save():
     return jsondump({'original_id': oldid, 'saved_id': pid})
 
 #TODO: Create delete probe and delete scale methods
-@app.route('/dashboards/part/keys/delete/<int:pid>', methods=['DELETE'])
+@app.route('/dashboards/part/<int:pid>/keys', methods=['DELETE'])
 @login_required
 def dashboard_part_keys_delete(pid):
-    """ Remove partsConf entrys """
-    probekeys= []
-    probe= False
-    scale= False
-    if 'probe' in request.form:
-        probe= request.form['probe']
-
-    if 'scale' in request.form:
-        scale= request.form['scale']
+    """ Remove partsConf entries """
+    probekeys = []
+    probe = request.args.get('probe', False)
+    scale = request.args.get('scale', False)
+    app.logger.debug('FORM is ' + pprint.pformat(request.environ, depth=5))
 
     if probe or scale:
         for row in db.engine.execute(select([partsConfTable.c.key]).where(partsConfTable.c.parts_id == pid)):
             if (probe and row[0].startswith('probe|'+probe+'|')) or (scale and row[0].startswith('scale|'+scale+'|')):
                 probekeys.append(partsConfTable.c.key == row[0])
+            else:
+                app.logger.debug('Key ' + row[0] + ' does not match probe ' + probe)
 
-    remove_conf_key(pid,probekeys)
-    return "",200
+        app.logger.debug('removing keys ' + str(probekeys))
+
+        remove_conf_key(pid, probekeys)
+    return "", 200
 
 @app.route('/dashboards/part/<int:pid>', methods=['DELETE'])
 @login_required
 def dashboard_delete_part(pid):
     delete_part(pid)
-    return "",200
+    return "", 200
 
 
 @app.route('/dashboards/<dashboard>', methods=['DELETE'])
@@ -146,7 +149,7 @@ def dashboard_delete(dashboard):
     query = select([partsTable.c.id]).where(partsTable.c.user_id == current_user.id).where(partsTable.c.dashboard == dashboard).distinct()
     for row in db.engine.execute(query).fetchall():
         delete_part(row[0])
-    return "",200
+    return "", 200
 
 
 # CONTEXT PROCESSOR
@@ -155,8 +158,8 @@ def global_dashboards_list():
     """ This context processor injects the list of the user's dashboards so they
         can be displayed on the main menu on every page
     """
-    if(current_user.is_authenticated()):
-        list = get_list_dashboards();
+    if current_user.is_authenticated():
+        list = get_list_dashboards()
         return dict(dashboards_list=list)
     else:
         return dict()

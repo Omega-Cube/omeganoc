@@ -194,7 +194,7 @@ def _secure_query_date(value):
     """
     Turns a standard date specifier into a format that can be inserted into a InfluxDB WHERE clause
     Supported intpus are :
-    - A number (timestamp)
+    - A number (timestamp in seconds)
     - Litteral 'now' string
     - A relative date specifier, relative to now, for example -30d.
       Supported units are u, ms, s, m, h, d, w

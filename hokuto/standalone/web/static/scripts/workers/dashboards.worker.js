@@ -24,6 +24,7 @@ define([
     'onoc.xhr', 
     'onoc.createurl',
     'argumenterror',
+    'metroservice',
     'workers/probes.probe', 
     'workers/probes.log'
 ], function(
@@ -33,6 +34,7 @@ define([
     OnocXHR, 
     createUrl, 
     ArgumentError,
+    MetroService,
     Probe, 
     Log
 ) {
@@ -86,18 +88,14 @@ define([
         }
 
         // Fetch metric data
-        var query = {'probes': probesList };
+        //var query = {'probes': probesList };
         if(start)
-            query['start'] = Math.floor(start / 1000);
+            start = Math.floor(start / 1000);
         if(end)
-            query['end'] = Math.floor(end / 1000);
+            end = Math.floor(end / 1000);
 
-        OnocXHR.getJson(createUrl('/services/metrics/values'), query).then(function(data) {
+        MetroService.getMetricValues(probesList, start, end).then(function(data) {
             if(data) {
-                // The data is NOT USED by the client... don't bother sending it
-                ///postMessage([1,data,signature]);
-                //this.trigger('metricsReceived', data);
-
                 this._parseResponseData(data);
             }
         }.bind(this));

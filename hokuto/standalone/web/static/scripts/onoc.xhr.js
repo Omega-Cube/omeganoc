@@ -121,7 +121,10 @@ define(['libs/rsvp'], function(RSVP) {
         delete: function(url, data) {
             return new RSVP.Promise(function(resolve, reject) {
                 var dataString = OnocXHR._createDataString(data);
-                OnocXHR._runXhr('DELETE', url, dataString, function(finishedXhr) {
+                if(dataString) {
+                    url += '?' + dataString;
+                }
+                OnocXHR._runXhr('DELETE', url, null, function(finishedXhr) {
                     OnocXHR._handleEmptyResponse(finishedXhr, resolve, reject);
                 });
             });

@@ -23,6 +23,7 @@ define([
     'dashboards.manager',
     'dashboards.widget',
     'dashboards.probes',
+    'dashboards.service',
     'onoc.createurl',
     'charts/forms',
     'charts/scales',
@@ -38,6 +39,7 @@ define([
     DashboardManager,
     Widget,
     DashboardProbes,
+    DashboardService,
     createUrl,
     form,
     DashboardChartScale,
@@ -2447,7 +2449,8 @@ define([
             //TODO add removeScale method
             scale.boundedProbe--;
             scale = (scale.boundedProbe) ? false : scale.name;
-            delete this.scales[scale];
+            if(scale)
+                delete this.scales[scale];
             if(this.current[orient][direction] === scaleName)
                 this.switchScale(orient,direction);
 
@@ -2468,7 +2471,8 @@ define([
                 while(axis.firstChild) axis.removeChild(axis.firstChild);
 
             }
-            DashboardProbes.remove(this.id,probe,scale);
+
+            DashboardService.removePartKeys(this.id, probe, scale);
             this.redraw();
         }
     };

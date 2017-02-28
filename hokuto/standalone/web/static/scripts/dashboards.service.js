@@ -82,6 +82,19 @@ define(['libs/rsvp', 'onoc.createurl', 'onoc.xhr'], function(RSVP, createUrl, On
         removeDashboard: function(dashboardName) {
             return OnocXhr.delete(createUrl('/dashboards/' + dashboardName));
         },
+
+        removePartKeys: function(partId, probeName, scaleName) {
+            var post = {};
+            if(probeName)
+                post.probe = probeName;
+            if(scaleName)
+                post.scale = scaleName;
+            return OnocXhr.delete(createUrl('/dashboards/part/' + partId + '/keys'), post);
+        },
+
+        removePartScale: function(partId, scaleName) {
+            return DashboardService.removePartKeys(partId, null, scaleName);
+        },
     };
 
     return DashboardService;
