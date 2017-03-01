@@ -126,12 +126,15 @@ define(['libs/rsvp', 'workerclient', 'workers/workerserver', 'onoc.config', 'con
         /**
          * Mocks the require function during the tests
          */
-        function requireMock(moduleName) {
-            if(moduleName === serverProxyModuleName) {
-                return createProxyMock();
+        function requireMock(dependencies, callback, errback) {
+            if(dependencies.length === 1 && dependencies[0] === serverProxyModuleName) {
+                setTimeout(function() {
+                    callback(createProxyMock());
+                }, 1);
+                return createProxyMock(callback);
             }
             else {
-                return legit_require(moduleName);
+                return legit_require(dependencies, callback, errback);
             }
         }
 
@@ -236,7 +239,7 @@ define(['libs/rsvp', 'workerclient', 'workers/workerserver', 'onoc.config', 'con
                         expect(client.readyState).toBe(1);
 
                         // The server should have required the proxy module
-                        expect(require).toHaveBeenCalledWith(serverProxyModuleName);
+                        expect(require).toHaveBeenCalled();
 
                         // The server should have imported the configuration
                         expect(Config.import).toHaveBeenCalled();
