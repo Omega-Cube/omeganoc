@@ -172,9 +172,88 @@ def get_metric_values():
                 'metric': parsed_metric,
                 'values': list(data.get_points())
             }
-#select time, value from metric_mem_free where host_name='courtois' and service_description='RAM' and time >= now() - 7d and time <= now()
-
     return jsonify(results)
+
+@app.route('/services/logs')
+@login_required
+def get_logs():
+    """ This action fetches log entries for the specified service instances """
+    # Array of host/service names, separated by the standard separator
+    target_names = request.args.getlist('targets')
+
+    if len(target_names) == 0:
+        return "Missing arguments", 400
+
+    if len(target_names) == 0:
+        return "", 200
+
+    # Get the necessary configuration values
+    permissions = utils.get_contact_permissions(current_user.shinken_contact)
+    separator = getattr(app.config, 'PROBENAME_SEP', '[SEP]')
+
+    # Build the Influx query
+    where_parts = []
+    for tstring in target_names:
+        # Extract start / end
+        pipe_pos = tstring.rfind('|')
+        if pipe_pos == -1:
+            return "Invalid target specification (end pipe): " + tstring, 400
+        end = int(tstring[pipe_pos + 1:])
+        tstring = tstring[:pipe_pos]
+        pipe_pos = tstring.rfind('|')
+        if pipe_pos == -1:
+            return "Invalid target specification (start pipe): " + tstring, 400
+        start = int(tstring[pipe_pos + 1:])
+        tstring = tstring[:pipe_pos]
+        # Parse name
+        parts = tstring.split(separator)
+        if len(parts) != 2:
+            return 'Invalid target name: ' + tstring, 400
+        [parsed_host, parsed_service] = parts
+
+        # Check permissions
+        if parsed_service.upper() == '__HOST__':
+            if parsed_host in permissions['hosts_with_services'] or parsed_host not in permissions['hosts']:
+                app.logger.info('No permissions to send logs for service "{}" to user "{}"'.format(tstring, current_user))
+                continue
+        elif parsed_service not in permissions['services']:
+            app.logger.info('No permissions to send logs for service "{}" to user "{}"'.format(tstring, current_user))
+            continue
+
+        where_parts.append('(host_name={} AND service_description={} AND time > {} AND time < {})'.format(
+            _secure_query_string(parts[0]),
+            _secure_query_string(parts[1]),
+            _secure_query_date(start),
+            _secure_query_date(end)))
+    if len(where_parts) == 0:
+        return "", 200
+
+    # Execute the query
+    query = "SELECT time, host_name, service_description, output, state, alert_type FROM EVENT"
+    query = query + " WHERE state_type='HARD' AND ("
+    query = query + ' OR '.join(where_parts) + ')'
+    app.logger.debug('Influx query: ' + query)
+    client = _create_connection()
+    data = client.query(query, epoch='s')
+
+    # Gather and return results
+    result = {}
+    for data_point in data.get_points():
+        host_name = data_point['host_name']
+        service_description = data_point['service_description']
+        if host_name not in result:
+            result[host_name] = {}
+
+        if service_description not in result[host_name]:
+            result[host_name][service_description] = []
+
+        result[host_name][service_description].append({
+            'time': data_point['time'],
+            'output': data_point['output'],
+            'state': data_point['state'],
+            'alert_type': data_point['alert_type']
+        })
+    return jsonify(result)
 
 def _secure_query_string(value):
     """

@@ -17,7 +17,7 @@
  */
 'use strict';
 
-define(['onoc.xhr', 'onoc.createurl'], function(OnocXhr, createUrl) {
+define(['onoc.xhr', 'onoc.config', 'onoc.createurl'], function(OnocXhr, Config, createUrl) {
     var MetroService = {
         /**
          * Gets a list of all the available metrics sources
@@ -32,7 +32,7 @@ define(['onoc.xhr', 'onoc.createurl'], function(OnocXhr, createUrl) {
          * @param {String|Array} probeNames One or several full probe names
          * @param {Number} start The lower bound of the time range covered by the requested metrics
          * @param {Number} end The upper bound of the time range covered by the requested metrics
-         * @returns {Object} An object following this structure type: result[probeName] = { host, service, metric, values = [{time, value}]}
+         * @returns {Promise} A promise returning an object following this structure type: result[probeName] = { host, service, metric, values = [{time, value}]}
          */
         getMetricValues: function(probeNames, start, end) {
             var qString = { probes: probeNames };
@@ -42,6 +42,22 @@ define(['onoc.xhr', 'onoc.createurl'], function(OnocXhr, createUrl) {
                 qString.end = end;
 
             return OnocXhr.getJson(createUrl('/services/metrics/values'), qString);
+        },
+
+        /**
+         * Gets the state change log entries for the specified components
+         * @param {Array} downloadList An array of [hostname, servicename, start, end] tuples
+         * @returns {Promise} A promise returning an object following this structure type : result[hostname]servicename] = { time, output, state, alert_type }
+         */
+        getLogs: function(downloadList) {
+            var separator = Config.separator();
+            var query = {
+                targets: downloadList.map(function(tuple) {
+                    return tuple[0] + separator + tuple[1] + '|' + tuple[2] + '|' + tuple[3];
+                })
+            };
+
+            return OnocXhr.getJson(createUrl('/services/logs'), query);
         },
     };
 
