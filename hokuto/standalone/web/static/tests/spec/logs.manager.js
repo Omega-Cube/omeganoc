@@ -20,7 +20,7 @@
 // Jasmine globals
 /* global describe it expect spyOn fail */
 
-define(['libs/rsvp', 'logs.manager'], function(RSVP, LogsManager) {
+define(['libs/rsvp', 'logs.manager', 'metroservice'], function(RSVP, LogsManager, MetroService) {
     describe('The Logs Manager', function() {
         describe('cache presence detection (_downloadRequired)', function() {
             it('works for elements that are not in the cache yet', function() {
@@ -354,7 +354,7 @@ define(['libs/rsvp', 'logs.manager'], function(RSVP, LogsManager) {
             it('works when all the data is already in the cache', function(done) {
                 spyOn(LogsManager.prototype, '_downloadRequired').and.returnValues(null, null);
                 spyOn(LogsManager.prototype, '_downloadAndUpdateCache');
-                spyOn(LogsManager.prototype, '_getFromCache').and.returnValues('ok');
+                spyOn(LogsManager.prototype, '_getFromCache').and.returnValue('ok');
                 var manager = new LogsManager();
 
                 var hostAndServiceNames = [['flub', 'myservice'], ['glub', 'myservice']];
@@ -375,10 +375,10 @@ define(['libs/rsvp', 'logs.manager'], function(RSVP, LogsManager) {
 
             it('works when some data needs downloading', function(done) {
                 spyOn(LogsManager.prototype, '_downloadRequired').and.returnValues(null, [[100, 120], [150, 200]]);
-                spyOn(LogsManager.prototype, '_downloadAndUpdateCache').and.returnValues(new RSVP.Promise(function(resolve) {
+                spyOn(LogsManager.prototype, '_downloadAndUpdateCache').and.returnValue(new RSVP.Promise(function(resolve) {
                     resolve();
                 }));
-                spyOn(LogsManager.prototype, '_getFromCache').and.returnValues('ok');
+                spyOn(LogsManager.prototype, '_getFromCache').and.returnValue('ok');
                 var manager = new LogsManager();
 
                 var hostAndServiceNames = [['flub', 'myservice'], ['glub', 'myservice']];
@@ -395,6 +395,40 @@ define(['libs/rsvp', 'logs.manager'], function(RSVP, LogsManager) {
                 }).finally(function() {
                     done();
                 });
+            });
+
+            it('stores download results in the cache before trying to read it', function(done) {
+                var callLog = [];
+                spyOn(LogsManager.prototype, '_downloadRequired').and.returnValues([[10, 20]]);
+                // Mock the _downloadAndUpdateCache contents
+                spyOn(LogsManager.prototype, '_mergeInCache').and.callFake(function() { 
+                    callLog.push('_mergeInCache');
+                });
+                spyOn(MetroService, 'getLogs').and.returnValue(new RSVP.Promise(function(resolve) {
+                    callLog.push('getLogs');
+                    resolve({
+                        myhost: {
+                            myservice: []
+                        }
+                    });
+                }));
+                spyOn(LogsManager.prototype, '_getFromCache').and.callFake(function() {
+                    callLog.push('_getFromCache');
+                    return 'ok';
+                });
+                var manager = new LogsManager();
+
+                var promise = manager.get(['myhost', 'myservice'], 100.2, 199.5);
+
+                promise.then(function(result) {
+                    expect(result).toBe('ok');
+                    expect(callLog).toEqual(['getLogs', '_mergeInCache', '_getFromCache']);
+                }).catch(function() {
+                    fail('The promise failed!');
+                }).finally(function() {
+                    done();
+                });
+
             });
         });
     });

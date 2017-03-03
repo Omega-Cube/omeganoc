@@ -26,7 +26,7 @@ define([
     'argumenterror',
     'metroservice',
     'workers/probes.probe', 
-    'workers/probes.log'
+    'logs.manager',
 ], function(
     RSVP,
     Config, 
@@ -35,10 +35,9 @@ define([
     createUrl, 
     ArgumentError,
     MetroService,
-    Probe, 
-    Log
+    Probe,
+    LogsManager
 ) {
-    var separator = Config.separator();
 
     /**
      * The DashboardsWorker class is a worker server proxy.
@@ -48,22 +47,23 @@ define([
         this._server = server;
 
         this.probes = {};
-        this.logs = {};
         this.predicted = {};
+
+        this.logs = new LogsManager();
     }
 
     DashboardsWorker.prototype.addProbe = function(probeName, interval) {
         if(!this.probes[probeName]){
             this.probes[probeName] = new Probe();
             this.probes[probeName].setInterval(interval);
-            var nameParts = probeName.split(separator);
-            if(nameParts.length > 1){
-                var hostName = nameParts[0];
-                var serviceName = nameParts[1];
-                this.logs[hostName] = this.logs[hostName] || {};
-                if(!this.logs[hostName][serviceName])
-                    this.logs[hostName][serviceName] = new Log();
-            }
+            // var nameParts = probeName.split(separator);
+            // if(nameParts.length > 1){
+            //     var hostName = nameParts[0];
+            //     var serviceName = nameParts[1];
+            //     this.logs[hostName] = this.logs[hostName] || {};
+            //     if(!this.logs[hostName][serviceName])
+            //         this.logs[hostName][serviceName] = new Log();
+            // }
         }
     };
 
@@ -76,16 +76,16 @@ define([
             probesList = Object.keys(probesList);
 
         // Fetch logs
-        var details = [];
-        for(var i=0, len = probesList.length; i < len; i++) {
-            var curProbe = probesList[i];
-            if(start || end)
-                this.probes[probesList[i]].setRequestedDate(start,end);
-            details = curProbe.split(separator);
+        // var details = [];
+        // for(var i=0, len = probesList.length; i < len; i++) {
+        //     var curProbe = probesList[i];
+        //     if(start || end)
+        //         this.probes[probesList[i]].setRequestedDate(start,end);
+        //     details = curProbe.split(separator);
 
-            if(!!this.logs[details[0]] && !!this.logs[details[0]][details[1]])
-                this.fetchLog(details[0] ,details[1], start, end);
-        }
+        //     if(!!this.logs[details[0]] && !!this.logs[details[0]][details[1]])
+        //         this.fetchLog(details[0] ,details[1], start, end);
+        // }
 
         // Fetch metric data
         //var query = {'probes': probesList };
@@ -104,35 +104,35 @@ define([
         this.fetchPredicts(probesList);
     };
 
-    DashboardsWorker.prototype.fetchLog = function(hostName, serviceName, start, end) {
-        if(start)
-            start /= 1000;
-        if(end)
-            end /= 1000;
+    // DashboardsWorker.prototype.fetchLog = function(hostName, serviceName, start, end) {
+    //     if(start)
+    //         start /= 1000;
+    //     if(end)
+    //         end /= 1000;
 
-        if(!this.logs[hostName][serviceName].getLogs().length) {
-            var url = createUrl('/services/livestatus/get/service/logs/' + hostName + '/' + serviceName + '/');
+    //     if(!this.logs[hostName][serviceName].getLogs().length) {
+    //         var url = createUrl('/services/livestatus/get/service/logs/' + hostName + '/' + serviceName + '/');
 
-            return OnocXHR.getJson(url, { 
-                'start': start, 
-                'end': end
-            }).then(function(data) {
-                this.logs[hostName][serviceName].setData(data);
-                var results = {};
-                results[hostName] = {};
-                results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
-                return results;
-            }.bind(this));
-        }
-        else {
-            var results = {};
-            results[hostName] = {};
-            results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
-            return new RSVP.Promise(function(resolve) {
-                resolve(results);
-            });
-        }
-    };
+    //         return OnocXHR.getJson(url, { 
+    //             'start': start, 
+    //             'end': end
+    //         }).then(function(data) {
+    //             this.logs[hostName][serviceName].setData(data);
+    //             var results = {};
+    //             results[hostName] = {};
+    //             results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
+    //             return results;
+    //         }.bind(this));
+    //     }
+    //     else {
+    //         var results = {};
+    //         results[hostName] = {};
+    //         results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
+    //         return new RSVP.Promise(function(resolve) {
+    //             resolve(results);
+    //         });
+    //     }
+    // };
 
     DashboardsWorker.prototype.fetchPredicts = function(probesList) {
         //TODO check if predict data already fetched to prevent useless requests
@@ -237,82 +237,105 @@ define([
     };
 
     DashboardsWorker.prototype.get = function(probesList, start, end, mode) {
-        var results = {
-            metrics: {},
-        };
-        var stacks = {};
 
         mode = mode || 'max';
         if(start && start.constructor === Date)
             start = start.getTime();
         if(end && end.constructor === Date)
             end = end.getTime();
-        for(var probeName in probesList) {
-            var curProbe = probesList[probeName];
-            if(curProbe.stacked){
-                stacks[curProbe.scale] = stacks[curProbe.scale] || [];
-                stacks[curProbe.scale].push(probeName);
+
+        var logStart = start;
+        var logEnd = end;
+        if(!logStart)
+            logStart = Date.now() - (30 * 24 * 3600 * 1000);
+        if(!logEnd)
+            logEnd = Date.now();
+        // Convert ms to s
+        logStart /= 1000;
+        logEnd /= 1000;
+        return this.logs.get(DashboardsWorker._splitProbeNames(Object.keys(probesList)), logStart, logEnd).then(function(logResults) {
+            var results = {
+                metrics: {},
+                logs: logResults,
+            };
+
+            // Convert log timestamps from s to ms
+            for(var logHost in logResults) {
+                for(var logService in logResults[logHost]) {
+                    for(var pos = 0; pos < logResults[logHost][logService].length; ++pos) {
+                        logResults[logHost][logService][pos].time *= 1000;
+                    }
+                }
             }
-            else {
-                var data = this.getProbe(probeName, start, end, mode);
-                if(data)
-                    results.metrics[probeName] = data;
+
+            var stacks = {};
+            for(var probeName in probesList) {
+                var curProbe = probesList[probeName];
+                if(curProbe.stacked){
+                    stacks[curProbe.scale] = stacks[curProbe.scale] || [];
+                    stacks[curProbe.scale].push(probeName);
+                }
+                else {
+                    var data = this.getProbe(probeName, start, end, mode);
+                    if(data)
+                        results.metrics[probeName] = data;
+                }
             }
-        }
 
-        //get stacked data
-        for(var i in stacks) {
-            var values = {};
-            var curStack = stacks[i];
-            for(var j in curStack) {
-                values[curStack[j]] = this.getProbe(curStack[j], start, end, mode, 1);
+            //get stacked data
+            for(var i in stacks) {
+                var values = {};
+                var curStack = stacks[i];
+                for(var j in curStack) {
+                    values[curStack[j]] = this.getProbe(curStack[j], start, end, mode, 1);
+                }
+
+                //aggregate theme
+                var aggregate = this.aggregateStack(values, mode);
+                for(var stack in aggregate) {
+                    results.metrics[stack] = aggregate[stack];
+                }
             }
 
-            //aggregate theme
-            var aggregate = this.aggregateStack(values, mode);
-            for(var stack in aggregate) {
-                results.metrics[stack] = aggregate[stack];
+            ///postMessage([6,results,signature]);
+
+            // var logs = this.getLogs(probesList, start, end);
+            // if(logs) {
+            //     ///postMessage([10,logs,signature]);
+            //     //this.trigger('logsReceived', logs);
+            //     results.logs = logs;
+            // }
+
+            var predictions = this.getPredicts(probesList);
+            if(predictions) {
+                results.predicts = predictions;
             }
-        }
 
-        ///postMessage([6,results,signature]);
-
-        var logs = this.getLogs(probesList, start, end);
-        if(logs) {
-            ///postMessage([10,logs,signature]);
-            //this.trigger('logsReceived', logs);
-            results.logs = logs;
-        }
-
-        var predictions = this.getPredicts(probesList);
-        if(predictions) {
-            results.predicts = predictions;
-        }
-
-        return results;
+            return results;
+        }.bind(this));
     };
 
-    DashboardsWorker.prototype.getLogs = function(probesList, start, end) {
-        var results = {};
-        var hostName, serviceName, nameParts;
-        for(var probeName in probesList){
-            nameParts = probeName.split(separator);
-            hostName = nameParts[0];
-            serviceName = nameParts[1];
-            if(serviceName && hostName) {
-                var logs = this.logs[hostName][serviceName].getLogs(start, end);
-                if(!logs.length)
-                    continue;
-                if(!results[hostName])
-                    results[hostName] = {};
-                if(!results[hostName][serviceName])
-                    results[hostName][serviceName] = logs;
-            }
-        }
-        if(!Object.keys(results).length)
-            return false;
-        return results;
-    };
+    // DashboardsWorker.prototype.getLogs = function(probesList, start, end) {
+    //     var results = {};
+    //     var hostName, serviceName, nameParts;
+    //     for(var probeName in probesList){
+    //         nameParts = probeName.split(separator);
+    //         hostName = nameParts[0];
+    //         serviceName = nameParts[1];
+    //         if(serviceName && hostName) {
+    //             var logs = this.logs[hostName][serviceName].getLogs(start, end);
+    //             if(!logs.length)
+    //                 continue;
+    //             if(!results[hostName])
+    //                 results[hostName] = {};
+    //             if(!results[hostName][serviceName])
+    //                 results[hostName][serviceName] = logs;
+    //         }
+    //     }
+    //     if(!Object.keys(results).length)
+    //         return false;
+    //     return results;
+    // };
 
     DashboardsWorker.prototype.getPredicts = function(probesList) {
         var result = {};
@@ -502,6 +525,14 @@ define([
 
     DashboardsWorker.prototype.trigger = function(eventName, data) {
         this._server.trigger(eventName, data);
+    };
+
+    DashboardsWorker._splitProbeNames = function(probeNames) {
+        var separator = Config.separator();
+
+        return probeNames.map(function(pName) {
+            return pName.split(separator);
+        });
     };
 
     return DashboardsWorker;

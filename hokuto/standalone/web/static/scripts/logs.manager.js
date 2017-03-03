@@ -30,7 +30,7 @@ Log data in the previous version :
 
  */
 
-define(['libs/rsvp', 'metroservice'], function(RSVP, MetroService) {
+define(['libs/rsvp', 'metroservice', 'argumenterror'], function(RSVP, MetroService, ArgumentError) {
     var LogsManager = function() {
 
         /**
@@ -53,6 +53,10 @@ define(['libs/rsvp', 'metroservice'], function(RSVP, MetroService) {
      * @param {Number} end The timestamp of the exclusive upper bound of the requested time frame
      */
     LogsManager.prototype.get = function(hostAndServiceNames, start, end) {
+        if(!start)
+            throw new ArgumentError('Please provide a value for the start argument');
+        if(!end)
+            throw new ArgumentError('Please provide a value for the end argument');
         // No floats, only integers!
         start = Math.floor(start);
         end = Math.ceil(end);
@@ -77,13 +81,13 @@ define(['libs/rsvp', 'metroservice'], function(RSVP, MetroService) {
             resultPromise = new RSVP.Promise(function(resolve) {
                 // No new data needed.
                 resolve();
-            });
+            }, 'LogsManager.get.emptyPromise');
         }
 
         return resultPromise.then(function() {
             // Return the results from the cache
             return this._getFromCache(hostAndServiceNames, start, end);
-        }.bind(this));
+        }.bind(this), undefined, 'LogsManager.get.readCache');
     };
 
     /**
@@ -151,10 +155,15 @@ define(['libs/rsvp', 'metroservice'], function(RSVP, MetroService) {
             for(var hostName in result) {
                 var hostEntry = result[hostName];
                 for(var serviceName in hostEntry) {
+                    var serviceEntry = hostEntry[serviceName];
+                    // Add numerical state to all incoming entries
+                    for(var i = 0, l = serviceEntry.length; i < l; ++i) {
+                        LogsManager._addNumericalStateToEntry(serviceEntry[i]);
+                    }
                     this._mergeInCache(hostName, serviceName, requestedStart, requestedEnd, hostEntry[serviceName]);
                 }
             }
-        }.bind(this));
+        }.bind(this), undefined, 'LogsManager._downloadAndUpdateCache');
     };
 
     LogsManager.prototype._mergeInCache = function(hostName, serviceName, requestedStart, requestedEnd, data) {
@@ -218,6 +227,7 @@ define(['libs/rsvp', 'metroservice'], function(RSVP, MetroService) {
     LogsManager.prototype._getFromCache = function(hostAndServiceNames, start, end) {
         // This method assumes the cache already contains all the required data
         var result = {};
+        
         for(var i = 0, l = hostAndServiceNames.length; i < l; ++i) {
             var hostName = hostAndServiceNames[i][0];
             var serviceName = hostAndServiceNames[i][1];
@@ -248,6 +258,35 @@ define(['libs/rsvp', 'metroservice'], function(RSVP, MetroService) {
         }
 
         return result;
+    };
+
+    LogsManager._addNumericalStateToEntry = function(entry) {
+        // Before we insert an entry in the cache, let's add a consolidated numerical state indicator
+        //  0 => OK or UP
+        //  1 => WARNING
+        //  2 => CRITICAL or DOWN
+        //  3 => UNREACHABLE
+        // -1 => others
+       switch(entry.state.toUpperCase()) {
+            case 'OK':
+            case 'UP':
+                entry.state_num = 0;
+                break;
+            case 'WARNING':
+                entry.state_num = 1;
+                break;
+            case 'CRITICAL':
+            case 'DOWN':
+                entry.state_num = 2;
+                break;
+            case 'UNREACHABLE':
+                entry.state_num = 3;
+                break;
+            default:
+                Console.warn('Unknown state value in incoming log entry: ' + serviceEntry[i].state);
+                entry.state_num = -1;
+                break;
+        }
     };
 
     return LogsManager;

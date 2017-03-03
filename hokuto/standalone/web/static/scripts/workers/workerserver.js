@@ -34,10 +34,10 @@ define(['libs/rsvp', 'onoc.config', 'console'], function(RSVP, Config, Console) 
          * @private
          */
         this._messageQueue = [];
-
         this._proxyInstance = null;
-
         this._configReceived = false;
+
+        WorkerServer.currentInstance = this;
 
         // A callback that is used when a message is received
         // that isn't using a known data format
@@ -49,7 +49,6 @@ define(['libs/rsvp', 'onoc.config', 'console'], function(RSVP, Config, Console) 
         }.bind(this);
 
         // Set the current server instance
-        WorkerServer.currentInstance = this;
 
         // Start the initialization sequence
         this._notifyServerStarting();

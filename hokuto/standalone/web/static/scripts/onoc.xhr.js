@@ -97,7 +97,7 @@ define(['libs/rsvp'], function(RSVP) {
                 OnocXHR._runXhr('GET', url, null, function(finishedXhr) {
                     OnocXHR._handleJsonResponse(finishedXhr, resolve, reject);
                 });
-            });
+            }, 'OnocXHR.getJson');
         },
 
         post: function(url, data) {
@@ -106,7 +106,7 @@ define(['libs/rsvp'], function(RSVP) {
                 OnocXHR._runXhr('POST', url, dataString, function(finishedXhr) {
                     OnocXHR._handleEmptyResponse(finishedXhr, resolve, reject);
                 });
-            });
+            }, 'OnocXHR.post');
         },
 
         postJson: function(url, data) {
@@ -115,7 +115,7 @@ define(['libs/rsvp'], function(RSVP) {
                 OnocXHR._runXhr('POST', url, dataString, function(finishedXhr) {
                     OnocXHR._handleJsonResponse(finishedXhr, resolve, reject);
                 });
-            });
+            }, 'OnocXHR.postJson');
         },
 
         delete: function(url, data) {
@@ -127,7 +127,7 @@ define(['libs/rsvp'], function(RSVP) {
                 OnocXHR._runXhr('DELETE', url, null, function(finishedXhr) {
                     OnocXHR._handleEmptyResponse(finishedXhr, resolve, reject);
                 });
-            });
+            }, 'OnocXHR.delete');
         }
     };
 

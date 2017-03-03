@@ -32,7 +32,8 @@ define([
     'charts/predict',
     'onoc.calendar',
     'onoc.tooltips',
-    'onoc.config'
+    'onoc.config',
+    'console',
 ], function(
     jQuery,
     d3,
@@ -48,7 +49,8 @@ define([
     Predict,
     Calendar,
     Tooltips,
-    Config)
+    Config,
+    Console)
 {
     /**
      * Basicchart widget class,handle multiple charts
@@ -1655,6 +1657,8 @@ define([
             for(var s in logs[h]){
                 for(var l in logs[h][s]){
                     var log = logs[h][s][l];
+                    log.host_name = h;
+                    log.service_description = s;
 
                     var orphan = true;
                     for(var i in stacked){
@@ -2802,7 +2806,7 @@ define([
      * Construct log panel
      * @param {Object} data - Logs data
      */
-    DashboardChart.prototype.buildLogsPanel = function(data){
+    DashboardChart.prototype.buildLogsPanel = function(data) {
         var container = jQuery('<div class="logPanel"></div>');
 
         var logContainer = jQuery('<p class="logContainer legend"></p>');
@@ -2817,12 +2821,19 @@ define([
             var log = data.logs[i];
             var date = new Date(log['time']);
 
-            logContainer = jQuery('<p class="logContainer log '+((log['state'] > 1)? 'error':'warning')+'"></p>');
-            logContainer.append('<span class="date">'+(date.toLocaleDateString().concat(' ',date.toLocaleTimeString()))+'</span>');
-            logContainer.append('<span class="host">'+log['host_name']+'</span>');
-            logContainer.append('<span class="service">'+(log['sertvice_description'] || '')+'</span>');
-            logContainer.append('<span class="type">'+log['type']+'</span>');
-            logContainer.append('<span class="output">'+log['plugin_output']+'</span>');
+            var stateClass = '';
+            if(log.state_num === 1)
+                stateClass = 'warning';
+            if(log.state_num > 1)
+                stateClass = 'error';
+
+
+            logContainer = jQuery('<p class="logContainer log ' + stateClass + '"></p>');
+            logContainer.append('<span class="date">' + (date.toLocaleDateString().concat(' ', date.toLocaleTimeString())) + '</span>');
+            logContainer.append(jQuery('<span class="host"></span>').text(log['host_name'] || ''));
+            logContainer.append(jQuery('<span class="service"></span>').text(log['service_description'] || ''));
+            logContainer.append(jQuery('<span class="type"></span>').text(log['alert_type'] || ''));
+            logContainer.append(jQuery('<span class="output"></span>').text(log['output'] || ''));
             container.append(logContainer);
         }
 
@@ -3702,12 +3713,6 @@ define([
                 this.checkAggregate(
                     [context[0].getTime(),context[1].getTime()],
                     [this.conf.brushstart.getTime(),this.conf.brushend.getTime()]);
-                // DashboardProbes.worker.postMessage([8, {
-                //     'probes': this.probes,
-                //     'contextTimeline': [context[0].getTime(),context[1].getTime()],
-                //     'focusTimeline': [this.conf.brushstart.getTime(),this.conf.brushend.getTime()],
-                //     'mode': this.conf.mode
-                // },this.id]);
             }.bind(this),500);
         }
     };

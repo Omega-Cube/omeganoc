@@ -192,18 +192,19 @@ def get_logs():
     separator = getattr(app.config, 'PROBENAME_SEP', '[SEP]')
 
     # Build the Influx query
+    result = {}
     where_parts = []
     for tstring in target_names:
         # Extract start / end
         pipe_pos = tstring.rfind('|')
         if pipe_pos == -1:
             return "Invalid target specification (end pipe): " + tstring, 400
-        end = int(tstring[pipe_pos + 1:])
+        end = tstring[pipe_pos + 1:]
         tstring = tstring[:pipe_pos]
         pipe_pos = tstring.rfind('|')
         if pipe_pos == -1:
             return "Invalid target specification (start pipe): " + tstring, 400
-        start = int(tstring[pipe_pos + 1:])
+        start = tstring[pipe_pos + 1:]
         tstring = tstring[:pipe_pos]
         # Parse name
         parts = tstring.split(separator)
@@ -220,11 +221,23 @@ def get_logs():
             app.logger.info('No permissions to send logs for service "{}" to user "{}"'.format(tstring, current_user))
             continue
 
+        if parsed_host not in result:
+            result[parsed_host] = {}
+
+        if parsed_service not in result[parsed_host]:
+            result[parsed_host][parsed_service] = []
+
+        secured_start = _secure_query_date(start)
+        if secured_start is None:
+            return 'Invalid start date for element "' + tstring + '": "' + start + '"', 400
+        secured_end = _secure_query_date(end)
+        if secured_end is None:
+            return 'Invalid end date for element ' + tstring + '": "' + end + '"', 400
         where_parts.append('(host_name={} AND service_description={} AND time > {} AND time < {})'.format(
             _secure_query_string(parts[0]),
             _secure_query_string(parts[1]),
-            _secure_query_date(start),
-            _secure_query_date(end)))
+            secured_start,
+            secured_end))
     if len(where_parts) == 0:
         return "", 200
 
@@ -237,15 +250,9 @@ def get_logs():
     data = client.query(query, epoch='s')
 
     # Gather and return results
-    result = {}
     for data_point in data.get_points():
         host_name = data_point['host_name']
         service_description = data_point['service_description']
-        if host_name not in result:
-            result[host_name] = {}
-
-        if service_description not in result[host_name]:
-            result[host_name][service_description] = []
 
         result[host_name][service_description].append({
             'time': data_point['time'],
@@ -286,11 +293,12 @@ def _secure_query_date(value):
     except ValueError:
         pass # If we can't convert to an int we'll try alternative formats below
     if numvalue > 0:
-        return str(numvalue)
+        return str(numvalue) + 's' #All service endpoints accepts second precision timestamps by default
     global _secure_query_date_expr
     if _secure_query_date_expr is None:
         _secure_query_date_expr = re.compile('^(\\+|\\-)\\w*(\\d+)\\w*(u|ms|s|m|h|d|w)$', re.UNICODE)
     match = _secure_query_date_expr.match(value)
     if match is not None:
         return 'now() {} {}{}'.format(match.group(1), match.group(2), match.group(3))
+    app.logger.warn('Invalid date input: ' + str(value))
     return None
