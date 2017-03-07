@@ -30,7 +30,7 @@ Log data in the previous version :
 
  */
 
-define(['libs/rsvp', 'metroservice', 'argumenterror', 'console'], function(RSVP, MetroService, ArgumentError, Console) {
+define(['metroservice', 'timeframecache', 'console', 'onoc.config'], function(MetroService, TimeFrameCache, Console, Config) {
     var LogsManager = function() {
 
         /**
@@ -43,7 +43,7 @@ define(['libs/rsvp', 'metroservice', 'argumenterror', 'console'], function(RSVP,
          *  }
          * ]
          */
-        this.cache = {};
+        this.cache = new TimeFrameCache(LogsManager._logDownloader);
     };
 
     /**
@@ -53,211 +53,55 @@ define(['libs/rsvp', 'metroservice', 'argumenterror', 'console'], function(RSVP,
      * @param {Number} end The timestamp of the exclusive upper bound of the requested time frame
      */
     LogsManager.prototype.get = function(hostAndServiceNames, start, end) {
-        if(!start)
-            throw new ArgumentError('Please provide a value for the start argument');
-        if(!end)
-            throw new ArgumentError('Please provide a value for the end argument');
-        // No floats, only integers!
-        start = Math.floor(start);
-        end = Math.ceil(end);
+        var separator = Config.separator();
+        var keys = hostAndServiceNames.map(function(val) {
+            return val[0] + separator + val[1];
+        });
 
-        // Check whether we need to download data to satisfy this query
-        var requiredDownloads = [];
-        for(var i = 0, l = hostAndServiceNames.length; i < l; ++i) {
-            var spans = this._downloadRequired(hostAndServiceNames[i][0], hostAndServiceNames[i][1], start, end);
-            if(spans) {
-                for(var j = 0; j < spans.length; ++j) {
-                    requiredDownloads.push([hostAndServiceNames[i][0], hostAndServiceNames[i][1], spans[j][0], spans[j][1]]);
-                }
-            }
-        }
-
-        var resultPromise = null;
-        if(requiredDownloads.length > 0) {
-            // We do need new data; download now
-            resultPromise = this._downloadAndUpdateCache(requiredDownloads, start, end);
-        }
-        else {
-            resultPromise = new RSVP.Promise(function(resolve) {
-                // No new data needed.
-                resolve();
-            }, 'LogsManager.get.emptyPromise');
-        }
-
-        return resultPromise.then(function() {
-            // Return the results from the cache
-            return this._getFromCache(hostAndServiceNames, start, end);
-        }.bind(this), undefined, 'LogsManager.get.readCache');
-    };
-
-    /**
-     * Determines if a data download is needed or not to know the log entries for the specified host/service, on the specified time frame.
-     * @param {String} hostName
-     * @param {String} serviceName
-     * @param {Number} start
-     * @param {Number} end
-     * @return {Boolean} An array of [start, end] tuples defining the time span(s) that needs downloading, or null if all the data is already in the cache
-     */
-    LogsManager.prototype._downloadRequired = function(hostName, serviceName, start, end) {
-        if(this.cache.hasOwnProperty(hostName) && this.cache[hostName].hasOwnProperty(serviceName)) {
-            // Do we have data for the requested time span?
-            var serviceCache = this.cache[hostName][serviceName];
-            var results = [];
-            for(var i = 0, l = serviceCache.length; i < l; ++i) {
-                var cacheEntry = serviceCache[i];
-
-                if(cacheEntry.start >= end) {
-                    // We went past the requested area; Done
-                    break;
+        return this.cache.get(keys, start, end).then(function(results) {
+            var expandedResults = {};
+            for(var key in results) {
+                var parts = key.split(separator);
+                var hostName = parts[0];
+                if(!(hostName in expandedResults)) {
+                    expandedResults[hostName] = {};
                 }
 
-                if(cacheEntry.end > start) {
-                    // Intersect !
-                    if(cacheEntry.start <= start) {
-                        if(cacheEntry.end >= end) {
-                            // This cache entry entirely covers the requested area!
-                            return null;
-                        }
-                        else {
-                            start = cacheEntry.end;
-                        }
-                    }
-                    else {
-                        if(cacheEntry.end >= end) {
-                            end = cacheEntry.start;
-                            break;
-                        }
-                        else {
-                            // The currently cache entry cuts the requested area in half
-                            // we'll have to return several segments !
-                            results.push([start, cacheEntry.start]);
-                            start = cacheEntry.end;
-                        }
-                    }
-                }
+                expandedResults[hostName][parts[1]] = results[key];
             }
-
-            results.push([start, end]);
-            return results;
-        }
-        else {
-            return [[start, end]];
-        }
-    };
-
-    /**
-     * Downloads the specified log data, and stores the results in the cache
-     * @param {Array} downloadList
-     */
-    LogsManager.prototype._downloadAndUpdateCache = function(downloadList, requestedStart, requestedEnd) {
-        return MetroService.getLogs(downloadList).then(function(result) {
-            // Store the results in the local cache
-            for(var hostName in result) {
-                var hostEntry = result[hostName];
-                for(var serviceName in hostEntry) {
-                    var serviceEntry = hostEntry[serviceName];
-                    // Add numerical state to all incoming entries
-                    for(var i = 0, l = serviceEntry.length; i < l; ++i) {
-                        LogsManager._addNumericalStateToEntry(serviceEntry[i]);
-                    }
-                    this._mergeInCache(hostName, serviceName, requestedStart, requestedEnd, hostEntry[serviceName]);
-                }
-            }
-        }.bind(this), undefined, 'LogsManager._downloadAndUpdateCache');
-    };
-
-    LogsManager.prototype._mergeInCache = function(hostName, serviceName, requestedStart, requestedEnd, data) {
-        // Stores a set of log entries in the cache.
-        // This method's role is to ensure that the cache state is consistent,
-        // and cache entries with touching time spans merges into a single one
-
-        var cacheEntry = null;
-
-        if(!this.cache.hasOwnProperty(hostName)) {
-            this.cache[hostName] = {};
-        }
-        if(!this.cache[hostName].hasOwnProperty(serviceName)) {
-            this.cache[hostName][serviceName] = [];
-        }
-        var serviceEntry = this.cache[hostName][serviceName];
-
-        // Find intersecting cache entries
-        var intersects = [];
-        var insertPos = -1;
-        for(var i = 0, l = serviceEntry.length; i < l; ++i) {
-            cacheEntry = serviceEntry[i];
-            if(cacheEntry.start <= requestedEnd && cacheEntry.end >= requestedStart) {
-                if(insertPos === -1)
-                    insertPos = i;
-                intersects.push(i);
-            }
-        }
-
-        // Add intersects data in the new dataset
-        for(i = intersects.length - 1; i >= 0; --i) {
-            cacheEntry = serviceEntry[intersects[i]];
-            if(cacheEntry.start < requestedStart)
-                requestedStart = cacheEntry.start;
-            if(cacheEntry.end > requestedEnd)
-                requestedEnd = cacheEntry.end;
-            LogsManager._mergeDataSets(data, cacheEntry.entries);
-        }
-
-        // Replace the intersects with the new cache entry
-        serviceEntry.splice(insertPos, intersects.length, {
-            start: requestedStart,
-            end: requestedEnd,
-            entries: data,
+            return expandedResults;
         });
     };
 
-    LogsManager._mergeDataSets = function(data1, data2) {
-        var i1 = 0;
+    LogsManager._logDownloader = function(downloadList) {
+        // Turn keys back in host,service tuples for the service call
+        var separator = Config.separator();
+        downloadList = downloadList.map(function(val) {
+            var parts = val[0].split(separator);
+            return [
+                parts[0],
+                parts[1],
+                val[1],
+                val[2]
+            ];
+        });
 
-        for(var i2 = 0, l = data2.length; i2 < l; ++i2) {
-            var currentVal = data2[i2];
-            while(i1 < data1.length && data1[i1].time < currentVal.time) {
-                ++i1;
-            }
-
-            data1.splice(i1, 0, currentVal);
-        }
-    };
-
-    LogsManager.prototype._getFromCache = function(hostAndServiceNames, start, end) {
-        // This method assumes the cache already contains all the required data
-        var result = {};
-        
-        for(var i = 0, l = hostAndServiceNames.length; i < l; ++i) {
-            var hostName = hostAndServiceNames[i][0];
-            var serviceName = hostAndServiceNames[i][1];
-            var serviceCache = this.cache[hostName][serviceName];
-            for(var j = 0, m = serviceCache.length; j < m; ++j) {
-                if(start >= serviceCache[j].start) {
-                    if(!result.hasOwnProperty(hostName)) {
-                        result[hostName] = {};
+        return MetroService.getLogs(downloadList).then(function(result) {
+            // Add the numerical state code before storing the results into the cache
+            var separator2 = Config.separator();
+            var transformed = {};
+            for(var hostName in result) {
+                for(var serviceName in result[hostName]) {
+                    var serviceEntry = result[hostName][serviceName];
+                    for(var i = 0, l = serviceEntry.length; i < l; ++i) {
+                        LogsManager._addNumericalStateToEntry(serviceEntry[i]);
                     }
-
-                    // Only insert the events matching the requested frame
-                    var from = serviceCache[j].entries;
-                    var to = [];
-                    for(var k = 0, n = from.length; k < n; ++k) {
-                        var curEntry = from[k];
-                        if(curEntry.time >= end) {
-                            break;
-                        }
-
-                        if(curEntry.time >= start) {
-                            to.push(curEntry);
-                        }
-                    }
-
-                    result[hostName][serviceName] = to;
+                    transformed[hostName + separator2 + serviceName] = serviceEntry;
                 }
             }
-        }
 
-        return result;
+            return transformed;
+        });
     };
 
     LogsManager._addNumericalStateToEntry = function(entry) {
