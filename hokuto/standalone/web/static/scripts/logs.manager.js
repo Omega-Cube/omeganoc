@@ -30,7 +30,7 @@ Log data in the previous version :
 
  */
 
-define(['libs/rsvp', 'metroservice', 'argumenterror'], function(RSVP, MetroService, ArgumentError) {
+define(['libs/rsvp', 'metroservice', 'argumenterror', 'console'], function(RSVP, MetroService, ArgumentError, Console) {
     var LogsManager = function() {
 
         /**
@@ -267,25 +267,25 @@ define(['libs/rsvp', 'metroservice', 'argumenterror'], function(RSVP, MetroServi
         //  2 => CRITICAL or DOWN
         //  3 => UNREACHABLE
         // -1 => others
-       switch(entry.state.toUpperCase()) {
-            case 'OK':
-            case 'UP':
-                entry.state_num = 0;
-                break;
-            case 'WARNING':
-                entry.state_num = 1;
-                break;
-            case 'CRITICAL':
-            case 'DOWN':
-                entry.state_num = 2;
-                break;
-            case 'UNREACHABLE':
-                entry.state_num = 3;
-                break;
-            default:
-                Console.warn('Unknown state value in incoming log entry: ' + serviceEntry[i].state);
-                entry.state_num = -1;
-                break;
+        switch(entry.state.toUpperCase()) {
+        case 'OK':
+        case 'UP':
+            entry.state_num = 0;
+            break;
+        case 'WARNING':
+            entry.state_num = 1;
+            break;
+        case 'CRITICAL':
+        case 'DOWN':
+            entry.state_num = 2;
+            break;
+        case 'UNREACHABLE':
+            entry.state_num = 3;
+            break;
+        default:
+            Console.warn('Unknown state value in incoming log entry: ' + entry.state);
+            entry.state_num = -1;
+            break;
         }
     };
 
