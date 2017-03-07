@@ -328,6 +328,28 @@ define(['libs/rsvp', 'timeframecache', 'metroservice'], function(RSVP, TimeFrame
                     ],
                 });
             });
+
+            it('returns deep copies of the actual cache, preventing modifications from outside through returned values', function() {
+                var tfc = new TimeFrameCache();
+                tfc.cache.somekey = [
+                    {
+                        start: 200,
+                        end: 500,
+                        entries: [
+                            { time: 210 },
+                            { time: 250 },
+                            { time: 360 },
+                            { time: 470 },
+                        ],
+                    },
+                ];
+
+                var result = tfc._getFromCache(['somekey'], 250, 500);
+
+                result.somekey[0].value = 'lul'; // Add a property in the result
+
+                expect(tfc.cache.somekey[0].entries[1].value).toBeUndefined(); // The cache should not contain the new property
+            });
         });
 
         describe('content retrieval', function() {

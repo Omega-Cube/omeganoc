@@ -230,7 +230,9 @@ define(['libs/rsvp', 'argumenterror'], function(RSVP, ArgumentError) {
                         }
 
                         if(curEntry.time >= start) {
-                            to.push(curEntry);
+                            // Push a copy of the cache into the results
+                            var copy = JSON.stringify(curEntry);
+                            to.push(JSON.parse(copy));
                         }
                     }
 
