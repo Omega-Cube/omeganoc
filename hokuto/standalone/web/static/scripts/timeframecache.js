@@ -17,7 +17,7 @@
  */
 'use strict';
 
-define(['libs/rsvp', 'argumenterror'], function(RSVP, ArgumentError) {
+define(['libs/rsvp', 'argumenterror', 'console', 'observable'], function(RSVP, ArgumentError, Console, Observable) {
     function TimeFrameCache(downloader) {
         /**
          * A structure that holds the cached data entries
@@ -31,6 +31,7 @@ define(['libs/rsvp', 'argumenterror'], function(RSVP, ArgumentError) {
          */
         this.cache = {};
         this.downloader = downloader;
+        this.observable = new Observable();
     }
 
 
@@ -81,6 +82,69 @@ define(['libs/rsvp', 'argumenterror'], function(RSVP, ArgumentError) {
             // Return the results from the cache
             return this._getFromCache(keys, start, end);
         }.bind(this), undefined, 'TimeFrameCache.get.readCache');
+    };
+
+    /**
+     * Gets the values stored in the cache at the specified time point
+     * @param {Array} keys A list if keys to retrieve
+     * @param {number} timePoint A timestamp in seconds
+     * @return {Object} An object whose values are arrays. These arrays are filled with the following rules :
+     *                  - If the array contains 2 values, they will then contain the two closest cache entries before and after the requested time.
+     *                    These entries can be null, if they are located outside the cached areas.
+     *                  - If the array contains 1 value, this value contains the cache entry found precisely at the requested time.
+     *                  - If the array is empty, it means that the requested time point is outside of the cached areas for this key.
+     */
+    TimeFrameCache.prototype.getAtTime = function(keys, timePoint) {
+        var result = {};
+        for(var i in keys) {
+            var key = keys[i];
+
+            if(key in this.cache) {
+                var cacheFrame = this._findCacheFrame(key, timePoint);
+                if(cacheFrame) {
+                    var entries = cacheFrame.entries;
+                    var previous = null;
+                    var found = false;
+                    for(var j = 0, l = entries.length; !found && j < l; ++j) {
+                        var curEntry = entries[j];
+                        if(curEntry.time > timePoint) {
+                            result[key] = [
+                                TimeFrameCache._createCopy(previous), 
+                                TimeFrameCache._createCopy(curEntry)
+                            ];
+                            found = true;
+                        }
+                        else if(curEntry.time === timePoint) {
+                            result[key] = [TimeFrameCache._createCopy(curEntry)];
+                            found = true;
+                        }
+                        else {
+                            previous = curEntry;
+                        }
+                    }
+
+                    if(!found) {
+                        result[key] = [TimeFrameCache._createCopy(previous), null];
+                    }
+                }
+                else {
+                    result[key] = [];
+                }
+            }
+            else {
+                result[key] = [];
+            }
+        }
+
+        return result;
+    };
+
+    /**
+     * Registers a callback to the onkeydownloaded event.
+     * This event is triggered every time new data has been downloaded for a given key.
+     */
+    TimeFrameCache.prototype.onkeydownloaded = function(callback) {
+        this.observable.on(TimeFrameCache.events.onkeydownloaded, callback);
     };
 
     /**
@@ -146,6 +210,9 @@ define(['libs/rsvp', 'argumenterror'], function(RSVP, ArgumentError) {
             // Store the results in the local cache
             for(var key in result) {
                 this._mergeInCache(key, requestedStart, requestedEnd, result[key]);
+                this.observable.trigger(TimeFrameCache.events.onkeydownloaded, {
+                    key: key
+                });
             }
         }.bind(this), undefined, 'TimeFrameCache._downloadAndUpdateCache');
     };
@@ -217,31 +284,65 @@ define(['libs/rsvp', 'argumenterror'], function(RSVP, ArgumentError) {
         
         for(var i = 0, l = keys.length; i < l; ++i) {
             var currentKey = keys[i];
-            var keyCache = this.cache[currentKey];
-            for(var j = 0, m = keyCache.length; j < m; ++j) {
-                if(start >= keyCache[j].start) {
-                    // Only insert the events matching the requested frame
-                    var from = keyCache[j].entries;
-                    var to = [];
-                    for(var k = 0, n = from.length; k < n; ++k) {
-                        var curEntry = from[k];
-                        if(curEntry.time >= end) {
-                            break;
-                        }
+            var cacheFrame = this._findCacheFrame(currentKey, start);
 
-                        if(curEntry.time >= start) {
-                            // Push a copy of the cache into the results
-                            var copy = JSON.stringify(curEntry);
-                            to.push(JSON.parse(copy));
-                        }
+            if(cacheFrame) {
+                // Only insert the events matching the requested frame
+                var from = cacheFrame.entries;
+                var to = [];
+                for(var k = 0, n = from.length; k < n; ++k) {
+                    var curEntry = from[k];
+                    if(curEntry.time >= end) {
+                        break;
                     }
 
-                    result[currentKey] = to;
+                    if(curEntry.time >= start) {
+                        // Push a copy of the cache into the results
+                        to.push(TimeFrameCache._createCopy(curEntry));
+                    }
                 }
             }
+            else {
+                Console.error('Could not find a cache frame for key ' + currentKey + ' and time ' + start + '!');
+            }
+
+            result[currentKey] = to;
         }
 
         return result;
+    };
+
+    /**
+     * Finds the cache frame matching the specified key and containing the specified time point.
+     * @param {string} key
+     * @param {number} time A timestamp in seconds
+     * @return {Object} The frame that was found, or null if there is no frame in the cache for the specified time
+     */
+    TimeFrameCache.prototype._findCacheFrame = function(key, time) {
+        var keyCache = this.cache[key];
+        for(var i in keyCache) {
+            if(keyCache[i].start <= time && keyCache[i].end > time) {
+                return keyCache[i];
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Creates a deep copy of a custom object
+     * @param {Object} object The object that should be copied
+     * @return {Object} A deep copy of the argument
+     */
+    TimeFrameCache._createCopy = function(object) {
+        if(object === null)
+            return null;
+
+        var str = JSON.stringify(object);
+        return JSON.parse(str);
+    };
+
+    TimeFrameCache.events = {
+        onkeydownloaded: 'onkeydownloaded'
     };
 
     return TimeFrameCache;

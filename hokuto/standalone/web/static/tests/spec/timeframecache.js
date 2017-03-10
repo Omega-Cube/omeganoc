@@ -431,5 +431,125 @@ define(['libs/rsvp', 'timeframecache', 'metroservice'], function(RSVP, TimeFrame
 
             });
         });
+
+        describe('reads values at a specified time point (getAtPoint)', function() {
+            it('returns null for non-cached points', function() {
+                var tfc = new TimeFrameCache();
+                tfc.cache.somekey = [
+                    {
+                        start: 200,
+                        end: 500,
+                        entries: [
+                            { time: 210 },
+                            { time: 250 },
+                            { time: 360 },
+                            { time: 470 },
+                        ],
+                    },
+                ];
+
+                var result = tfc.getAtTime(['unknown', 'somekey'], 700);
+
+                expect(result).toEqual({
+                    unknown: [],
+                    somekey: [],
+                });
+            });
+
+            it('returns one element arrays when the requested time exists in the cache', function() {
+                var tfc = new TimeFrameCache();
+                tfc.cache.somekey = [
+                    {
+                        start: 200,
+                        end: 500,
+                        entries: [
+                            { time: 210 },
+                            { time: 250, value: 'ok' },
+                            { time: 360 },
+                            { time: 470 },
+                        ],
+                    },
+                ];
+
+                var result = tfc.getAtTime(['somekey'], 250);
+
+                expect(result).toEqual({
+                    somekey: [{ time: 250, value: 'ok' }],
+                });
+            });
+
+            it('returns two elements arrays when the requested time is between two cached values', function() {
+                var tfc = new TimeFrameCache();
+                tfc.cache.somekey = [
+                    {
+                        start: 200,
+                        end: 500,
+                        entries: [
+                            { time: 210 },
+                            { time: 250, value: 'ok' },
+                            { time: 360, value: 'ye' },
+                            { time: 470 },
+                        ],
+                    },
+                ];
+
+                tfc.cache.keybefore = [
+                    {
+                        start: 200,
+                        end: 500,
+                        entries: [
+                            { time: 210 },
+                            { time: 250, value: 'before' },
+                        ],
+                    },
+                ];
+                
+                tfc.cache.keyafter = [
+                    {
+                        start: 200,
+                        end: 500,
+                        entries: [
+                            { time: 360, value: 'after' },
+                            { time: 470 },
+                        ],
+                    },
+                ];
+                
+                var result = tfc.getAtTime(['somekey', 'keybefore', 'keyafter'], 300);
+
+                expect(result).toEqual({
+                    somekey: [
+                            { time: 250, value: 'ok' },
+                            { time: 360, value: 'ye' },
+                    ],
+                    keybefore: [{ time: 250, value: 'before' }, null],
+                    keyafter: [null, { time: 360, value: 'after' }],
+                });
+            });
+
+            it('returns deep copies of the actual cache, preventing modifications from outside through returned values', function() {
+                var tfc = new TimeFrameCache();
+                tfc.cache.somekey = [
+                    {
+                        start: 200,
+                        end: 500,
+                        entries: [
+                            { time: 210 },
+                            { time: 250, value: 'ok' },
+                            { time: 360, value: 'ye' },
+                            { time: 470 },
+                        ],
+                    },
+                ];
+
+                var results = tfc.getAtTime(['somekey'], 300);
+
+                results.somekey[0].value = 1;
+                results.somekey[1].value = 2;
+
+                expect(tfc.cache.somekey[0].entries[1].value).toBe('ok');
+                expect(tfc.cache.somekey[0].entries[2].value).toBe('ye');
+            });
+        });
     });
 });

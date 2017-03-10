@@ -1105,7 +1105,6 @@ define([
             this.toogleSpinner(this.container.main);
 
             this.fetchFromWorker(probes, start, end);
-            //DashboardProbes.worker.postMessage([3,data,this.id]);
         }.bind(this));
 
         //actions
@@ -1787,19 +1786,21 @@ define([
      */
     DashboardChart.prototype.showCursor = function(event) {
         var cursor = this.getCursor();
-        if(event.date >= this.axis.x.domain()[0] && event.date <= this.axis.x.domain()[1]){
+        if(event.date >= this.axis.x.domain()[0] && event.date <= this.axis.x.domain()[1]) {
             cursor.attr('transform','translate('+this.axis.x(new Date(event.date))+',0)').attr('display','inherit');
             cursor.select('text').text(new Date(event.date).toLocaleString());
-        }else{
+        }
+        else {
             cursor.attr('display','none');
         }
-        for(var legend in this.legends){
-            if(!this.probes[legend]){
+        for(var legend in this.legends) {
+            if(!this.probes[legend]) {
                 //console.log(this.id,legend,this.probes,this.legends);
                 continue;
             }
             var unit = this.units.get(this.scales[this.probes[legend].scale].unit);
-            if(!event.values[legend] && typeof(event.values[legend]) === 'boolean') event.values[legend] = 'unknown';
+            if(!event.values[legend] && typeof(event.values[legend]) === 'boolean')
+                event.values[legend] = 'unknown';
             this.legends[legend].text(this.units.unitFormat(event.values[legend],unit));
         }
     };
@@ -3056,10 +3057,6 @@ define([
 
             DashboardManager.savePartData(data).then(function() {
                 this.fetchFromWorker(probeList, (this.conf.fromDate) ? this.conf.fromDate.getTime() : false);
-                // DashboardProbes.worker.postMessage([3, {
-                //     'probes': probeList,
-                //     'start' : (this.conf.fromDate) ? this.conf.fromDate.getTime() : false
-                // },this.id]);
                 clickedForm.color.value = getNextUnusedColor();
                 settings.find('.color').find('.selected').attr('class','');
                 settings.find('.color').find('[data-value="' + clickedForm.color.value + '"]').attr('class','selected');

@@ -125,54 +125,54 @@ def get_metrics_list():
             result[host_name][service_description][metric_name] = host_name + '.' + service_description + '.' + metric_name
     return jsonify(result)
 
-@app.route('/services/metrics/values')
-@login_required
-def get_metric_values():
-    # TODO : Add security checks
-    # Read query string arguments
-    probes = request.args.getlist('probes') # An array of strings, in the form "host/service/probe"
-    start = request.args.get('start') or '-28d' # Retrieve the last 28 days by default
-    end = request.args.get('end') or 'now'
-    separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
-    results = {}
-    permissions = utils.get_contact_permissions(current_user.shinken_contact)
+# @app.route('/services/metrics/values')
+# @login_required
+# def get_metric_values():
+#     # TODO : Add security checks
+#     # Read query string arguments
+#     probes = request.args.getlist('probes') # An array of strings, in the form "host/service/probe"
+#     start = request.args.get('start') or '-28d' # Retrieve the last 28 days by default
+#     end = request.args.get('end') or 'now'
+#     separator = getattr(app.config,'PROBENAME_SEP','[SEP]')
+#     results = {}
+#     permissions = utils.get_contact_permissions(current_user.shinken_contact)
 
-    if probes is not None:
-        parsed_probes = []
-        influx = _create_connection()
-        for pstring in  probes:
-            parts = pstring.split(separator)
-            if len(parts) != 3:
-                app.logger.warning('Data was requested for invalid probe ID "{}"'.format(parts))
-                continue
-            parsed_host = parts[0]
-            parsed_service = parts[1]
-            parsed_metric = parts[2]
+#     if probes is not None:
+#         parsed_probes = []
+#         influx = _create_connection()
+#         for pstring in  probes:
+#             parts = pstring.split(separator)
+#             if len(parts) != 3:
+#                 app.logger.warning('Data was requested for invalid probe ID "{}"'.format(parts))
+#                 continue
+#             parsed_host = parts[0]
+#             parsed_service = parts[1]
+#             parsed_metric = parts[2]
 
-            # Check that we are allowed to access that probe
-            if parsed_service.upper() == '__HOST__':
-                if parsed_host in permissions['hosts_with_services'] or parsed_host not in permissions['hosts']:
-                    app.logger.info('No permissions to send data for service "{}" to user "{}"'.format(pstring, current_user))
-                    continue
-            elif parsed_service not in permissions['services']:
-                app.logger.info('No permissions to send data for service "{}" to user "{}"'.format(pstring, current_user))
-                continue
+#             # Check that we are allowed to access that probe
+#             if parsed_service.upper() == '__HOST__':
+#                 if parsed_host in permissions['hosts_with_services'] or parsed_host not in permissions['hosts']:
+#                     app.logger.info('No permissions to send data for service "{}" to user "{}"'.format(pstring, current_user))
+#                     continue
+#             elif parsed_service not in permissions['services']:
+#                 app.logger.info('No permissions to send data for service "{}" to user "{}"'.format(pstring, current_user))
+#                 continue
 
-            query = 'select time, value from {} where host_name={} and service_description={} and time >= {} and time <= {}'.format(
-                _secure_query_token('metric_' + parsed_metric), 
-                _secure_query_string(parsed_host), 
-                _secure_query_string(parsed_service), 
-                _secure_query_date(start), 
-                _secure_query_date(end))
-            app.logger.debug('influx query: ' + query)
-            data = influx.query(query, epoch='s')
-            results[pstring] = {
-                'host': parsed_host,
-                'service': parsed_service,
-                'metric': parsed_metric,
-                'values': list(data.get_points())
-            }
-    return jsonify(results)
+#             query = 'select time, value from {} where host_name={} and service_description={} and time >= {} and time <= {}'.format(
+#                 _secure_query_token('metric_' + parsed_metric), 
+#                 _secure_query_string(parsed_host), 
+#                 _secure_query_string(parsed_service), 
+#                 _secure_query_date(start), 
+#                 _secure_query_date(end))
+#             app.logger.debug('influx query: ' + query)
+#             data = influx.query(query, epoch='s')
+#             results[pstring] = {
+#                 'host': parsed_host,
+#                 'service': parsed_service,
+#                 'metric': parsed_metric,
+#                 'values': list(data.get_points())
+#             }
+#     return jsonify(results)
 
 @app.route('/services/logs')
 @login_required
@@ -261,6 +261,101 @@ def get_logs():
             'alert_type': data_point['alert_type']
         })
     return jsonify(result)
+
+@app.route('/services/metrics/values')
+@login_required
+def get_matric_values2():
+    """ This action fetches metric entries for the specified probe instances """
+    # Array of host/service/probe names, separated by the standard separator
+    target_names = request.args.getlist('targets')
+
+    if len(target_names) == 0:
+        return "Missing arguments", 400
+
+    if len(target_names) == 0:
+        return "", 200
+
+    # Get the necessary configuration values
+    permissions = utils.get_contact_permissions(current_user.shinken_contact)
+    separator = getattr(app.config, 'PROBENAME_SEP', '[SEP]')
+
+    # Build the Influx query
+    result = {}
+    queries_data = {}
+    for tstring in target_names:
+        # Extract start / end
+        pipe_pos = tstring.rfind('|')
+        if pipe_pos == -1:
+            return "Invalid target specification (end pipe): " + tstring, 400
+        end = tstring[pipe_pos + 1:]
+        tstring = tstring[:pipe_pos]
+        pipe_pos = tstring.rfind('|')
+        if pipe_pos == -1:
+            return "Invalid target specification (start pipe): " + tstring, 400
+        start = tstring[pipe_pos + 1:]
+        tstring = tstring[:pipe_pos]
+        # Parse name
+        parts = tstring.split(separator)
+        if len(parts) != 3:
+            return 'Invalid target name: ' + tstring, 400
+        [parsed_host, parsed_service, parsed_probe] = parts
+
+        # Check permissions
+        if parsed_service.upper() == '__HOST__':
+            if parsed_host in permissions['hosts_with_services'] or parsed_host not in permissions['hosts']:
+                app.logger.info('No permissions to send logs for service "{}" to user "{}"'.format(tstring, current_user))
+                continue
+        elif parsed_service not in permissions['services']:
+            app.logger.info('No permissions to send logs for service "{}" to user "{}"'.format(tstring, current_user))
+            continue
+
+        if parsed_host not in result:
+            result[parsed_host] = {}
+
+        if parsed_service not in result[parsed_host]:
+            result[parsed_host][parsed_service] = {}
+
+        if parsed_probe not in result[parsed_host][parsed_service]:
+            result[parsed_host][parsed_service][parsed_probe] = []
+
+        table_name = _secure_query_token('metric_' + parsed_probe)
+        if table_name not in queries_data:
+            queries_data[table_name] = ''
+
+        secured_start = _secure_query_date(start)
+        if secured_start is None:
+            return 'Invalid start date for element "' + tstring + '": "' + start + '"', 400
+        secured_end = _secure_query_date(end)
+        if secured_end is None:
+            return 'Invalid end date for element ' + tstring + '": "' + end + '"', 400
+        queries_data[table_name].append('(host_name={} AND service_description={} AND time > {} AND time < {})'.format(
+            _secure_query_string(parts[0]),
+            _secure_query_string(parts[1]),
+            secured_start,
+            secured_end))
+    if len(queries_data) == 0:
+        return "", 200
+
+    # Execute the queries
+    for table in queries_data:
+        metric_name = table[7:]
+        query = "SELECT time, value, host_name, service_description FROM " + table
+        query = query + " WHERE " + ' OR '.join(queries_data[table]) + ')'
+        app.logger.debug('Influx query: ' + query)
+        client = _create_connection()
+        data = client.query(query, epoch='s')
+
+        # Gather and return results
+        for data_point in data.get_points():
+            host_name = data_point['host_name']
+            service_description = data_point['service_description']
+
+            result[host_name][service_description][metric_name].append({
+                'time': data_point['time'],
+                'value': data_point['value'],
+            })
+    return jsonify(result)
+
 
 def _secure_query_string(value):
     """

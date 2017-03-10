@@ -29,19 +29,11 @@ define(['onoc.xhr', 'onoc.config', 'onoc.createurl'], function(OnocXhr, Config, 
 
         /**
          * Gets all the metric values associated to the specified probes
-         * @param {String|Array} probeNames One or several full probe names
-         * @param {Number} start The lower bound of the time range covered by the requested metrics
-         * @param {Number} end The upper bound of the time range covered by the requested metrics
+         * @param {Array} downloadList An array of [probename, start, end] tuples
          * @returns {Promise} A promise returning an object following this structure type: result[probeName] = { host, service, metric, values = [{time, value}]}
          */
-        getMetricValues: function(probeNames, start, end) {
-            var qString = { probes: probeNames };
-            if(start)
-                qString.start = start;
-            if(end)
-                qString.end = end;
-
-            return OnocXhr.getJson(createUrl('/services/metrics/values'), qString);
+        getMetricValues: function(downloadList) {
+            return OnocXhr.getJson(createUrl('/services/metrics/values'), { targets: downloadList });
         },
 
         /**

@@ -123,7 +123,6 @@ define(['console', 'argumenterror'], function(Console, ArgumentError) {
         }
         else {
             throw new ArgumentError('Trying to get data from an undefined or empty probe');
-            //postMessage([9001,'Trying to get data from an undefined or empty probe']);
         }
         return result;
     };

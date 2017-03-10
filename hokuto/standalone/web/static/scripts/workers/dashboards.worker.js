@@ -27,6 +27,7 @@ define([
     'metroservice',
     'workers/probes.probe', 
     'logs.manager',
+    'probes.manager',
 ], function(
     RSVP,
     Config, 
@@ -36,7 +37,8 @@ define([
     ArgumentError,
     MetroService,
     Probe,
-    LogsManager
+    LogsManager,
+    ProbesManager
 ) {
 
     /**
@@ -50,20 +52,14 @@ define([
         this.predicted = {};
 
         this.logs = new LogsManager();
+        this.probesDataCache = new ProbesManager();
     }
 
     DashboardsWorker.prototype.addProbe = function(probeName, interval) {
-        if(!this.probes[probeName]){
+        if(!this.probes[probeName]) {
             this.probes[probeName] = new Probe();
             this.probes[probeName].setInterval(interval);
-            // var nameParts = probeName.split(separator);
-            // if(nameParts.length > 1){
-            //     var hostName = nameParts[0];
-            //     var serviceName = nameParts[1];
-            //     this.logs[hostName] = this.logs[hostName] || {};
-            //     if(!this.logs[hostName][serviceName])
-            //         this.logs[hostName][serviceName] = new Log();
-            // }
+
         }
     };
 
@@ -74,18 +70,6 @@ define([
         probesList = probesList || Object.keys(this.probes);
         if(!Array.isArray(probesList)) 
             probesList = Object.keys(probesList);
-
-        // Fetch logs
-        // var details = [];
-        // for(var i=0, len = probesList.length; i < len; i++) {
-        //     var curProbe = probesList[i];
-        //     if(start || end)
-        //         this.probes[probesList[i]].setRequestedDate(start,end);
-        //     details = curProbe.split(separator);
-
-        //     if(!!this.logs[details[0]] && !!this.logs[details[0]][details[1]])
-        //         this.fetchLog(details[0] ,details[1], start, end);
-        // }
 
         // Fetch metric data
         //var query = {'probes': probesList };
@@ -103,36 +87,6 @@ define([
         // Fetch predicted data
         this.fetchPredicts(probesList);
     };
-
-    // DashboardsWorker.prototype.fetchLog = function(hostName, serviceName, start, end) {
-    //     if(start)
-    //         start /= 1000;
-    //     if(end)
-    //         end /= 1000;
-
-    //     if(!this.logs[hostName][serviceName].getLogs().length) {
-    //         var url = createUrl('/services/livestatus/get/service/logs/' + hostName + '/' + serviceName + '/');
-
-    //         return OnocXHR.getJson(url, { 
-    //             'start': start, 
-    //             'end': end
-    //         }).then(function(data) {
-    //             this.logs[hostName][serviceName].setData(data);
-    //             var results = {};
-    //             results[hostName] = {};
-    //             results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
-    //             return results;
-    //         }.bind(this));
-    //     }
-    //     else {
-    //         var results = {};
-    //         results[hostName] = {};
-    //         results[hostName][serviceName] = this.logs[hostName][serviceName].getLogs();
-    //         return new RSVP.Promise(function(resolve) {
-    //             resolve(results);
-    //         });
-    //     }
-    // };
 
     DashboardsWorker.prototype.fetchPredicts = function(probesList) {
         //TODO check if predict data already fetched to prevent useless requests
@@ -188,7 +142,7 @@ define([
         */
 
         // New parsing logic, used with Influx
-        // The objective here is not to create somethink efficient, but rather something that
+        // The objective here is not to create something efficient, but rather something that
         // will get the closest possible result when compared to the original Graphite implementation
         // Optimizations will come later, with a more general reorganization
         var interval = 0;
@@ -210,7 +164,7 @@ define([
                 if(currentSlot > lastFilledSlot) {
                     // Take the current value for the current slot.
                     // That means that if there are several values in the same slot,
-                    // only the last one will be used. (that should happen fairely 
+                    // only the last one will be used. (that should happen fairly 
                     // rarely though)
 
                     if(lastFilledSlot > 0) {
@@ -297,15 +251,6 @@ define([
                 }
             }
 
-            ///postMessage([6,results,signature]);
-
-            // var logs = this.getLogs(probesList, start, end);
-            // if(logs) {
-            //     ///postMessage([10,logs,signature]);
-            //     //this.trigger('logsReceived', logs);
-            //     results.logs = logs;
-            // }
-
             var predictions = this.getPredicts(probesList);
             if(predictions) {
                 results.predicts = predictions;
@@ -314,28 +259,6 @@ define([
             return results;
         }.bind(this));
     };
-
-    // DashboardsWorker.prototype.getLogs = function(probesList, start, end) {
-    //     var results = {};
-    //     var hostName, serviceName, nameParts;
-    //     for(var probeName in probesList){
-    //         nameParts = probeName.split(separator);
-    //         hostName = nameParts[0];
-    //         serviceName = nameParts[1];
-    //         if(serviceName && hostName) {
-    //             var logs = this.logs[hostName][serviceName].getLogs(start, end);
-    //             if(!logs.length)
-    //                 continue;
-    //             if(!results[hostName])
-    //                 results[hostName] = {};
-    //             if(!results[hostName][serviceName])
-    //                 results[hostName][serviceName] = logs;
-    //         }
-    //     }
-    //     if(!Object.keys(results).length)
-    //         return false;
-    //     return results;
-    // };
 
     DashboardsWorker.prototype.getPredicts = function(probesList) {
         var result = {};
@@ -467,8 +390,11 @@ define([
     };
 
     DashboardsWorker.prototype.checkAggregate = function(probesList, previousRange, nextRange, mode) {
-        var results = false, result = false, stacks = false;
+        
+        var results = false, stacks = false;
         var step, probe;
+
+        var result;
         for(var i in probesList) {
             var curProbe = probesList[i];
             if(curProbe.stacked) {
@@ -517,10 +443,11 @@ define([
     };
 
     DashboardsWorker.prototype.getCursor = function(targetTime) {
-        var results = {};
-        for(var p in this.probes)
-            results[p] = this.probes[p].getCursor(targetTime);
-        return results;
+        // var results = {};
+        // for(var p in this.probes)
+        //     results[p] = this.probes[p].getCursor(targetTime);
+        // return results;
+        return this.probesDataCache.getAtTime(this.probes, targetTime);
     };
 
     DashboardsWorker.prototype.trigger = function(eventName, data) {
